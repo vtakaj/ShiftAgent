@@ -1,9 +1,9 @@
-# Docker Buildx設定（Apple Silicon対応）
+# Docker Buildx設定
 #!/bin/bash
 
 set -e
 
-echo "🍎 Apple Silicon Mac用 Docker環境セットアップ"
+echo "🐳 Docker環境セットアップ"
 
 # Docker Buildxの確認とセットアップ
 setup_buildx() {
@@ -34,11 +34,11 @@ detect_platform() {
     ARCH=$(uname -m)
     case $ARCH in
         arm64|aarch64)
-            echo "✅ Apple Silicon (ARM64) detected"
+            echo "✅ ARM64 detected"
             PLATFORM="linux/arm64"
             ;;
         x86_64|amd64)
-            echo "ℹ️ Intel/AMD (x86_64) detected"
+            echo "ℹ️ x86_64 detected"
             PLATFORM="linux/amd64"
             ;;
         *)

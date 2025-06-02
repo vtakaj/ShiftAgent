@@ -1,4 +1,4 @@
-# Dev Container Makefile（修正版）
+# Dev Container Makefile
 .PHONY: help setup install dev run test format lint clean
 
 # デフォルトターゲット
@@ -77,9 +77,9 @@ check:
 test-api:
 	@echo "🌐 API動作テスト:"
 	@echo "ヘルスチェック:"
-	curl -s http://localhost:8000/health | jq . || curl -s http://localhost:8000/health
+	curl -s http://localhost:8081/health | jq . || curl -s http://localhost:8081/health
 	@echo "\nデモデータ取得:"
-	curl -s http://localhost:8000/api/shifts/demo | jq '.statistics' || echo "サーバーが起動していません"
+	curl -s http://localhost:8081/api/shifts/demo | jq '.statistics' || echo "サーバーが起動していません"
 
 # トラブルシューティング
 troubleshoot:
@@ -100,4 +100,4 @@ dev-start: setup run
 # デバッグモード
 debug:
 	@echo "🐛 デバッグモードで起動..."
-	uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
+	uv run uvicorn main:app --host 0.0.0.0 --port 8081 --reload --log-level debug
