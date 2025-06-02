@@ -165,10 +165,10 @@ def test_target_hours():
 
 @pytest.fixture
 def sample_schedule():
-    """テスト用のサンプルスケジュール"""
+    """Sample schedule for testing"""
     employees = [
-        Employee("emp1", "田中太郎", {"看護師", "フルタイム"}),
-        Employee("emp2", "佐藤花子", {"警備員"}),
+        Employee("emp1", "John Smith", {"Nurse", "Full-time"}),
+        Employee("emp2", "Sarah Johnson", {"Security"}),
     ]
 
     shifts = [
@@ -176,13 +176,13 @@ def sample_schedule():
             "shift1",
             datetime(2025, 6, 1, 9, 0),
             datetime(2025, 6, 1, 17, 0),
-            {"看護師"},
+            {"Nurse"},
         ),
         Shift(
             "shift2",
             datetime(2025, 6, 1, 22, 0),
             datetime(2025, 6, 2, 6, 0),
-            {"警備員"},
+            {"Security"},
         ),
     ]
 
@@ -190,14 +190,14 @@ def sample_schedule():
 
 
 def test_schedule_statistics(sample_schedule):
-    """スケジュール統計のテスト"""
+    """Test for schedule statistics"""
     schedule = sample_schedule
 
     assert schedule.get_employee_count() == 2
     assert schedule.get_shift_count() == 2
     assert schedule.get_unassigned_shift_count() == 2
 
-    # 1つのシフトを割り当て
+    # Assign one shift
     schedule.shifts[0].employee = schedule.employees[0]
 
     assert schedule.get_assigned_shift_count() == 1
