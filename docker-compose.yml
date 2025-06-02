@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  shift-scheduler:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - JAVA_OPTS=-Xmx1g
+    volumes:
+      # 開発時のみ有効にする
+      # - ./main.py:/app/main.py
+      # - ./models.py:/app/models.py
+      # - ./constraints.py:/app/constraints.py
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - shift-network
+
+  # オプション: 将来的にデータベースを追加する場合
+  # postgres:
+  #   image: postgres:15
+  #   environment:
+  #     POSTGRES_DB: shiftdb
+  #     POSTGRES_USER: shiftuser
+  #     POSTGRES_PASSWORD: shiftpass
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - shift-network
+
+volumes:
+  postgres_data:
+
+networks:
+  shift-network:
+    driver: bridge

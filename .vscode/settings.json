@@ -1,0 +1,58 @@
+# VS Code設定（Dev Container用）
+{
+    // Python関連設定
+    "python.defaultInterpreterPath": "/workspace/.venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    
+    // Linting設定
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.linting.mypyEnabled": true,
+    
+    // フォーマッター設定
+    "python.formatting.provider": "black",
+    "python.sortImports.args": ["--profile", "black"],
+    
+    // エディター設定
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true
+    },
+    "editor.rulers": [88],
+    
+    // ファイル除外設定
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/*.pyc": true,
+        "**/.uv": true,
+        "**/uv.lock": false
+    },
+    
+    // テスト設定
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+        "."
+    ],
+    
+    // Docker設定
+    "docker.dockerPath": "docker",
+    
+    // ターミナル設定
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.profiles.linux": {
+        "bash": {
+            "path": "/bin/bash",
+            "args": []
+        }
+    },
+    
+    // Fast API開発設定
+    "rest-client.environmentVariables": {
+        "local": {
+            "baseUrl": "http://localhost:8000"
+        }
+    }
+}

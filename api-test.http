@@ -1,0 +1,155 @@
+### API テスト用REST Client設定
+
+# 環境設定
+@baseUrl = http://localhost:8000
+
+### ヘルスチェック
+GET {{baseUrl}}/health
+
+### ルート情報
+GET {{baseUrl}}/
+
+### デモデータ取得
+GET {{baseUrl}}/api/shifts/demo
+
+### シフト最適化（同期）
+POST {{baseUrl}}/api/shifts/solve-sync
+Content-Type: application/json
+
+{
+  "employees": [
+    {
+      "id": "emp1",
+      "name": "田中太郎",
+      "skills": ["看護師", "CPR", "フルタイム"]
+    },
+    {
+      "id": "emp2",
+      "name": "佐藤花子",
+      "skills": ["看護師", "フルタイム"]
+    },
+    {
+      "id": "emp3",
+      "name": "鈴木一郎",
+      "skills": ["警備員", "フルタイム"]
+    },
+    {
+      "id": "emp4",
+      "name": "高橋美咲",
+      "skills": ["受付", "事務", "パートタイム"]
+    }
+  ],
+  "shifts": [
+    {
+      "id": "morning_shift",
+      "start_time": "2025-06-01T08:00:00",
+      "end_time": "2025-06-01T16:00:00",
+      "required_skills": ["看護師"],
+      "location": "病院",
+      "priority": 1
+    },
+    {
+      "id": "evening_shift",
+      "start_time": "2025-06-01T16:00:00",
+      "end_time": "2025-06-02T00:00:00",
+      "required_skills": ["看護師"],
+      "location": "病院",
+      "priority": 2
+    },
+    {
+      "id": "security_shift",
+      "start_time": "2025-06-01T22:00:00",
+      "end_time": "2025-06-02T06:00:00",
+      "required_skills": ["警備員"],
+      "location": "病院",
+      "priority": 3
+    },
+    {
+      "id": "reception_shift",
+      "start_time": "2025-06-01T09:00:00",
+      "end_time": "2025-06-01T13:00:00",
+      "required_skills": ["受付"],
+      "location": "受付",
+      "priority": 4
+    }
+  ]
+}
+
+### シフト最適化（非同期）- ジョブ投入
+POST {{baseUrl}}/api/shifts/solve
+Content-Type: application/json
+
+{
+  "employees": [
+    {
+      "id": "emp1",
+      "name": "田中太郎",
+      "skills": ["看護師", "フルタイム"]
+    }
+  ],
+  "shifts": [
+    {
+      "id": "shift1",
+      "start_time": "2025-06-01T09:00:00",
+      "end_time": "2025-06-01T17:00:00",
+      "required_skills": ["看護師"]
+    }
+  ]
+}
+
+### ジョブ結果取得（上記レスポンスのjob_idを使用）
+# GET {{baseUrl}}/api/shifts/solve/{job_id}
+
+### 週勤務時間分析（即座分析）
+POST {{baseUrl}}/api/shifts/analyze-weekly
+Content-Type: application/json
+
+{
+  "employees": [
+    {
+      "id": "emp1",
+      "name": "田中太郎",
+      "skills": ["看護師", "フルタイム"]
+    },
+    {
+      "id": "emp2",
+      "name": "佐藤花子",
+      "skills": ["看護師", "パートタイム"]
+    }
+  ],
+  "shifts": [
+    {
+      "id": "mon_morning",
+      "start_time": "2025-06-02T08:00:00",
+      "end_time": "2025-06-02T16:00:00",
+      "required_skills": ["看護師"]
+    },
+    {
+      "id": "mon_evening",
+      "start_time": "2025-06-02T16:00:00",
+      "end_time": "2025-06-03T00:00:00",
+      "required_skills": ["看護師"]
+    },
+    {
+      "id": "tue_morning",
+      "start_time": "2025-06-03T08:00:00",
+      "end_time": "2025-06-03T16:00:00",
+      "required_skills": ["看護師"]
+    },
+    {
+      "id": "tue_evening",
+      "start_time": "2025-06-03T16:00:00",
+      "end_time": "2025-06-04T00:00:00",
+      "required_skills": ["看護師"]
+    }
+  ]
+}
+
+### 週勤務時間制約テスト
+GET {{baseUrl}}/api/shifts/test-weekly
+
+### Swagger UI確認
+# GET {{baseUrl}}/docs
+
+### ReDoc確認
+# GET {{baseUrl}}/redoc

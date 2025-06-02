@@ -1,0 +1,41 @@
+{
+    "recommendations": [
+        // Python開発
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "ms-python.flake8",
+        "ms-python.mypy-type-checker",
+        "charliermarsh.ruff",
+        
+        // Docker関連
+        "ms-vscode.docker",
+        "ms-azuretools.vscode-docker",
+        
+        // ファイル形式
+        "redhat.vscode-yaml",
+        "ms-vscode.makefile-tools",
+        
+        // AI支援
+        "github.copilot",
+        "github.copilot-chat",
+        
+        // テスト
+        "ms-python.debugpy",
+        "ms-vscode.test-adapter-converter",
+        "hbenl.vscode-test-explorer",
+        "littlefoxteam.vscode-python-test-adapter",
+        
+        // REST API開発
+        "humao.rest-client",
+        
+        // Git
+        "mhutchie.git-graph",
+        "eamodio.gitlens",
+        
+        // その他便利ツール
+        "ms-vscode.vscode-json",
+        "bradlc.vscode-tailwindcss",
+        "formulahendry.auto-rename-tag"
+    ]
+}

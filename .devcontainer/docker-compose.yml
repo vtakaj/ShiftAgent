@@ -1,0 +1,25 @@
+# Docker Compose設定は使わず、単純なDockerfileビルドに変更
+# この問題を避けるため、devcontainer.jsonで直接Dockerfileを指定する方式に変更しました
+
+# 従来のdocker-compose.ymlは使用しませんが、
+# 本番環境用として残しておきます
+
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - .:/workspace
+    networks:
+      - shift-network
+
+networks:
+  shift-network:
+    driver: bridge
