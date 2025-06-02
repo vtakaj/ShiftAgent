@@ -1,186 +1,186 @@
-# Shift Scheduler システム仕様書
-# Claude Code実装用
+# Shift Scheduler System Specification
+# For Claude Code Implementation
 
-## 📋 プロジェクト概要
+## 📋 Project Overview
 
-### システム名
+### System Name
 Employee Shift Scheduler API
 
-### 概要
-Timefold Solverを使用した従業員シフト最適化システム。制約充足問題として複雑なシフト要件を解決し、労働基準法遵守と業務効率を両立する。
+### Overview
+Employee shift optimization system using Timefold Solver. Solves complex shift requirements as a constraint satisfaction problem, balancing labor law compliance with operational efficiency.
 
-### 技術スタック
-- **言語**: Python 3.11+
-- **Webフレームワーク**: FastAPI
-- **最適化エンジン**: Timefold Solver (Java 17)
-- **パッケージマネージャー**: uv
-- **開発環境**: Dev Container (Apple Silicon対応)
-- **データベース**: メモリ内 (将来的にPostgreSQL対応)
-
----
-
-## 🎯 機能要件
-
-### 1. シフト最適化機能
-
-#### 1.1 基本最適化
-- **機能ID**: F001
-- **説明**: 従業員とシフトのマッチング最適化
-- **入力**: 従業員リスト、シフトリスト、制約条件
-- **出力**: 最適化されたシフト割り当て
-- **エンドポイント**: `POST /api/shifts/solve-sync`
-
-#### 1.2 非同期最適化
-- **機能ID**: F002
-- **説明**: 大量データ対応の非同期処理
-- **入力**: 従業員リスト、シフトリスト
-- **出力**: ジョブID、処理状況
-- **エンドポイント**: 
-  - `POST /api/shifts/solve` (ジョブ投入)
-  - `GET /api/shifts/solve/{job_id}` (結果取得)
-
-#### 1.3 シフト固定機能
-- **機能ID**: F003
-- **説明**: 既決定シフトを固定して一部のみ最適化
-- **入力**: シフトID、従業員ID、固定フラグ
-- **出力**: 固定状況、再最適化結果
-- **エンドポイント**:
-  - `POST /api/shifts/pin` (シフト固定)
-  - `POST /api/shifts/unpin` (固定解除)
-  - `POST /api/shifts/re-optimize/{job_id}` (再最適化)
-
-### 2. 週勤務時間分析機能
-
-#### 2.1 勤務時間分析
-- **機能ID**: F004
-- **説明**: 従業員別週勤務時間分析と制約違反検出
-- **入力**: シフトスケジュール
-- **出力**: 週別勤務時間、制約違反、改善提案
-- **エンドポイント**: `POST /api/shifts/analyze-weekly`
-
-#### 2.2 コンプライアンスチェック
-- **機能ID**: F005
-- **説明**: 労働基準法等への準拠状況確認
-- **出力**: 違反項目、重要度、推奨対応
-- **エンドポイント**: `GET /api/shifts/test-weekly`
-
-### 3. データ管理機能
-
-#### 3.1 デモデータ提供
-- **機能ID**: F006
-- **説明**: テスト用のサンプルデータ生成
-- **出力**: 1週間分の現実的なシフトデータ
-- **エンドポイント**: `GET /api/shifts/demo`
+### Technology Stack
+- **Language**: Python 3.11+
+- **Web Framework**: FastAPI
+- **Optimization Engine**: Timefold Solver (Java 17)
+- **Package Manager**: uv
+- **Development Environment**: Dev Container (Apple Silicon Support)
+- **Database**: In-memory (Future PostgreSQL support)
 
 ---
 
-## 🔒 制約仕様
+## 🎯 Functional Requirements
 
-### Hard Constraints (絶対遵守)
+### 1. Shift Optimization Features
 
-#### HC001: スキルマッチング制約
+#### 1.1 Basic Optimization
+- **Feature ID**: F001
+- **Description**: Employee and shift matching optimization
+- **Input**: Employee list, shift list, constraints
+- **Output**: Optimized shift assignments
+- **Endpoint**: `POST /api/shifts/solve-sync`
+
+#### 1.2 Asynchronous Optimization
+- **Feature ID**: F002
+- **Description**: Asynchronous processing for large datasets
+- **Input**: Employee list, shift list
+- **Output**: Job ID, processing status
+- **Endpoints**: 
+  - `POST /api/shifts/solve` (Job submission)
+  - `GET /api/shifts/solve/{job_id}` (Result retrieval)
+
+#### 1.3 Shift Pinning Feature
+- **Feature ID**: F003
+- **Description**: Pin existing shifts and optimize remaining ones
+- **Input**: Shift ID, employee ID, pin flag
+- **Output**: Pin status, re-optimization results
+- **Endpoints**:
+  - `POST /api/shifts/pin` (Pin shift)
+  - `POST /api/shifts/unpin` (Unpin shift)
+  - `POST /api/shifts/re-optimize/{job_id}` (Re-optimize)
+
+### 2. Weekly Work Hours Analysis Features
+
+#### 2.1 Work Hours Analysis
+- **Feature ID**: F004
+- **Description**: Per-employee weekly work hours analysis and constraint violation detection
+- **Input**: Shift schedule
+- **Output**: Weekly work hours, constraint violations, improvement suggestions
+- **Endpoint**: `POST /api/shifts/analyze-weekly`
+
+#### 2.2 Compliance Check
+- **Feature ID**: F005
+- **Description**: Verify compliance with labor laws
+- **Output**: Violation items, importance, recommended actions
+- **Endpoint**: `GET /api/shifts/test-weekly`
+
+### 3. Data Management Features
+
+#### 3.1 Demo Data Provision
+- **Feature ID**: F006
+- **Description**: Generate sample data for testing
+- **Output**: One week of realistic shift data
+- **Endpoint**: `GET /api/shifts/demo`
+
+---
+
+## 🔒 Constraint Specifications
+
+### Hard Constraints (Must Follow)
+
+#### HC001: Skill Matching Constraint
 ```python
-制約名: required_skill_constraint
-説明: シフトに必要なスキルを持つ従業員のみ割り当て可能
-条件: shift.employee.skills ⊇ shift.required_skills
-違反時: HardMediumSoftScore.ONE_HARD ペナルティ
+Constraint Name: required_skill_constraint
+Description: Only assign employees with required skills to shifts
+Condition: shift.employee.skills ⊇ shift.required_skills
+Violation: HardMediumSoftScore.ONE_HARD penalty
 ```
 
-#### HC002: シフト重複防止制約
+#### HC002: Shift Overlap Prevention Constraint
 ```python
-制約名: no_overlapping_shifts_constraint
-説明: 同一従業員が同時刻に複数シフト割り当て禁止
-条件: ∀(shift1, shift2) where shift1.employee = shift2.employee
+Constraint Name: no_overlapping_shifts_constraint
+Description: Prevent same employee from being assigned to overlapping shifts
+Condition: ∀(shift1, shift2) where shift1.employee = shift2.employee
       → ¬overlaps(shift1.time, shift2.time)
-違反時: HardMediumSoftScore.ONE_HARD ペナルティ
+Violation: HardMediumSoftScore.ONE_HARD penalty
 ```
 
-#### HC003: 週最大勤務時間制約
+#### HC003: Weekly Maximum Hours Constraint
 ```python
-制約名: weekly_maximum_hours_constraint
-説明: 従業員の週勤務時間上限(45時間)
-条件: sum(employee.weekly_hours) ≤ 45 * 60 (分)
-違反時: HardMediumSoftScore.ONE_HARD * 超過時間(時間単位)
+Constraint Name: weekly_maximum_hours_constraint
+Description: Employee weekly work hours limit (45 hours)
+Condition: sum(employee.weekly_hours) ≤ 45 * 60 (minutes)
+Violation: HardMediumSoftScore.ONE_HARD * excess_hours
 ```
 
-### Medium Constraints (重要だが例外あり)
+### Medium Constraints (Important but Exceptions Allowed)
 
-#### MC001: 最低休憩時間制約
+#### MC001: Minimum Rest Time Constraint
 ```python
-制約名: minimum_rest_time_constraint
-説明: 連続シフト間の最低休憩時間(8時間)
-条件: next_shift.start_time - current_shift.end_time ≥ 8時間
-違反時: HardMediumSoftScore.ONE_MEDIUM ペナルティ
+Constraint Name: minimum_rest_time_constraint
+Description: Minimum rest time between consecutive shifts (8 hours)
+Condition: next_shift.start_time - current_shift.end_time ≥ 8 hours
+Violation: HardMediumSoftScore.ONE_MEDIUM penalty
 ```
 
-#### MC002: 週最小勤務時間制約
+#### MC002: Weekly Minimum Hours Constraint
 ```python
-制約名: weekly_minimum_hours_constraint
-説明: フルタイム従業員の最小勤務時間(32時間)
-条件: フルタイム従業員 → weekly_hours ≥ 32 * 60 (分)
-違反時: HardMediumSoftScore.ONE_MEDIUM * 不足時間
+Constraint Name: weekly_minimum_hours_constraint
+Description: Minimum work hours for full-time employees (32 hours)
+Condition: full_time_employee → weekly_hours ≥ 32 * 60 (minutes)
+Violation: HardMediumSoftScore.ONE_MEDIUM * deficit_hours
 ```
 
-### Soft Constraints (最適化目標)
+### Soft Constraints (Optimization Goals)
 
-#### SC001: 未割り当てシフト最小化
+#### SC001: Minimize Unassigned Shifts
 ```python
-制約名: minimize_unassigned_shifts_constraint
-説明: 未割り当てシフトの最小化(優先度考慮)
-目標: 全シフトの従業員割り当て
-ペナルティ: HardMediumSoftScore.of_soft(shift.priority * 10)
+Constraint Name: minimize_unassigned_shifts_constraint
+Description: Minimize unassigned shifts (considering priority)
+Goal: Assign employees to all shifts
+Penalty: HardMediumSoftScore.of_soft(shift.priority * 10)
 ```
 
-#### SC002: 労働時間公平分配
+#### SC002: Fair Workload Distribution
 ```python
-制約名: fair_workload_distribution_constraint
-説明: 従業員間の勤務時間格差最小化
-目標: 各従業員の勤務時間を8時間/日に近づける
-ペナルティ: HardMediumSoftScore.ONE_SOFT * |actual_hours - 480分|
+Constraint Name: fair_workload_distribution_constraint
+Description: Minimize work hours gap between employees
+Goal: Keep each employee's work hours close to 8 hours/day
+Penalty: HardMediumSoftScore.ONE_SOFT * |actual_hours - 480 minutes|
 ```
 
-#### SC003: 週勤務時間目標達成
+#### SC003: Weekly Hours Target Achievement
 ```python
-制約名: weekly_hours_target_constraint
-説明: 各従業員の目標勤務時間達成
-目標: フルタイム40時間/週、パートタイム20時間/週
-ペナルティ: HardMediumSoftScore.ONE_SOFT * |actual - target|
+Constraint Name: weekly_hours_target_constraint
+Description: Achieve target work hours for each employee
+Goal: Full-time 40 hours/week, Part-time 20 hours/week
+Penalty: HardMediumSoftScore.ONE_SOFT * |actual - target|
 ```
 
 ---
 
-## 📊 データモデル仕様
+## 📊 Data Model Specifications
 
-### Employee (従業員)
+### Employee
 ```python
 @dataclass
 class Employee:
-    id: str                    # 一意識別子
-    name: str                  # 従業員名
-    skills: Set[str]           # 保有スキル一覧
+    id: str                    # Unique identifier
+    name: str                  # Employee name
+    skills: Set[str]           # List of skills
     
-    # メソッド仕様
+    # Method specifications
     has_skill(skill: str) -> bool
     has_all_skills(required_skills: Set[str]) -> bool
 ```
 
-### Shift (シフト)
+### Shift
 ```python
 @planning_entity
 @dataclass  
 class Shift:
-    id: str                           # 一意識別子
-    start_time: datetime              # 開始日時
-    end_time: datetime                # 終了日時
-    required_skills: Set[str]         # 必要スキル
-    location: Optional[str]           # 勤務場所
-    priority: int                     # 優先度(1-10, 1が最高)
-    is_pinned: bool                   # 固定フラグ
+    id: str                           # Unique identifier
+    start_time: datetime              # Start date/time
+    end_time: datetime                # End date/time
+    required_skills: Set[str]         # Required skills
+    location: Optional[str]           # Work location
+    priority: int                     # Priority (1-10, 1 is highest)
+    is_pinned: bool                   # Pin flag
     
-    # Planning Variable (Timefold最適化対象)
-    employee: Optional[Employee]      # 割り当て従業員
+    # Planning Variable (Timefold optimization target)
+    employee: Optional[Employee]      # Assigned employee
     
-    # メソッド仕様
+    # Method specifications
     get_duration_minutes() -> int
     overlaps_with(other: Shift) -> bool
     is_assigned() -> bool
@@ -188,45 +188,36 @@ class Shift:
     unpin_assignment() -> None
 ```
 
-### ShiftSchedule (スケジュール全体)
+### ShiftSchedule
 ```python
 @planning_solution
 @dataclass
 class ShiftSchedule:
-    # Problem Facts (最適化で変更されない)
+    # Problem Facts (unchanged during optimization)
     employees: List[Employee]
     
-    # Planning Entities (最適化対象)
+    # Planning Entities (optimization targets)
     shifts: List[Shift]
-    
-    # Planning Score (最適化結果)
-    score: HardMediumSoftScore
-    
-    # メソッド仕様
-    get_pinned_shifts() -> List[Shift]
-    get_optimizable_shifts() -> List[Shift]
-    pin_shift(shift_id: str, employee_id: str) -> bool
-    unpin_shift(shift_id: str) -> bool
 ```
 
 ---
 
-## 🌐 API仕様
+## 🌐 API Specifications
 
 ### Base URL
 ```
 http://localhost:8000
 ```
 
-### 認証
-現在は認証なし（将来的にJWT実装予定）
+### Authentication
+Currently no authentication (planned for future implementation)
 
 ### Content-Type
 ```
 application/json
 ```
 
-### 共通レスポンス形式
+### Common Response Format
 ```json
 {
   "success": boolean,
@@ -237,28 +228,28 @@ application/json
 }
 ```
 
-### エンドポイント一覧
+### Endpoint List
 
-#### 1. ヘルスチェック
+#### 1. Health Check
 ```http
 GET /health
 Response: {"status": "UP", "service": "shift-scheduler"}
 ```
 
-#### 2. デモデータ取得
+#### 2. Demo Data Retrieval
 ```http
 GET /api/shifts/demo
 Response: ShiftScheduleResponse
 ```
 
-#### 3. 同期シフト最適化
+#### 3. Synchronous Shift Optimization
 ```http
 POST /api/shifts/solve-sync
 Request: ShiftScheduleRequest
 Response: ShiftScheduleResponse
 ```
 
-#### 4. 非同期シフト最適化
+#### 4. Asynchronous Shift Optimization
 ```http
 POST /api/shifts/solve
 Request: ShiftScheduleRequest  
@@ -268,7 +259,7 @@ GET /api/shifts/solve/{job_id}
 Response: SolutionResponse
 ```
 
-#### 5. シフト固定機能
+#### 5. Shift Pinning Feature
 ```http
 POST /api/shifts/pin
 Request: {"shift_id": string, "employee_id": string}
@@ -282,7 +273,7 @@ GET /api/shifts/pinning-status/{job_id}
 Response: PinningStatusResponse
 ```
 
-#### 6. 週勤務時間分析
+#### 6. Weekly Work Hours Analysis
 ```http
 POST /api/shifts/analyze-weekly
 Request: ShiftScheduleRequest
@@ -294,9 +285,9 @@ Response: WeeklyTestResponse
 
 ---
 
-## 🏗️ アーキテクチャ仕様
+## 🏗️ System Architecture Specifications
 
-### システム構成
+### System Configuration
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   FastAPI       │    │   Timefold      │    │   Data Models   │
@@ -311,7 +302,7 @@ Response: WeeklyTestResponse
                         └─────────────────┘
 ```
 
-### ディレクトリ構造
+### Directory Structure
 ```
 shift-scheduler/
 ├── main.py                  # FastAPI application entry point
@@ -324,7 +315,7 @@ shift-scheduler/
 └── test_models.py          # Unit tests
 ```
 
-### 依存関係
+### Dependencies
 ```toml
 [dependencies]
 fastapi = ">=0.104.1"           # Web framework
@@ -336,60 +327,60 @@ python-multipart = ">=0.0.6"   # Form data support
 
 ---
 
-## 🧪 テスト仕様
+## 🧪 Test Specifications
 
-### テスト戦略
-- **Unit Tests**: 各クラス・メソッドの単体テスト
-- **Integration Tests**: API エンドポイントのテスト
-- **Constraint Tests**: 制約ロジックの検証
-- **Performance Tests**: 最適化処理の性能テスト
+### Test Strategy
+- **Unit Tests**: Individual class/method unit tests
+- **Integration Tests**: API endpoint tests
+- **Constraint Tests**: Constraint logic verification
+- **Performance Tests**: Optimization process performance tests
 
-### テストデータ
+### Test Data
 ```python
-# 標準テストデータセット
+# Standard test data set
 employees = [
-    Employee("emp1", "田中太郎", {"看護師", "CPR", "フルタイム"}),
-    Employee("emp2", "佐藤花子", {"看護師", "フルタイム"}), 
-    Employee("emp3", "鈴木一郎", {"警備員", "フルタイム"}),
-    Employee("emp4", "高橋美咲", {"受付", "事務", "パートタイム"})
+    Employee("emp1", "John Smith", {"Nurse", "CPR", "Full-time"}),
+    Employee("emp2", "Sarah Johnson", {"Nurse", "Full-time"}), 
+    Employee("emp3", "Michael Brown", {"Security", "Full-time"}),
+    Employee("emp4", "Emily Davis", {"Reception", "Admin", "Part-time"})
 ]
 
 shifts = [
-    # 1週間分のリアルなシフトパターン
-    # 朝シフト、夜シフト、警備シフト、受付シフト
+    # 1 week of realistic shift pattern
+    # Morning shift, Night shift, Guard shift, Reception shift
 ]
 ```
 
-### テスト実行
+### Test Execution
 ```bash
-# 全テスト実行
+# Run all tests
 make test
 
-# カバレッジ付きテスト
+# Test coverage
 uv run pytest --cov=.
 
-# 特定テスト実行  
+# Specific test execution  
 uv run pytest test_models.py::test_employee_creation
 ```
 
 ---
 
-## 🚀 デプロイ仕様
+## 🚀 Deployment Specifications
 
-### 開発環境
-- **Dev Container**: Apple Silicon Mac対応
-- **ホットリロード**: uvicorn --reload
-- **デバッグ**: VS Code統合デバッガー
+### Development Environment
+- **Dev Container**: Apple Silicon Mac support
+- **Hot Reload**: uvicorn --reload
+- **Debugging**: VS Code integrated debugger
 
-### 本番環境
-- **コンテナ**: Docker (マルチプラットフォーム対応)
-- **プロセス管理**: uvicorn (複数ワーカー)
-- **リバースプロキシ**: Nginx (将来予定)
-- **データベース**: PostgreSQL (将来予定)
+### Production Environment
+- **Container**: Docker (Multi-platform support)
+- **Process Management**: uvicorn (Multiple workers)
+- **Reverse Proxy**: Nginx (Future plan)
+- **Database**: PostgreSQL (Future plan)
 
-### 環境変数
+### Environment Variables
 ```bash
-# 本番環境用
+# Production environment
 ENVIRONMENT=production
 LOG_LEVEL=info
 DATABASE_URL=postgresql://user:pass@host:port/db
@@ -399,85 +390,85 @@ TIMEFOLD_SOLVER_TIMEOUT=60s
 
 ---
 
-## 📈 パフォーマンス要件
+## 📈 Performance Requirements
 
-### レスポンス時間
-- **同期最適化**: 30秒以内 (中規模データ)
-- **API レスポンス**: 200ms以内 (データ取得)
-- **週勤務時間分析**: 5秒以内
+### Response Time
+- **Synchronous Optimization**: Within 30 seconds (Medium-sized data)
+- **API Response**: Within 200ms (Data retrieval)
+- **Weekly Work Hours Analysis**: Within 5 seconds
 
-### スケーラビリティ
-- **従業員数**: 最大1000人
-- **シフト数**: 最大10000シフト/月
-- **同時リクエスト**: 100req/sec
+### Scalability
+- **Employee Count**: Up to 1000
+- **Shift Count**: Up to 10000 shifts/month
+- **Simultaneous Requests**: 100req/sec
 
-### メモリ使用量
-- **ベースライン**: 512MB
-- **最適化実行時**: 2GB以内
-- **Java Heap**: 1GB (Timefold Solver用)
-
----
-
-## 🔒 セキュリティ仕様
-
-### 認証・認可 (将来実装)
-- **認証方式**: JWT Bearer Token
-- **ロール**: Admin, Manager, Employee
-- **権限**: Read, Write, Execute
-
-### データ保護
-- **入力検証**: Pydantic による厳密な型チェック
-- **SQL Injection**: ORM使用により対策済み
-- **XSS**: FastAPI自動エスケープ
-
-### ログ・監査
-- **アクセスログ**: uvicorn標準ログ
-- **操作ログ**: シフト固定・解除の履歴
-- **エラーログ**: 構造化ログ出力
+### Memory Usage
+- **Baseline**: 512MB
+- **Optimization Execution**: Within 2GB
+- **Java Heap**: 1GB (Timefold Solver use)
 
 ---
 
-## 🔄 今後の拡張計画
+## 🔒 Security Specifications
 
-### Phase 2: データベース統合
-- PostgreSQL導入
-- データ永続化
-- 履歴管理
+### Authentication/Authorization (Future implementation)
+- **Authentication Method**: JWT Bearer Token
+- **Role**: Admin, Manager, Employee
+- **Permissions**: Read, Write, Execute
 
-### Phase 3: 認証・権限管理
-- JWT認証
-- ロールベースアクセス制御
-- 組織階層対応
+### Data Protection
+- **Input Validation**: Strict type checking with Pydantic
+- **SQL Injection**: Already mitigated with ORM usage
+- **XSS**: FastAPI automatic escape
 
-### Phase 4: 高度な機能
-- 複数拠点対応
-- 自動通知機能
-- レポート生成
-- CSV/Excel入出力
-
-### Phase 5: 機械学習統合
-- 需要予測
-- パターン学習
-- 自動調整提案
+### Logging/Auditing
+- **Access Log**: uvicorn standard log
+- **Operation Log**: Shift pinning/unpinning history
+- **Error Log**: Structured log output
 
 ---
 
-## 📞 開発・運用情報
+## 🔄 Future Extension Plan
 
-### 開発チーム連絡先
-- **Lead Developer**: [連絡先]
-- **System Architecture**: [連絡先]  
-- **QA Engineer**: [連絡先]
+### Phase 2: Database Integration
+- PostgreSQL introduction
+- Data persistence
+- History management
 
-### リポジトリ情報
+### Phase 3: Authentication/Authorization Management
+- JWT authentication
+- Role-based access control
+- Organizational hierarchy support
+
+### Phase 4: Advanced Features
+- Multiple site support
+- Automatic notification function
+- Report generation
+- CSV/Excel input/output
+
+### Phase 5: Machine Learning Integration
+- Demand prediction
+- Pattern learning
+- Automatic adjustment proposal
+
+---
+
+## 📞 Development/Operation Information
+
+### Development Team Contact
+- **Lead Developer**: [Contact]
+- **System Architecture**: [Contact]  
+- **QA Engineer**: [Contact]
+
+### Repository Information
 - **Git Repository**: [URL]
 - **CI/CD Pipeline**: [URL]
 - **Documentation**: [URL]
 
-### サポート・トラブルシューティング
+### Support/Troubleshooting
 - **Issue Tracker**: [URL]
 - **Knowledge Base**: [URL]
-- **Emergency Contact**: [連絡先]
+- **Emergency Contact**: [Contact]
 
 ---
 

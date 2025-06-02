@@ -5,7 +5,6 @@
     "context": ".."
   },
   "workspaceFolder": "/workspace",
-  
   // Features to add to the dev container
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
@@ -16,7 +15,6 @@
       "version": "latest"
     }
   },
-
   // Configure tool-specific properties
   "customizations": {
     "vscode": {
@@ -26,7 +24,10 @@
         "python.linting.pylintEnabled": false,
         "python.linting.flake8Enabled": true,
         "python.formatting.provider": "black",
-        "python.sortImports.args": ["--profile", "black"],
+        "python.sortImports.args": [
+          "--profile",
+          "black"
+        ],
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
           "source.organizeImports": true
@@ -37,7 +38,6 @@
           "**/*.pyc": true
         }
       },
-      
       "extensions": [
         "ms-python.python",
         "ms-python.black-formatter",
@@ -56,25 +56,22 @@
       ]
     }
   },
-
   // Use 'forwardPorts' to make a list of ports inside the container available locally
-  "forwardPorts": [8081],
+  "forwardPorts": [
+    8081
+  ],
   "portsAttributes": {
     "8081": {
       "label": "FastAPI Server",
       "onAutoForward": "notify"
     }
   },
-
-  // 段階的なセットアップ with エラーハンドリング
-  "postCreateCommand": "bash -c 'rm -f uv.lock && mkdir -p /home/vscode/commandhistory && touch /home/vscode/commandhistory/.bash_history && echo \"Installing dependencies...\" && uv sync --no-install-project && echo \"🎉 Dev Container is ready! Run: make run\"'",
-
+  // Step-by-step setup with error handling
+  "postCreateCommand": "bash -c 'rm -f uv.lock && echo \"Installing dependencies...\" && uv sync --no-install-project && echo \"🎉 Dev Container is ready! Run: make run\"'",
   // Use 'postStartCommand' to run commands after the container starts
   "postStartCommand": "git config --global --add safe.directory /workspace",
-
   // Comment out to connect as root instead
   "remoteUser": "vscode",
-  
   // Mount the workspace
   "mounts": [
     "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"

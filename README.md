@@ -1,112 +1,114 @@
 # Shift Scheduler API
 
-Timefold Solver を使った Shift Scheduler API です。
+A Shift Scheduler API using Timefold Solver.
 
-## 🚀 クイックスタート
+## 🚀 Quick Start
 
-### 前提条件
+### Prerequisites
 
 ```bash
 # Docker Desktop
 brew install --cask docker
 
-# VS Code + Dev Containers拡張
+# VS Code + Dev Containers extension
 brew install --cask visual-studio-code
 code --install-extension ms-vscode-remote.remote-containers
 ```
 
-### 開発環境起動
+### Starting Development Environment
 
-**方法1: VS Code Dev Container（推奨）**
+**Method 1: VS Code Dev Container (Recommended)**
 ```bash
-# プロジェクトを開く
+# Open project
 code /projects/shared/shift-scheduler
 
 # Command Palette (Cmd+Shift+P) → "Dev Containers: Reopen in Container"
 ```
 
-**方法2: セットアップスクリプト**
+**Method 2: Setup Script**
 ```bash
 cd /projects/shared/shift-scheduler
 
-# Docker環境セットアップ
+# Docker environment setup
 chmod +x setup-docker.sh
 ./setup-docker.sh
 
-# Dev Container起動
+# Start Dev Container
 make dev-setup
 ```
 
-### 開発開始
+### Development Start
 
-Dev Container内で：
+Inside Dev Container:
 ```bash
-# 依存関係インストール
+# Install dependencies
 make setup
 
-# アプリケーション起動
+# Start application
 make run  # → http://localhost:8081
 
-# テスト実行
+# Run tests
 make test
 
-# API仕様確認
+# Check API specification
 # → http://localhost:8081/docs (Swagger UI)
 ```
 
-## 📁 プロジェクト構造
+## 📁 Project Structure
 
 ```
 shift-scheduler/
-├── .devcontainer/          # Dev Container設定
-│   ├── devcontainer.json   # VS Code Dev Container設定
-│   ├── docker-compose.yml  # Dev Container用Docker Compose
-│   └── Dockerfile          # Dev Container用Dockerfile
-├── .vscode/                # VS Code設定
-│   ├── settings.json       # エディター設定
-│   ├── launch.json         # デバッグ設定
-│   └── extensions.json     # 推奨拡張機能
-├── main.py                 # FastAPI メインアプリケーション
-├── models.py               # Timefold Solver データモデル
-├── constraints.py          # シフト最適化制約定義
-├── api-test.http           # REST Client APIテスト
-├── Dockerfile              # 本番用Dockerfile（マルチプラットフォーム）
-├── docker-compose.yml      # 本番用Docker Compose
-├── pyproject.toml          # uv設定ファイル
-├── Makefile                # 開発効率化コマンド
-└── README.md               # このファイル
+├── .devcontainer/          # Dev Container configuration
+│   ├── devcontainer.json   # VS Code Dev Container settings
+│   ├── docker-compose.yml  # Dev Container Docker Compose
+│   └── Dockerfile          # Dev Container Dockerfile
+├── .vscode/                # VS Code settings
+│   ├── settings.json       # Editor settings
+│   ├── launch.json         # Debug settings
+│   └── extensions.json     # Recommended extensions
+├── main.py                 # FastAPI main application
+├── models.py               # Timefold Solver data models
+├── constraints.py          # Shift optimization constraints
+├── api-test.http           # REST Client API tests
+├── Dockerfile              # Production Dockerfile (multi-platform)
+├── docker-compose.yml      # Production Docker Compose
+├── pyproject.toml          # uv configuration
+├── Makefile                # Development efficiency commands
+└── README.md               # This file
 ```
 
-## 🎯 主要機能
+## 🎯 Key Features
 
-### ✅ **シフト最適化**
-- **スキルベース割り当て**: 必要スキルと従業員スキルのマッチング
-- **時間制約管理**: シフト重複防止、最低休憩時間確保
-- **週勤務時間制約**: 40時間制限、最小勤務時間、目標時間調整
-- **公平性最適化**: 労働時間の均等分配
+### ✅ **Shift Optimization**
+- **Skill-based Assignment**: Matching required skills with employee skills
+- **Time Constraint Management**: Shift overlap prevention, minimum break time
+- **Weekly Work Hours Constraints**: 40-hour limit, minimum work hours, target time adjustment
+- **Fairness Optimization**: Equal distribution of work hours
 
-## 📊 API仕様
+## 📊 API Specification
 
-### 基本エンドポイント
+### Basic Endpoints
 
 ```http
-GET  /health                    # ヘルスチェック
-GET  /api/shifts/demo          # デモデータ
-POST /api/shifts/solve-sync    # 同期シフト最適化
-POST /api/shifts/solve         # 非同期シフト最適化
-GET  /api/shifts/solve/{id}    # 最適化結果取得
-POST /api/shifts/analyze-weekly # 週勤務時間分析
+GET  /health                          # Health check
+GET  /api/shifts/demo                 # Demo data
+POST /api/shifts/solve-sync           # Synchronous shift optimization
+POST /api/shifts/solve                # Asynchronous shift optimization
+GET  /api/shifts/solve/{job_id}       # Get optimization results
+POST /api/shifts/analyze-weekly       # Weekly work hours analysis (immediate)
+GET  /api/shifts/weekly-analysis/{job_id} # Weekly work hours analysis (after solve)
+GET  /api/shifts/test-weekly          # Weekly work hours constraint test (demo)
 ```
 
-### リクエスト例
+### Request Example
 
 ```json
 {
   "employees": [
     {
       "id": "emp1",
-      "name": "田中太郎",
-      "skills": ["看護師", "CPR", "フルタイム"]
+      "name": "John Doe",
+      "skills": ["Nurse", "CPR", "Full-time"]
     }
   ],
   "shifts": [
@@ -114,132 +116,170 @@ POST /api/shifts/analyze-weekly # 週勤務時間分析
       "id": "morning_shift",
       "start_time": "2025-06-01T08:00:00",
       "end_time": "2025-06-01T16:00:00",
-      "required_skills": ["看護師"],
-      "location": "病院",
+      "required_skills": ["Nurse"],
+      "location": "Hospital",
       "priority": 1
     }
   ]
 }
 ```
 
-## 🔧 制約システム
+## 🔧 Constraint System
 
-| レベル | 制約名 | 説明 |
+| Level | Constraint | Description |
 |--------|--------|------|
-| **HARD** | スキルマッチング | 必要スキルを持つ従業員のみ割り当て |
-| **HARD** | シフト重複防止 | 同一従業員の同時間帯重複禁止 |
-| **HARD** | 週最大勤務時間 | 45時間超過で制約違反 |
-| **MEDIUM** | 最低休憩時間 | 連続シフト間8時間休憩 |
-| **MEDIUM** | 週最小勤務時間 | フルタイム32時間以上 |
-| **SOFT** | 労働時間公平分配 | 従業員間の勤務時間格差最小化 |
-| **SOFT** | 週勤務時間目標 | 個人目標時間への近似 |
+| **HARD** | Skill Matching | Only assign employees with required skills |
+| **HARD** | Shift Overlap Prevention | Prevent same employee in overlapping shifts |
+| **HARD** | Weekly Max Hours | Violation if over 45 hours |
+| **MEDIUM** | Minimum Break Time | 8 hours break between consecutive shifts |
+| **MEDIUM** | Weekly Min Hours | Full-time minimum 32 hours |
+| **SOFT** | Work Hours Fair Distribution | Minimize work hours gap between employees |
+| **SOFT** | Weekly Target Hours | Approximate to personal target hours |
 
-## 🧪 テスト・デバッグ
+## 🧪 Testing & Debugging
 
-### VS Code統合テスト
+### VS Code Integrated Testing
 ```bash
-# テストエクスプローラーでの実行
+# Run in Test Explorer
 # Command Palette → "Test: Run All Tests"
 
-# デバッグ実行
-# F5キー → "FastAPI Server" 設定でデバッグ開始
+# Debug Execution
+# F5 key → Start debugging with "FastAPI Server" configuration
 ```
 
-### REST Clientテスト
+### REST Client Testing
 ```bash
-# api-test.httpファイルを開いて
-# APIリクエストの上の "Send Request" をクリック
+# Open api-test.http file and
+# Click "Send Request" above API requests
 ```
 
-### コマンドラインテスト
+### Command Line Testing
 ```bash
-make test-api      # API動作確認
-make test-solve    # シフト最適化テスト
-make test          # フルテストスイート
+make test-api      # Verify API functionality
+make test-solve    # Test shift optimization
+make test          # Full test suite
 ```
 
-## 🛠 トラブルシューティング
+## 🛠 Troubleshooting
 
-### プラットフォーム確認
+### Common Issues and Solutions
+
+#### 1. **uv sync Error**
 ```bash
-make check-platform        # 現在のプラットフォーム情報
-make troubleshoot          # 包括的なトラブルシューティング
+# Issue: Corrupted uv.lock file
+# Solution:
+rm -f uv.lock
+uv sync --no-install-project
 ```
 
-### よくある問題
-
-**Java関連エラー**
+#### 2. **Java Environment Error**
 ```bash
-# Dev Container内でJAVA_HOME確認
+# Check Java environment
+java -version
 echo $JAVA_HOME
-# 期待値: /usr/lib/jvm/java-17-openjdk
+
+# Expected values: 
+# OpenJDK 17
+# JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 ```
 
-**uv関連エラー**
+#### 3. **Browser Access Issues**
 ```bash
-# uvの再インストール
-curl -LsSf https://astral.sh/uv/install.sh | sh
-source ~/.bashrc
+# Check VS Code PORTS tab
+# Click 🌐 icon for localhost:8081
+# Or right-click → "Open in Browser"
 ```
 
-**Dev Containerビルドエラー**
+#### 4. **bash history Error**
 ```bash
-# キャッシュクリアして再ビルド
-make dev-rebuild
+# Solution:
+mkdir -p /home/vscode/commandhistory
+touch /home/vscode/commandhistory/.bash_history
+
+# Or rebuild Dev Container completely
+# Command Palette → "Dev Containers: Rebuild Container"
 ```
 
-## 🚀 本番デプロイ
+### Environment Check Commands
 
-### マルチプラットフォームビルド
 ```bash
-# マルチプラットフォーム対応
-make build-multi-platform
+# Overall check
+make check
 
-# プラットフォーム指定ビルド
-docker buildx build --platform linux/arm64 -t shift-scheduler:arm64 .
-docker buildx build --platform linux/amd64 -t shift-scheduler:amd64 .
+# Individual checks
+python --version    # Python 3.11.x
+uv --version       # uv 0.7.x
+java -version      # OpenJDK 17
+echo $JAVA_HOME    # Java environment variable
+
+# Application verification
+curl http://localhost:8081/health
+curl http://localhost:8081/api/shifts/demo
 ```
 
-### Docker Compose本番起動
+### Complete Reset Procedure
+
+Last resort if issues persist:
+
 ```bash
-# 本番環境用
-docker-compose -f docker-compose.yml up -d
+# 1. Clean up Docker environment
+docker system prune -a
+
+# 2. Rebuild Dev Container completely
+# VS Code Command Palette:
+# "Dev Containers: Rebuild Container"
+
+# 3. Manual verification
+cd /workspace
+make setup
+make run
 ```
 
-## 🔄 開発ワークフロー
+## 💡 Best Practices
 
-1. **VS CodeでDev Container起動**
-2. **コード編集** (自動フォーマット・リント)
-3. **ブレークポイントでデバッグ**
-4. **REST Clientでテスト**
-5. **Git commit** (自動テスト実行)
+### **Code Quality**
+- Auto-format on save (Black, isort)
+- Linting (flake8, mypy)
+- Type hints recommended
 
-## 📚 参考資料
+### **Testing**
+```bash
+# Unit tests
+make test
+
+# Check coverage
+uv run pytest --cov=.
+```
+
+### **Performance**
+- Docker Desktop recommended settings: CPU 4+ cores, Memory 8GB+
+- File sync optimized
+
+## 📚 References
 
 - [Timefold Solver Documentation](https://docs.timefold.ai/)
-- [uv Package Manager](https://github.com/astral-sh/uv)
-- [VS Code Dev Containers](https://code.visualstudio.com/docs/devcontainers/containers)
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [uv Documentation](https://github.com/astral-sh/uv)
+- [Dev Containers Documentation](https://code.visualstudio.com/docs/devcontainers/containers)
 
-## 🤝 コントリビューション
+## ✅ Success Checklist
 
-1. Dev Containerで開発環境起動
-2. フィーチャーブランチ作成: `git checkout -b feature/new-feature`
-3. 変更とテスト: `make test && make lint`
-4. コミット: `git commit -am 'Add new feature'`
-5. プッシュ: `git push origin feature/new-feature`
-6. Pull Request作成
+- [ ] Dev Container started successfully
+- [ ] Server started with `make run`
+- [ ] Browser access to http://localhost:8081
+- [ ] `/health` endpoint verified
+- [ ] `/api/shifts/demo` data retrieved
+- [ ] Debug and test execution in VS Code working
+
+## 🤝 Support
+
+If issues persist, please provide:
+- OS version
+- Docker Desktop version
+- VS Code version
+- Specific error messages
+- `make check` results
 
 ---
 
-# API動作テスト
-test-api:
-	@echo "🌐 API動作テスト:"
-	@echo "ヘルスチェック:"
-	curl -s http://localhost:8081/health | jq . || curl -s http://localhost:8081/health
-	@echo "\nデモデータ取得:"
-	curl -s http://localhost:8081/api/shifts/demo | jq '.statistics' || echo "サーバーが起動していません"
-
-# デバッグモード
-debug:
-	@echo "🐛 デバッグモードで起動..."
-	uv run uvicorn main:app --host 0.0.0.0 --port 8081 --reload --log-level debug
+**🎉 Happy Coding with Shift Scheduler!**

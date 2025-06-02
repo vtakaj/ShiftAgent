@@ -16,16 +16,16 @@ from models import Employee, Shift, ShiftSchedule
 def shift_scheduling_constraints(
     constraint_factory: ConstraintFactory,
 ) -> list[Constraint]:
-    """シフトスケジューリングの制約を定義"""
+    """Define shift scheduling constraints"""
     return [
-        # ハード制約（絶対に守る必要がある）
+        # Hard constraints (must be satisfied)
         required_skill_constraint(constraint_factory),
         no_overlapping_shifts_constraint(constraint_factory),
         weekly_maximum_hours_constraint(constraint_factory),
-        # ミディアム制約（重要だが、ある程度の違反は許容）
+        # Medium constraints (important but some violations allowed)
         minimum_rest_time_constraint(constraint_factory),
         weekly_minimum_hours_constraint(constraint_factory),
-        # ソフト制約（最適化目標）
+        # Soft constraints (optimization goals)
         minimize_unassigned_shifts_constraint(constraint_factory),
         fair_workload_distribution_constraint(constraint_factory),
         weekly_hours_target_constraint(constraint_factory),
@@ -33,7 +33,7 @@ def shift_scheduling_constraints(
 
 
 def required_skill_constraint(constraint_factory: ConstraintFactory) -> Constraint:
-    """必要なスキルを持つ従業員のみがシフトに割り当てられる"""
+    """Only employees with required skills can be assigned to shifts"""
     return (
         constraint_factory.for_each(Shift)
         .filter(
@@ -50,7 +50,7 @@ def required_skill_constraint(constraint_factory: ConstraintFactory) -> Constrai
 def no_overlapping_shifts_constraint(
     constraint_factory: ConstraintFactory,
 ) -> Constraint:
-    """従業員は同時に複数のシフトに割り当てられない"""
+    """Employees cannot be assigned to multiple shifts at the same time"""
     return (
         constraint_factory.for_each(Shift)
         .join(
@@ -69,7 +69,7 @@ def no_overlapping_shifts_constraint(
 
 
 def minimum_rest_time_constraint(constraint_factory: ConstraintFactory):
-    """最低休憩時間の確保（8時間）"""
+    """Ensure minimum rest time (8 hours) between shifts"""
     return (
         constraint_factory.for_each(Shift)
         .join(
@@ -92,7 +92,7 @@ def minimum_rest_time_constraint(constraint_factory: ConstraintFactory):
 
 
 def minimize_unassigned_shifts_constraint(constraint_factory: ConstraintFactory):
-    """未割り当てシフトを最小化（優先度を考慮）"""
+    """Minimize unassigned shifts (considering priority)"""
     return (
         constraint_factory.for_each(Shift)
         .filter(lambda shift: shift.employee is None)
@@ -102,7 +102,7 @@ def minimize_unassigned_shifts_constraint(constraint_factory: ConstraintFactory)
 
 
 def fair_workload_distribution_constraint(constraint_factory: ConstraintFactory):
-    """公平な労働時間配分（8時間からの差を最小化）"""
+    """Fair workload distribution (minimize deviation from 8 hours)"""
     return (
         constraint_factory.for_each(Shift)
         .filter(lambda shift: shift.employee is not None)
@@ -113,13 +113,13 @@ def fair_workload_distribution_constraint(constraint_factory: ConstraintFactory)
         .penalize(
             HardMediumSoftScore.ONE_SOFT,
             lambda employee, total_minutes: abs(total_minutes - 480),
-        )  # 8時間 = 480分
+        )  # 8 hours = 480 minutes
         .as_constraint("Fair workload distribution")
     )
 
 
 def weekly_maximum_hours_constraint(constraint_factory: ConstraintFactory):
-    """週最大勤務時間制約（法定40時間）- ハード制約"""
+    """Weekly maximum hours constraint (legal 40 hours) - Hard constraint"""
     return (
         constraint_factory.for_each(Shift)
         .filter(lambda shift: shift.employee is not None)
@@ -130,7 +130,7 @@ def weekly_maximum_hours_constraint(constraint_factory: ConstraintFactory):
         )
         .filter(
             lambda employee, week, total_minutes: total_minutes > 45 * 60
-        )  # 45時間超過で違反
+        )  # Violation if over 45 hours
         .penalize(
             HardMediumSoftScore.ONE_HARD,
             lambda employee, week, total_minutes: (total_minutes - 45 * 60) // 60,
@@ -140,7 +140,7 @@ def weekly_maximum_hours_constraint(constraint_factory: ConstraintFactory):
 
 
 def weekly_minimum_hours_constraint(constraint_factory: ConstraintFactory):
-    """週最小勤務時間制約（フルタイム従業員）"""
+    """Weekly minimum hours constraint (for full-time employees)"""
     return (
         constraint_factory.for_each(Shift)
         .filter(
@@ -154,7 +154,7 @@ def weekly_minimum_hours_constraint(constraint_factory: ConstraintFactory):
         )
         .filter(
             lambda employee, week, total_minutes: total_minutes < 32 * 60
-        )  # 32時間未満
+        )  # Less than 32 hours
         .penalize(
             HardMediumSoftScore.ONE_MEDIUM,
             lambda employee, week, total_minutes: (32 * 60 - total_minutes) // 60,
@@ -164,7 +164,7 @@ def weekly_minimum_hours_constraint(constraint_factory: ConstraintFactory):
 
 
 def weekly_hours_target_constraint(constraint_factory: ConstraintFactory):
-    """週勤務時間目標制約（ソフト制約）"""
+    """Weekly hours target constraint (soft constraint)"""
     return (
         constraint_factory.for_each(Shift)
         .filter(lambda shift: shift.employee is not None)
@@ -184,23 +184,23 @@ def weekly_hours_target_constraint(constraint_factory: ConstraintFactory):
     )
 
 
-# ヘルパー関数
+# Helper functions
 def get_week_key(date: datetime) -> str:
-    """日付から週キー（年-週番号）を生成"""
+    """Generate week key (year-week number) from date"""
     year, week_num, _ = date.isocalendar()
     return f"{year}-W{week_num:02d}"
 
 
 def is_full_time_employee(employee: Employee) -> bool:
-    """フルタイム従業員かどうかの判定"""
-    return "フルタイム" in employee.skills or "正社員" in employee.skills
+    """Check if employee is full-time"""
+    return "Full-time" in employee.skills or "Regular" in employee.skills
 
 
 def get_target_hours(employee: Employee) -> int:
-    """従業員の目標勤務時間を取得"""
-    if "パートタイム" in employee.skills:
-        return 20  # パートタイム: 20時間/週
-    elif "フルタイム" in employee.skills or "正社員" in employee.skills:
-        return 40  # フルタイム: 40時間/週
+    """Get target working hours for employee"""
+    if "Part-time" in employee.skills:
+        return 20  # Part-time: 20 hours/week
+    elif "Full-time" in employee.skills or "Regular" in employee.skills:
+        return 40  # Full-time: 40 hours/week
     else:
-        return 32  # デフォルト: 32時間/週
+        return 32  # Default: 32 hours/week

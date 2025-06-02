@@ -10,7 +10,7 @@ __author__ = "Shift Scheduler Team"
 
 from .constraints import shift_scheduling_constraints
 
-# パッケージレベルのインポート
+# Package level imports
 from .models import Employee, Shift, ShiftSchedule
 
 __all__ = [

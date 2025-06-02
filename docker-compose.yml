@@ -23,7 +23,7 @@ services:
     networks:
       - shift-network
 
-  # オプション: 将来的にデータベースを追加する場合
+  # (Optional)
   # postgres:
   #   image: postgres:15
   #   environment:

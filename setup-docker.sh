@@ -1,35 +1,35 @@
-# Docker Buildx設定
+# Docker Buildx Configuration
 #!/bin/bash
 
 set -e
 
-echo "🐳 Docker環境セットアップ"
+echo "🐳 Setting up Docker environment"
 
-# Docker Buildxの確認とセットアップ
+# Docker Buildx setup
 setup_buildx() {
-    echo "🔧 Docker Buildxをセットアップ中..."
+    echo "🔧 Setting up Docker Buildx..."
     
-    # Buildxが利用可能か確認
+    # Check if Buildx is available
     if ! docker buildx version > /dev/null 2>&1; then
-        echo "❌ Docker Buildxが利用できません。Docker Desktopを最新版に更新してください。"
+        echo "❌ Docker Buildx is not available. Please update Docker Desktop to the latest version."
         exit 1
     fi
     
-    # マルチプラットフォームビルダーの作成
+    # Create multi-platform builder
     if ! docker buildx inspect multiplatform > /dev/null 2>&1; then
-        echo "📱 マルチプラットフォームビルダーを作成中..."
+        echo "📱 Creating multi-platform builder..."
         docker buildx create --name multiplatform --platform linux/amd64,linux/arm64
     fi
     
-    # ビルダーの使用開始
+    # Start using the builder
     docker buildx use multiplatform
     
-    echo "✅ Docker Buildxセットアップ完了"
+    echo "✅ Docker Buildx setup complete"
 }
 
-# プラットフォーム検出
+# Platform detection
 detect_platform() {
-    echo "🔍 プラットフォームを検出中..."
+    echo "🔍 Detecting platform..."
     
     ARCH=$(uname -m)
     case $ARCH in
@@ -50,9 +50,9 @@ detect_platform() {
     echo "Platform: $PLATFORM"
 }
 
-# Dev Containerのビルド
+# Build Dev Container
 build_dev_container() {
-    echo "🐳 Dev Containerをビルド中..."
+    echo "🐳 Building Dev Container..."
     
     cd .devcontainer
     docker buildx build \
@@ -63,12 +63,12 @@ build_dev_container() {
         ..
     cd ..
     
-    echo "✅ Dev Containerビルド完了"
+    echo "✅ Dev Container build complete"
 }
 
-# 本番用コンテナのビルド
+# Build Production Container
 build_production_container() {
-    echo "🚀 本番用コンテナをビルド中..."
+    echo "🚀 Building Production Container..."
     
     docker buildx build \
         --platform linux/amd64,linux/arm64 \
@@ -78,33 +78,33 @@ build_production_container() {
         --load \
         .
     
-    echo "✅ 本番用コンテナビルド完了"
+    echo "✅ Production Container build complete"
 }
 
-# Docker環境の確認
+# Check Docker Environment
 check_docker_environment() {
-    echo "🔍 Docker環境を確認中..."
+    echo "🔍 Checking Docker environment..."
     
-    # Docker Desktopの起動確認
+    # Check if Docker Desktop is running
     if ! docker info > /dev/null 2>&1; then
-        echo "❌ Dockerが起動していません。Docker Desktopを起動してください。"
+        echo "❌ Docker is not running. Please start Docker Desktop."
         exit 1
     fi
     
-    # Docker Composeの確認
+    # Check Docker Compose
     if ! docker compose version > /dev/null 2>&1; then
-        echo "❌ Docker Composeが利用できません。"
+        echo "❌ Docker Compose is not available."
         exit 1
     fi
     
     echo "Docker version: $(docker --version)"
     echo "Docker Compose version: $(docker compose version)"
-    echo "✅ Docker環境確認完了"
+    echo "✅ Docker environment check complete"
 }
 
-# メイン処理
+# Main process
 main() {
-    echo "🎯 Shift Scheduler Docker環境セットアップ開始"
+    echo "🎯 Starting Shift Scheduler Docker Environment Setup"
     echo "=================================================="
     
     detect_platform
@@ -124,19 +124,19 @@ main() {
             ;;
         *)
             echo "Usage: $0 [dev|prod|all]"
-            echo "  dev  - Dev Containerのみビルド"
-            echo "  prod - 本番用コンテナのみビルド"
-            echo "  all  - 両方ビルド（デフォルト）"
+            echo "  dev  - Build Dev Container only"
+            echo "  prod - Build Production Container only"
+            echo "  all  - Build both (default)"
             exit 1
             ;;
     esac
     
     echo ""
-    echo "🎉 セットアップ完了！"
-    echo "次のコマンドでDev Containerを起動できます："
+    echo "🎉 Setup complete!"
+    echo "You can start the Dev Container with:"
     echo "  make dev-up"
-    echo "  code . (その後 'Dev Containers: Reopen in Container')"
+    echo "  code . (then 'Dev Containers: Reopen in Container')"
 }
 
-# スクリプト実行
+# Execute script
 main "$@"

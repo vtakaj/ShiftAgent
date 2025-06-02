@@ -1,67 +1,67 @@
-# 本番用Dockerfile（マルチプラットフォーム対応）
+# Production Dockerfile (Multi-platform support)
 FROM --platform=$BUILDPLATFORM python:3.11-slim as builder
 
 # Build arguments
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
-# uvをインストール
+# Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
-# 作業ディレクトリ設定
+# Set working directory
 WORKDIR /app
 
-# プロジェクトファイルをコピー
+# Copy project files
 COPY pyproject.toml uv.lock ./
 
-# 依存関係をインストール（本番用のみ）
+# Install dependencies (production only)
 RUN uv sync --frozen --no-dev
 
-# ===== 実行ステージ =====
+# ===== Runtime stage =====
 FROM --platform=$TARGETPLATFORM python:3.11-slim
 
 # Build arguments
 ARG TARGETPLATFORM
 
-# システムパッケージの更新とJavaのインストール（プラットフォーム対応）
+# Update system packages and install Java (platform-specific)
 RUN apt-get update && apt-get install -y \
     openjdk-17-jre-headless \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# JAVA_HOME設定（プラットフォーム別）
+# Set JAVA_HOME (platform-specific)
 RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-        echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64' >> /etc/environment; \
+    echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64' >> /etc/environment; \
     else \
-        echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >> /etc/environment; \
+    echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >> /etc/environment; \
     fi
 
-# 作業ディレクトリ設定
+# Set working directory
 WORKDIR /app
 
-# ビルドステージから仮想環境をコピー
+# Copy virtual environment from builder stage
 COPY --from=builder /app/.venv /app/.venv
 
-# PATH環境変数に仮想環境を追加
+# Add virtual environment to PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
-# アプリケーションコードをコピー
+# Copy application code
 COPY main.py models.py constraints.py ./
 
-# 非rootユーザーを作成
+# Create non-root user
 RUN useradd --create-home --shell /bin/bash app \
     && chown -R app:app /app
 USER app
 
-# プラットフォーム別のJAVA_HOME設定
+# Platform-specific JAVA_HOME setting
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
 
-# ヘルスチェック
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# ポート8000を公開
+# Expose port 8000
 EXPOSE 8000
 
-# アプリケーションの実行
+# Run application
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

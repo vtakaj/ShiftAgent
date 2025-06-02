@@ -1,71 +1,71 @@
 # Dev Container Makefile
 .PHONY: help setup install dev run test format lint clean
 
-# デフォルトターゲット
+# Default target
 help:
-	@echo "🚀 Shift Scheduler Dev Container コマンド:"
+	@echo "🚀 Shift Scheduler Dev Container Commands:"
 	@echo ""
-	@echo "  setup        - 開発環境セットアップ（初回実行推奨）"
-	@echo "  install      - 依存関係のみインストール"
-	@echo "  dev          - 開発用依存関係インストール"
-	@echo "  run          - FastAPIサーバー起動"
-	@echo "  test         - テスト実行"
-	@echo "  format       - コードフォーマット"
-	@echo "  lint         - コードチェック"
-	@echo "  clean        - キャッシュクリア"
+	@echo "  setup        - Set up development environment (recommended for first run)"
+	@echo "  install      - Install dependencies only"
+	@echo "  dev          - Install development dependencies"
+	@echo "  run          - Start FastAPI server"
+	@echo "  test         - Run tests"
+	@echo "  format       - Format code"
+	@echo "  lint         - Check code"
+	@echo "  clean        - Clear cache"
 
-# 開発環境セットアップ（エラー処理付き）
+# Development environment setup (with error handling)
 setup:
-	@echo "🔧 開発環境をセットアップ中..."
+	@echo "🔧 Setting up development environment..."
 	@rm -f uv.lock
-	@echo "📦 依存関係をインストール中..."
+	@echo "📦 Installing dependencies..."
 	uv sync --no-install-project
-	@echo "✅ セットアップ完了！"
+	@echo "✅ Setup complete!"
 
-# 依存関係のインストール
+# Install dependencies
 install:
-	@echo "📦 依存関係をインストール中..."
+	@echo "📦 Installing dependencies..."
 	uv sync --no-install-project
 
-# 開発用依存関係のインストール
+# Install development dependencies
 dev:
-	@echo "🛠 開発用依存関係をインストール中..."
+	@echo "🛠 Installing development dependencies..."
 	uv sync --all-extras
 
-# FastAPIサーバー起動
+# Start FastAPI server
 run:
-	@echo "🚀 FastAPIサーバーを起動中..."
-	@echo "サーバーURL: http://localhost:8081"
-	@echo "API仕様: http://localhost:8081/docs"
+	@echo "🚀 Starting FastAPI server..."
+	@echo "Server URL: http://localhost:8081"
+	@echo "API Documentation: http://localhost:8081/docs"
 	uv run uvicorn main:app --host 0.0.0.0 --port 8081 --reload
 
-# テスト実行
+# Run tests
 test:
-	@echo "🧪 テストを実行中..."
+	@echo "🧪 Running tests..."
 	uv run pytest -v
 
-# コードフォーマット
+# Format code
 format:
-	@echo "✨ コードをフォーマット中..."
+	@echo "✨ Formatting code..."
 	uv run black .
 	uv run isort .
 
-# コードチェック
+# Check code
 lint:
-	@echo "🔍 コードをチェック中..."
+	@echo "🔍 Checking code..."
 	uv run flake8 . || true
 	uv run mypy . || true
 
-# キャッシュクリア
+# Clear cache
 clean:
-	@echo "🧹 キャッシュをクリア中..."
+	@echo "🧹 Clearing cache..."
 	uv cache clean
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 
-# 環境確認
+# Check environment
 check:
-	@echo "🔍 環境を確認中..."
+	@echo "🔍 Checking environment..."
 	@echo "Python: $(shell python --version 2>&1 || echo 'Not found')"
 	@echo "uv: $(shell uv --version 2>&1 || echo 'Not found')"
 	@echo "Java: $(shell java -version 2>&1 | head -1 || echo 'Not found')"
@@ -73,31 +73,31 @@ check:
 	@echo "Current directory: $(shell pwd)"
 	@echo "Files: $(shell ls -la | head -5)"
 
-# API動作テスト
+# API test
 test-api:
-	@echo "🌐 API動作テスト:"
-	@echo "ヘルスチェック:"
+	@echo "🌐 API Test:"
+	@echo "Health Check:"
 	curl -s http://localhost:8081/health | jq . || curl -s http://localhost:8081/health
-	@echo "\nデモデータ取得:"
-	curl -s http://localhost:8081/api/shifts/demo | jq '.statistics' || echo "サーバーが起動していません"
+	@echo "\nGet Demo Data:"
+	curl -s http://localhost:8081/api/shifts/demo | jq '.statistics' || echo "Server not running"
 
-# トラブルシューティング
+# Troubleshooting
 troubleshoot:
-	@echo "🔧 トラブルシューティング情報:"
+	@echo "🔧 Troubleshooting Information:"
 	@$(MAKE) check
 	@echo ""
-	@echo "uv環境:"
-	uv show || echo "uv sync が必要かもしれません"
+	@echo "uv environment:"
+	uv show || echo "uv sync may be needed"
 	@echo ""
-	@echo "解決方法:"
-	@echo "1. make setup を実行"
-	@echo "2. エラーが続く場合は make clean && make setup"
-	@echo "3. それでも問題がある場合は Dev Container を Rebuild"
+	@echo "Solutions:"
+	@echo "1. Run make setup"
+	@echo "2. If error persists, run make clean && make setup"
+	@echo "3. If problem continues, Rebuild Dev Container"
 
-# 簡単な開発フロー
+# Simple development flow
 dev-start: setup run
 
-# デバッグモード
+# Debug mode
 debug:
-	@echo "🐛 デバッグモードで起動..."
+	@echo "🐛 Starting in debug mode..."
 	uv run uvicorn main:app --host 0.0.0.0 --port 8081 --reload --log-level debug

@@ -133,7 +133,7 @@ cython_debug/
 
 # uv
 .uv/
-# uv.lock は自動生成されるため除外
+# Exclude uv.lock as it is auto-generated
 uv.lock
 
 # Docker

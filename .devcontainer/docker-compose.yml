@@ -1,8 +1,8 @@
-# Docker Compose設定は使わず、単純なDockerfileビルドに変更
-# この問題を避けるため、devcontainer.jsonで直接Dockerfileを指定する方式に変更しました
+# Docker Compose configuration is not used, changed to simple Dockerfile build
+# To avoid this issue, we now specify the Dockerfile directly in devcontainer.json
 
-# 従来のdocker-compose.ymlは使用しませんが、
-# 本番環境用として残しておきます
+# The original docker-compose.yml is not used but
+# kept for production environment reference
 
 version: '3.8'
 
@@ -12,7 +12,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8081:8081"
     environment:
       - PYTHONUNBUFFERED=1
     volumes:
