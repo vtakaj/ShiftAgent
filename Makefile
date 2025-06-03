@@ -5,20 +5,25 @@
 help:
 	@echo "🚀 Shift Scheduler Dev Container Commands:"
 	@echo ""
-	@echo "  setup        - Set up development environment (recommended for first run)"
-	@echo "  install      - Install dependencies only"
-	@echo "  dev          - Install development dependencies"
-	@echo "  run          - Start FastAPI server"
+	@echo "  setup        - Complete setup (Python, Node.js, MCP) - run this first!"
+	@echo "  run          - Start FastAPI server only"
+	@echo "  run-mcp      - Start both API and MCP servers together"
 	@echo "  test         - Run tests"
 	@echo "  format       - Format code"
 	@echo "  lint         - Check code"
 	@echo "  clean        - Clear cache"
+	@echo ""
+	@echo "  Additional Commands:"
+	@echo "  install      - Install Python dependencies only"
+	@echo "  dev          - Install development dependencies"
+	@echo "  debug        - Run API in debug mode"
+	@echo "  test-api     - Test API endpoints"
 
 # Development environment setup (with error handling)
 setup:
 	@echo "🔧 Setting up development environment..."
 	@rm -f uv.lock
-	@echo "📦 Installing dependencies..."
+	@echo "📦 Installing Python dependencies (including FastMCP)..."
 	uv sync --no-install-project
 	@echo "✅ Setup complete!"
 
@@ -101,3 +106,18 @@ dev-start: setup run
 debug:
 	@echo "🐛 Starting in debug mode..."
 	uv run uvicorn main:app --host 0.0.0.0 --port 8081 --reload --log-level debug
+
+# Run with MCP server
+run-mcp:
+	@echo "🚀 Starting API and MCP Server..."
+	@./run-with-mcp.sh
+
+# Run MCP server only
+mcp:
+	@echo "🔧 Starting MCP server (make sure API is running)..."
+	@uv run python mcp_server.py
+
+# Test MCP server
+test-mcp:
+	@echo "🧪 Testing MCP server..."
+	@echo '{"jsonrpc":"2.0","method":"list_tools","id":1}' | uv run python mcp_server.py

@@ -10,20 +10,17 @@ This is a Shift Scheduler API built with FastAPI and Timefold Solver (AI optimiz
 
 ### Development Setup
 ```bash
-# Initial setup (clears uv.lock and installs dependencies)
+# Complete setup - installs all Python dependencies including FastMCP (run this first!)
 make setup
-
-# Install dependencies only
-make install
-
-# Install with dev dependencies
-make dev
 ```
 
 ### Running the Application
 ```bash
-# Start FastAPI server on port 8081
+# Start FastAPI server only
 make run
+
+# Start both API and MCP servers together
+make run-mcp
 
 # Start in debug mode with verbose logging
 make debug
@@ -117,3 +114,29 @@ uv run pytest test_models.py::test_name -v
 
 ### API Testing
 The `api-test.http` file contains REST Client requests for testing endpoints. Use with VS Code REST Client extension or similar tools.
+
+## MCP Server
+
+The project includes a Python-based MCP (Model Context Protocol) server using FastMCP that exposes the Shift Scheduler API as MCP tools.
+
+### MCP Server Setup
+The MCP server uses FastMCP and is automatically set up when you run `make setup`. To run both servers together:
+```bash
+make run-mcp
+```
+
+Or run the MCP server separately:
+```bash
+make mcp
+```
+
+### Available MCP Tools
+- `health_check`: Check API health
+- `get_demo_schedule`: Get demo shift schedule
+- `solve_schedule_sync`: Synchronous shift optimization
+- `solve_schedule_async`: Asynchronous shift optimization
+- `get_solve_status`: Check async job status
+- `analyze_weekly_hours`: Analyze weekly work hours
+- `test_weekly_constraints`: Test weekly constraints with demo data
+
+See `MCP_SERVER.md` for detailed usage and Claude Desktop integration instructions.
