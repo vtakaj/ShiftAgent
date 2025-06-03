@@ -70,6 +70,8 @@ shift-scheduler/
 ├── models.py               # Timefold Solver data models
 ├── constraints.py          # Shift optimization constraints
 ├── api-test.http           # REST Client API tests
+├── mcp_server.py           # MCP server for AI assistants
+├── MCP_SERVER.md           # MCP server documentation
 ├── Dockerfile              # Production Dockerfile (multi-platform)
 ├── docker-compose.yml      # Production Docker Compose
 ├── pyproject.toml          # uv configuration
@@ -84,6 +86,11 @@ shift-scheduler/
 - **Time Constraint Management**: Shift overlap prevention, minimum break time
 - **Weekly Work Hours Constraints**: 40-hour limit, minimum work hours, target time adjustment
 - **Fairness Optimization**: Equal distribution of work hours
+
+### 🤖 **MCP Server Integration**
+- **AI Assistant Support**: Built-in MCP (Model Context Protocol) server for Claude Desktop and other AI assistants
+- **Python-based Implementation**: Uses FastMCP for seamless integration
+- **Full API Access**: All shift scheduling features available through MCP tools
 
 ## 📊 API Specification
 
@@ -136,6 +143,53 @@ GET  /api/shifts/test-weekly          # Weekly work hours constraint test (demo)
 | **SOFT** | Work Hours Fair Distribution | Minimize work hours gap between employees |
 | **SOFT** | Weekly Target Hours | Approximate to personal target hours |
 
+## 🤖 MCP Server for AI Assistants
+
+This project includes a built-in MCP (Model Context Protocol) server that allows AI assistants like Claude Desktop to interact with the Shift Scheduler API.
+
+### Quick Start with MCP
+
+```bash
+# Run both API and MCP servers together
+make run-mcp
+
+# Or run them separately:
+make run      # Terminal 1: API server
+make mcp      # Terminal 2: MCP server
+```
+
+### Available MCP Tools
+
+- `health_check` - Check API health status
+- `get_demo_schedule` - Retrieve demo shift schedule with sample data
+- `solve_schedule_sync` - Solve shift scheduling synchronously
+- `solve_schedule_async` - Start async optimization (returns job ID)
+- `get_solve_status` - Check async job status
+- `analyze_weekly_hours` - Analyze weekly work hours for schedules
+- `test_weekly_constraints` - Test weekly hour constraints with demo data
+
+### Claude Desktop Configuration
+
+Add to your Claude Desktop config file:
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "shift-scheduler": {
+      "command": "uv",
+      "args": ["run", "--project", "/path/to/shift-scheduler", "python", "/path/to/shift-scheduler/mcp_server.py"],
+      "env": {
+        "SHIFT_SCHEDULER_API_URL": "http://localhost:8081"
+      }
+    }
+  }
+}
+```
+
+See [MCP_SERVER.md](MCP_SERVER.md) for detailed setup and usage instructions.
+
 ## 🧪 Testing & Debugging
 
 ### VS Code Integrated Testing
@@ -183,14 +237,23 @@ echo $JAVA_HOME
 # JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 ```
 
-#### 3. **Browser Access Issues**
+#### 3. **Python Version Error (Timefold)**
+```bash
+# Issue: Timefold doesn't support Python 3.13+
+# Solution: Use Python 3.11 or 3.12
+rm -rf .venv
+uv venv --python 3.11
+make setup
+```
+
+#### 4. **Browser Access Issues**
 ```bash
 # Check VS Code PORTS tab
 # Click 🌐 icon for localhost:8081
 # Or right-click → "Open in Browser"
 ```
 
-#### 4. **bash history Error**
+#### 5. **bash history Error**
 ```bash
 # Solution:
 mkdir -p /home/vscode/commandhistory
