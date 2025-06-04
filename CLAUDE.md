@@ -58,22 +58,56 @@ make clean
 
 ## Architecture
 
+### Folder Structure
+
+```
+src/natural_shift_planner/
+├── api/              # FastAPI application layer
+│   ├── app.py        # FastAPI instance and configuration
+│   ├── routes.py     # API endpoints
+│   ├── schemas.py    # Pydantic request/response models
+│   ├── solver.py     # Timefold solver configuration
+│   ├── jobs.py       # Async job management
+│   ├── converters.py # Domain <-> API model converters
+│   └── analysis.py   # Weekly hours analysis logic
+├── core/             # Domain logic
+│   ├── models/       # Domain models with Timefold annotations
+│   │   ├── employee.py   # Employee entity
+│   │   ├── shift.py      # Shift planning entity
+│   │   └── schedule.py   # ShiftSchedule planning solution
+│   └── constraints/  # Optimization constraints
+│       └── shift_constraints.py
+├── mcp/              # MCP server for AI assistants
+│   ├── server.py     # FastMCP server setup
+│   └── tools.py      # MCP tool functions
+└── utils/            # Utilities
+    └── demo_data.py  # Demo data generation
+```
+
 ### Core Components
 
-1. **main.py**: FastAPI application entry point
-   - Defines API endpoints for shift optimization
-   - Manages async job processing
-   - Configures Timefold Solver
+1. **main.py**: Entry point that imports and runs the FastAPI app
+   - Adds src directory to Python path
+   - Starts the API server on port 8081
 
-2. **models.py**: Domain models using Timefold annotations
+2. **api/routes.py**: API endpoints for shift optimization
+   - Defines all REST endpoints
+   - Manages async job processing
+   - Handles request/response conversion
+
+3. **core/models/**: Domain models using Timefold annotations
    - `Employee`: Has skills, assigned to shifts
    - `Shift`: Planning entity with time, location, required skills
    - `ShiftSchedule`: Planning solution containing employees and shifts
 
-3. **constraints.py**: Optimization rules
+4. **core/constraints/shift_constraints.py**: Optimization rules
    - Hard constraints: skill matching, no overlapping shifts, max weekly hours
    - Medium constraints: minimum rest time, minimum weekly hours
    - Soft constraints: minimize unassigned shifts, fair workload distribution
+
+5. **mcp_server.py**: Entry point for MCP server
+   - Exposes shift scheduler functionality to AI assistants
+   - Uses FastMCP for protocol implementation
 
 ### Constraint System
 

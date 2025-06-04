@@ -1,21 +1,9 @@
 """
-Shift Scheduler - Employee shift scheduling using Timefold Solver
+Natural Shift Planner - Employee shift scheduling using Timefold Solver
 
 A FastAPI-based application for optimizing employee shift schedules
-with constraint satisfaction using Timefold Solver.
+with constraint satisfaction using Timefold Solver and FastMCP integration.
 """
 
 __version__ = "1.0.0"
-__author__ = "Shift Scheduler Team"
-
-from .constraints import shift_scheduling_constraints
-
-# Package level imports
-from .models import Employee, Shift, ShiftSchedule
-
-__all__ = [
-    "Employee",
-    "Shift",
-    "ShiftSchedule",
-    "shift_scheduling_constraints",
-]
+__author__ = "Natural Shift Planner Team"

@@ -1,6 +1,6 @@
-# Shift Scheduler API
+# Natural Shift Planner
 
-A Shift Scheduler API using Timefold Solver.
+A Shift Scheduler API using Timefold Solver with FastMCP integration for AI assistant support.
 
 ## 🚀 Quick Start
 
@@ -66,12 +66,36 @@ shift-scheduler/
 │   ├── settings.json       # Editor settings
 │   ├── launch.json         # Debug settings
 │   └── extensions.json     # Recommended extensions
-├── main.py                 # FastAPI main application
-├── models.py               # Timefold Solver data models
-├── constraints.py          # Shift optimization constraints
+├── src/                    # Source code directory
+│   └── natural_shift_planner/
+│       ├── api/            # FastAPI application
+│       │   ├── app.py      # FastAPI instance
+│       │   ├── routes.py   # API endpoints
+│       │   ├── schemas.py  # Pydantic models
+│       │   ├── solver.py   # Timefold solver config
+│       │   ├── jobs.py     # Async job management
+│       │   ├── converters.py # Schema converters
+│       │   └── analysis.py # Weekly hours analysis
+│       ├── core/           # Domain logic
+│       │   ├── models/     # Domain models
+│       │   │   ├── employee.py
+│       │   │   ├── shift.py
+│       │   │   └── schedule.py
+│       │   └── constraints/# Optimization constraints
+│       │       └── shift_constraints.py
+│       ├── mcp/            # MCP server implementation
+│       │   ├── server.py   # FastMCP server
+│       │   └── tools.py    # MCP tool functions
+│       └── utils/          # Utilities
+│           └── demo_data.py
+├── tests/                  # Test files
+│   ├── test_models.py
+│   └── test_mcp.py
+├── main.py                 # API entry point
+├── mcp_server.py           # MCP server entry point
 ├── api-test.http           # REST Client API tests
-├── mcp_server.py           # MCP server for AI assistants
 ├── MCP_SERVER.md           # MCP server documentation
+├── CLAUDE.md               # Claude Code guidance
 ├── Dockerfile              # Production Dockerfile (multi-platform)
 ├── docker-compose.yml      # Production Docker Compose
 ├── pyproject.toml          # uv configuration
