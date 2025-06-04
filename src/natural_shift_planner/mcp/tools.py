@@ -49,6 +49,8 @@ async def call_api(
             response = await client.get(url)
         elif method == "POST":
             response = await client.post(url, json=data)
+        elif method == "PATCH":
+            response = await client.patch(url, json=data)
         else:
             raise ValueError(f"Unsupported HTTP method: {method}")
         
@@ -170,3 +172,186 @@ async def analyze_weekly_hours(
 async def test_weekly_constraints(ctx: Context) -> Dict[str, Any]:
     """Test weekly constraints with demo data"""
     return await call_api("GET", "/api/shifts/test-weekly")
+
+
+# Partial modification tools
+async def modify_shift_assignment(
+    ctx: Context,
+    shift_id: str,
+    employee_id: Optional[str] = None,
+    check_constraints: bool = True,
+    dry_run: bool = False
+) -> Dict[str, Any]:
+    """
+    Modify an individual shift assignment
+    
+    Args:
+        shift_id: ID of the shift to modify
+        employee_id: ID of employee to assign (null to unassign)
+        check_constraints: Whether to check constraints before applying
+        dry_run: Simulate change without applying
+    
+    Returns:
+        Modification result with warnings and constraint violations
+    """
+    request_data = {
+        "employee_id": employee_id,
+        "check_constraints": check_constraints,
+        "dry_run": dry_run
+    }
+    
+    return await call_api("PATCH", f"/api/shifts/{shift_id}", request_data)
+
+
+async def lock_shifts(
+    ctx: Context,
+    shift_ids: List[str],
+    action: str = "lock",
+    reason: Optional[str] = None,
+    locked_by: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Lock or unlock multiple shifts to prevent modifications
+    
+    Args:
+        shift_ids: List of shift IDs to lock/unlock
+        action: "lock" or "unlock"
+        reason: Reason for locking (optional)
+        locked_by: User who is locking (optional)
+    
+    Returns:
+        Lock operation result with success count and failures
+    """
+    request_data = {
+        "shift_ids": shift_ids,
+        "action": action,
+        "reason": reason,
+        "locked_by": locked_by
+    }
+    
+    return await call_api("POST", "/api/shifts/lock", request_data)
+
+
+async def analyze_change_impact(
+    ctx: Context,
+    shift_id: str,
+    new_employee_id: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Analyze the impact of changing a shift assignment
+    
+    Args:
+        shift_id: ID of the shift to analyze
+        new_employee_id: ID of new employee to assign (optional)
+    
+    Returns:
+        Impact analysis including constraint violations and weekly hours impact
+    """
+    params = {}
+    if new_employee_id:
+        params["new_employee"] = new_employee_id
+    
+    url = f"/api/shifts/change-impact/{shift_id}"
+    if params:
+        param_str = "&".join([f"{k}={v}" for k, v in params.items()])
+        url += f"?{param_str}"
+    
+    return await call_api("GET", url)
+
+
+async def partial_optimize_schedule(
+    ctx: Context,
+    base_schedule_id: str,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    employees: Optional[List[str]] = None,
+    locations: Optional[List[str]] = None,
+    preserve_locked: bool = True,
+    minimize_changes: bool = False
+) -> Dict[str, Any]:
+    """
+    Optimize only a portion of an existing schedule
+    
+    Args:
+        base_schedule_id: ID of the existing schedule to modify
+        start_date: Start date for optimization scope (ISO format)
+        end_date: End date for optimization scope (ISO format)
+        employees: List of employee IDs to include in scope
+        locations: List of locations to include in scope
+        preserve_locked: Keep locked shifts unchanged
+        minimize_changes: Try to minimize changes from current state
+    
+    Returns:
+        Partial optimization job ID and scope summary
+    """
+    optimization_scope = {}
+    
+    if start_date and end_date:
+        optimization_scope["date_range"] = {
+            "start_date": start_date,
+            "end_date": end_date
+        }
+    
+    if employees:
+        optimization_scope["employees"] = employees
+    
+    if locations:
+        optimization_scope["locations"] = locations
+    
+    request_data = {
+        "base_schedule_id": base_schedule_id,
+        "optimization_scope": optimization_scope,
+        "preserve_locked": preserve_locked,
+        "minimize_changes": minimize_changes
+    }
+    
+    return await call_api("POST", "/api/shifts/partial-solve", request_data)
+
+
+async def get_schedule_shifts(
+    ctx: Context,
+    job_id: str
+) -> Dict[str, Any]:
+    """
+    Get all shifts from a completed schedule for inspection
+    
+    Args:
+        job_id: ID of the completed optimization job
+    
+    Returns:
+        Schedule data with detailed shift information
+    """
+    return await call_api("GET", f"/api/shifts/solve/{job_id}")
+
+
+async def quick_fix_schedule(
+    ctx: Context,
+    base_schedule_id: str,
+    issues: List[str],
+    date_range_days: int = 7
+) -> Dict[str, Any]:
+    """
+    Quick fix common scheduling issues using partial optimization
+    
+    Args:
+        base_schedule_id: ID of the existing schedule
+        issues: List of issues to fix ("overtime", "unassigned", "skills")
+        date_range_days: Number of days to optimize (from today)
+    
+    Returns:
+        Optimization result focusing on fixing specified issues
+    """
+    from datetime import datetime, timedelta
+    
+    today = datetime.now().date()
+    end_date = today + timedelta(days=date_range_days)
+    
+    # Use partial optimization with focused scope
+    return await partial_optimize_schedule(
+        ctx,
+        base_schedule_id=base_schedule_id,
+        start_date=today.isoformat(),
+        end_date=end_date.isoformat(),
+        preserve_locked=True,
+        minimize_changes=True
+    )

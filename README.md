@@ -111,14 +111,21 @@ shift-scheduler/
 - **Weekly Work Hours Constraints**: 40-hour limit, minimum work hours, target time adjustment
 - **Fairness Optimization**: Equal distribution of work hours
 
+### 🔧 **Partial Modifications** (NEW!)
+- **Individual Shift Changes**: Modify single shift assignments with constraint validation
+- **Shift Locking**: Lock confirmed shifts to prevent unwanted modifications
+- **Impact Analysis**: Preview weekly hours and constraint effects before applying changes
+- **Partial Optimization**: Re-optimize only specific date ranges, employees, or locations
+- **Quick Fixes**: Rapidly address common scheduling issues in focused scopes
+
 ### 🤖 **MCP Server Integration**
 - **AI Assistant Support**: Built-in MCP (Model Context Protocol) server for Claude Desktop and other AI assistants
 - **Python-based Implementation**: Uses FastMCP for seamless integration
-- **Full API Access**: All shift scheduling features available through MCP tools
+- **Full API Access**: All shift scheduling and partial modification features available through MCP tools
 
 ## 📊 API Specification
 
-### Basic Endpoints
+### Core Endpoints
 
 ```http
 GET  /health                          # Health check
@@ -129,6 +136,15 @@ GET  /api/shifts/solve/{job_id}       # Get optimization results
 POST /api/shifts/analyze-weekly       # Weekly work hours analysis (immediate)
 GET  /api/shifts/weekly-analysis/{job_id} # Weekly work hours analysis (after solve)
 GET  /api/shifts/test-weekly          # Weekly work hours constraint test (demo)
+```
+
+### Partial Modification Endpoints (NEW!)
+
+```http
+PATCH /api/shifts/{shift_id}                 # Modify individual shift assignment
+POST  /api/shifts/lock                       # Lock/unlock multiple shifts
+GET   /api/shifts/change-impact/{shift_id}   # Analyze change impact
+POST  /api/shifts/partial-solve              # Partial schedule optimization
 ```
 
 ### Request Example
@@ -184,6 +200,7 @@ make mcp      # Terminal 2: MCP server
 
 ### Available MCP Tools
 
+#### Core Operations
 - `health_check` - Check API health status
 - `get_demo_schedule` - Retrieve demo shift schedule with sample data
 - `solve_schedule_sync` - Solve shift scheduling synchronously
@@ -191,6 +208,14 @@ make mcp      # Terminal 2: MCP server
 - `get_solve_status` - Check async job status
 - `analyze_weekly_hours` - Analyze weekly work hours for schedules
 - `test_weekly_constraints` - Test weekly hour constraints with demo data
+
+#### Partial Modifications (NEW!)
+- `modify_shift_assignment` - Change individual shift assignments safely
+- `lock_shifts` - Lock/unlock shifts to prevent modifications
+- `analyze_change_impact` - Preview effects of changes before applying
+- `partial_optimize_schedule` - Re-optimize specific date ranges or employees
+- `get_schedule_shifts` - Inspect completed schedules in detail
+- `quick_fix_schedule` - Rapidly fix common issues in focused scopes
 
 ### Claude Desktop Configuration
 
