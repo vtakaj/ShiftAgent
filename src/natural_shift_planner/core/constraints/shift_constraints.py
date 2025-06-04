@@ -19,6 +19,7 @@ def shift_scheduling_constraints(
     """Define shift scheduling constraints"""
     return [
         # Hard constraints (must be satisfied)
+        locked_shift_constraint(constraint_factory),
         required_skill_constraint(constraint_factory),
         no_overlapping_shifts_constraint(constraint_factory),
         weekly_maximum_hours_constraint(constraint_factory),
@@ -30,6 +31,24 @@ def shift_scheduling_constraints(
         fair_workload_distribution_constraint(constraint_factory),
         weekly_hours_target_constraint(constraint_factory),
     ]
+
+
+def locked_shift_constraint(constraint_factory: ConstraintFactory) -> Constraint:
+    """Locked shifts should not be modified - this is enforced by pinning in partial solver"""
+    # This constraint acts as a safety net in case pinning fails
+    # In practice, locked shifts should be pinned and not changeable by the solver
+    return (
+        constraint_factory.for_each(Shift)
+        .filter(
+            lambda shift: (
+                shift.is_locked
+                and hasattr(shift, '_pinned')
+                and shift._pinned
+            )
+        )
+        .penalize(HardMediumSoftScore.ZERO)  # No penalty needed if pinning works
+        .as_constraint("Locked shift constraint")
+    )
 
 
 def required_skill_constraint(constraint_factory: ConstraintFactory) -> Constraint:

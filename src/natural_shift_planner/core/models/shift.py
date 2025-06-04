@@ -24,6 +24,12 @@ class Shift:
 
     # Timefold Solverによって最適化される変数
     employee: Annotated[Optional[Employee], PlanningVariable] = field(default=None)
+    
+    # Locking fields for partial modification support
+    is_locked: bool = field(default=False)
+    locked_at: Optional[datetime] = field(default=None)
+    locked_by: Optional[str] = field(default=None)
+    lock_reason: Optional[str] = field(default=None)
 
     def get_duration_minutes(self) -> int:
         """シフトの時間（分）を取得"""
@@ -38,6 +44,24 @@ class Shift:
     def is_assigned(self) -> bool:
         """従業員が割り当てられているかチェック"""
         return self.employee is not None
+    
+    def lock(self, locked_by: str, reason: Optional[str] = None) -> None:
+        """Lock this shift to prevent modifications"""
+        self.is_locked = True
+        self.locked_at = datetime.now()
+        self.locked_by = locked_by
+        self.lock_reason = reason
+    
+    def unlock(self) -> None:
+        """Unlock this shift to allow modifications"""
+        self.is_locked = False
+        self.locked_at = None
+        self.locked_by = None
+        self.lock_reason = None
+    
+    def can_modify(self) -> bool:
+        """Check if this shift can be modified"""
+        return not self.is_locked
 
     def __str__(self):
         employee_name = self.employee.name if self.employee else "未割り当て"
