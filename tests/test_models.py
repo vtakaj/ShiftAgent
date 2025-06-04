@@ -1,9 +1,14 @@
+import sys
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import pytest
 
-from constraints import get_target_hours, get_week_key, is_full_time_employee
-from models import Employee, Shift, ShiftSchedule
+# Add src directory to Python path
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+from natural_shift_planner.api.analysis import get_target_hours, get_week_key, is_full_time_employee
+from natural_shift_planner.core.models import Employee, Shift, ShiftSchedule
 
 
 def test_employee_creation():

@@ -4,9 +4,11 @@
 import asyncio
 import httpx
 import os
+import pytest
 
 API_URL = os.getenv("SHIFT_SCHEDULER_API_URL", "http://localhost:8081")
 
+@pytest.mark.asyncio
 async def test_connection():
     print(f"Testing connection to API at: {API_URL}")
     
