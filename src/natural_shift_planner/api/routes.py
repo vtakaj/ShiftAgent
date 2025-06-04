@@ -4,6 +4,7 @@ API route handlers
 import threading
 import uuid
 from datetime import datetime
+from typing import Optional
 
 from fastapi import HTTPException
 
