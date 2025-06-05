@@ -11,7 +11,14 @@ def convert_request_to_domain(request: ShiftScheduleRequest) -> ShiftSchedule:
     """Convert API request to domain objects"""
     # Convert employees
     employees = [
-        Employee(id=emp.id, name=emp.name, skills=set(emp.skills))
+        Employee(
+            id=emp.id,
+            name=emp.name,
+            skills=set(emp.skills),
+            preferred_days_off=set(emp.preferred_days_off),
+            preferred_work_days=set(emp.preferred_work_days),
+            unavailable_dates=set(emp.unavailable_dates)
+        )
         for emp in request.employees
     ]
 
@@ -35,7 +42,14 @@ def convert_domain_to_response(schedule: ShiftSchedule) -> Dict[str, Any]:
     """Convert domain objects to API response"""
     return {
         "employees": [
-            {"id": emp.id, "name": emp.name, "skills": list(emp.skills)}
+            {
+                "id": emp.id,
+                "name": emp.name,
+                "skills": list(emp.skills),
+                "preferred_days_off": list(emp.preferred_days_off),
+                "preferred_work_days": list(emp.preferred_work_days),
+                "unavailable_dates": [date.isoformat() for date in emp.unavailable_dates]
+            }
             for emp in schedule.employees
         ],
         "shifts": [

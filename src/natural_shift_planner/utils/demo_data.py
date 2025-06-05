@@ -8,24 +8,55 @@ from ..core.models import Employee, Shift, ShiftSchedule
 
 def create_demo_schedule() -> ShiftSchedule:
     """Create demo shift schedule"""
-    # Create employees (with employment type)
-    employees = [
-        Employee("emp1", "John Smith", {"Nurse", "CPR", "Full-time"}),
-        Employee("emp2", "Sarah Johnson", {"Nurse", "Full-time"}),
-        Employee("emp3", "Michael Brown", {"Security", "Full-time"}),
-        Employee("emp4", "Emily Davis", {"Reception", "Admin", "Part-time"}),
-        Employee("emp5", "David Wilson", {"Nurse", "Part-time"}),
-    ]
-
-    # Create shifts for one week (considering weekly working hours)
+    # Get specific dates for unavailable examples
     base_date = datetime.now().replace(
         hour=9,
         minute=0,
         second=0,
         microsecond=0
     )
-    # Start from Monday
     monday = base_date - timedelta(days=base_date.weekday())
+    friday_date = monday + timedelta(days=4)
+    
+    # Create employees (with employment type and preferences)
+    employees = [
+        Employee(
+            "emp1",
+            "John Smith",
+            {"Nurse", "CPR", "Full-time"},
+            preferred_days_off={"friday", "saturday"},  # Prefers weekends off
+            preferred_work_days={"monday", "tuesday"}
+        ),
+        Employee(
+            "emp2",
+            "Sarah Johnson", 
+            {"Nurse", "Full-time"},
+            preferred_work_days={"sunday", "saturday"},  # Prefers weekends
+            unavailable_dates={friday_date}  # Unavailable on specific Friday
+        ),
+        Employee(
+            "emp3",
+            "Michael Brown",
+            {"Security", "Full-time"},
+            preferred_days_off={"wednesday"}  # Prefers Wednesdays off
+        ),
+        Employee(
+            "emp4",
+            "Emily Davis",
+            {"Reception", "Admin", "Part-time"},
+            preferred_work_days={"monday", "tuesday", "wednesday"},  # Prefers weekdays
+            preferred_days_off={"saturday", "sunday"}
+        ),
+        Employee(
+            "emp5",
+            "David Wilson",
+            {"Nurse", "Part-time"},
+            preferred_days_off={"thursday", "friday"}  # Student who prefers Thu/Fri off
+        ),
+    ]
+
+    # Create shifts for one week (considering weekly working hours)
+    # Start from Monday (already calculated above)
 
     shifts = []
 
