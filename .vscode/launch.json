@@ -1,0 +1,53 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "FastAPI Server",
+            "type": "python",
+            "request": "launch",
+            "program": "/workspace/.venv/bin/uvicorn",
+            "args": [
+                "main:app",
+                "--host", "0.0.0.0",
+                "--port", "8000",
+                "--reload",
+                "--log-level", "debug"
+            ],
+            "cwd": "/workspace",
+            "env": {
+                "PYTHONPATH": "/workspace",
+                "JAVA_HOME": "/usr/lib/jvm/java-17-openjdk-arm64"
+            },
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "cwd": "/workspace",
+            "env": {
+                "PYTHONPATH": "/workspace",
+                "JAVA_HOME": "/usr/lib/jvm/java-17-openjdk-arm64"
+            },
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: Tests",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "-v",
+                "${workspaceFolder}"
+            ],
+            "cwd": "/workspace",
+            "env": {
+                "PYTHONPATH": "/workspace",
+                "JAVA_HOME": "/usr/lib/jvm/java-17-openjdk-arm64"
+            },
+            "console": "integratedTerminal"
+        }
+    ]
+}

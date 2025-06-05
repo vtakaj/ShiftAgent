@@ -1,4 +1,4 @@
-# VS Code settings (Dev Container use)
+// VS Code settings (Dev Container use)
 {
     // Python settings
     "python.defaultInterpreterPath": "/workspace/.venv/bin/python",

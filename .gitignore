@@ -139,11 +139,6 @@ uv.lock
 # Docker
 .dockerignore
 
-# VS Code
-.vscode/launch.json
-.vscode/tasks.json
-.vscode/.ropeproject
-
 # Dev Container
 .devcontainer/.env
 
