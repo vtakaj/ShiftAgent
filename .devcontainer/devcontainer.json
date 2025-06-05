@@ -74,6 +74,7 @@
   "remoteUser": "vscode",
   // Mount the workspace
   "mounts": [
-    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
   ]
 }
