@@ -1,55 +1,5 @@
-# VS Code settings (Dev Container use)
 {
-    // Python settings
-    "python.defaultInterpreterPath": "/workspace/.venv/bin/python",
-    "python.terminal.activateEnvironment": true,
-    // Linting settings
-    "python.linting.enabled": true,
-    "python.linting.pylintEnabled": false,
-    "python.linting.flake8Enabled": true,
-    "python.linting.mypyEnabled": true,
-    // Formatter settings
-    "python.formatting.provider": "black",
-    "python.sortImports.args": [
-        "--profile",
-        "black"
-    ],
-    // Editor settings
-    "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-        "source.organizeImports": true
-    },
-    "editor.rulers": [
-        88
-    ],
-    // File exclusion settings
-    "files.exclude": {
-        "**/__pycache__": true,
-        "**/.pytest_cache": true,
-        "**/*.pyc": true,
-        "**/.uv": true,
-        "**/uv.lock": false
-    },
-    // Test settings
-    "python.testing.pytestEnabled": true,
-    "python.testing.unittestEnabled": false,
-    "python.testing.pytestArgs": [
-        "."
-    ],
-    // Docker settings
-    "docker.dockerPath": "docker",
-    // Terminal settings
-    "terminal.integrated.defaultProfile.linux": "bash",
-    "terminal.integrated.profiles.linux": {
-        "bash": {
-            "path": "/bin/bash",
-            "args": []
-        }
-    },
-    // Fast API development settings
-    "rest-client.environmentVariables": {
-        "local": {
-            "baseUrl": "http://localhost:8000"
-        }
+        "source.organizeImports": "explicit"
     }
 }

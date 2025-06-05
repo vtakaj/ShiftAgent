@@ -423,3 +423,12 @@ If issues persist, please provide:
 ---
 
 **🎉 Happy Coding with Shift Scheduler!**
+
+## Development Environment
+
+All development for this project must be done inside the VS Code Dev Container. Direct local development is not supported.
+
+### Setup Instructions
+1. Install Visual Studio Code
+2. Install the Remote - Containers extension
+3. Open this repository in VS Code and select "Remote-Containers: Open Folder in Container..."
