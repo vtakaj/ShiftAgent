@@ -11,6 +11,9 @@ class EmployeeRequest(BaseModel):
     id: str
     name: str
     skills: List[str]
+    preferred_days_off: List[str] = Field(default_factory=list, description="Days employee prefers not to work (e.g., ['friday', 'saturday'])")
+    preferred_work_days: List[str] = Field(default_factory=list, description="Days employee prefers to work (e.g., ['sunday', 'monday'])")
+    unavailable_dates: List[datetime] = Field(default_factory=list, description="Specific dates when employee is unavailable")
 
 
 class ShiftRequest(BaseModel):

@@ -23,6 +23,7 @@ def shift_scheduling_constraints(
         required_skill_constraint(constraint_factory),
         no_overlapping_shifts_constraint(constraint_factory),
         weekly_maximum_hours_constraint(constraint_factory),
+        unavailable_date_constraint(constraint_factory),
         # Medium constraints (important but some violations allowed)
         minimum_rest_time_constraint(constraint_factory),
         weekly_minimum_hours_constraint(constraint_factory),
@@ -30,6 +31,8 @@ def shift_scheduling_constraints(
         minimize_unassigned_shifts_constraint(constraint_factory),
         fair_workload_distribution_constraint(constraint_factory),
         weekly_hours_target_constraint(constraint_factory),
+        preferred_days_off_constraint(constraint_factory),
+        preferred_work_days_constraint(constraint_factory),
     ]
 
 
@@ -223,3 +226,53 @@ def get_target_hours(employee: Employee) -> int:
         return 40  # Full-time: 40 hours/week
     else:
         return 32  # Default: 32 hours/week
+
+
+def unavailable_date_constraint(constraint_factory: ConstraintFactory) -> Constraint:
+    """Hard constraint: Employees cannot be assigned to shifts on unavailable dates"""
+    return (
+        constraint_factory.for_each(Shift)
+        .filter(
+            lambda shift: (
+                shift.employee is not None
+                and shift.employee.is_unavailable_on_date(shift.start_time)
+            )
+        )
+        .penalize(HardMediumSoftScore.ONE_HARD)
+        .as_constraint("Unavailable date constraint")
+    )
+
+
+def preferred_days_off_constraint(constraint_factory: ConstraintFactory) -> Constraint:
+    """Soft constraint: Penalize assignments on employees' preferred days off"""
+    return (
+        constraint_factory.for_each(Shift)
+        .filter(
+            lambda shift: (
+                shift.employee is not None
+                and shift.employee.prefers_day_off(get_day_name(shift.start_time))
+            )
+        )
+        .penalize(HardMediumSoftScore.of_soft(5))  # Medium penalty for preferred days off
+        .as_constraint("Preferred days off constraint")
+    )
+
+
+def preferred_work_days_constraint(constraint_factory: ConstraintFactory) -> Constraint:
+    """Soft constraint: Reward assignments on employees' preferred work days"""
+    return (
+        constraint_factory.for_each(Shift)
+        .filter(
+            lambda shift: (
+                shift.employee is not None
+                and shift.employee.prefers_work_day(get_day_name(shift.start_time))
+            )
+        )
+        .reward(HardMediumSoftScore.of_soft(3))  # Reward for preferred work days
+        .as_constraint("Preferred work days constraint")
+    )
+
+
+def get_day_name(date: datetime) -> str:
+    """Get day name from datetime"""
+    return date.strftime('%A').lower()  # Returns 'monday', 'tuesday', etc.
