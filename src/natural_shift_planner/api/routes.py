@@ -7,7 +7,9 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import HTTPException
+from fastapi.responses import HTMLResponse
 
+from ..templates.renderer import render_schedule_html
 from ..utils import create_demo_schedule
 from .analysis import analyze_weekly_hours, generate_recommendations
 from .app import app
@@ -499,3 +501,53 @@ async def partial_solve_shifts(request: PartialOptimizationRequest):
             scope_summary=scope_summary,
             message=f"Optimizing {scope_summary['shifts_to_optimize']} shifts out of {scope_summary['total_shifts_in_scope']} in scope"
         )
+
+
+# HTML Report endpoints
+@app.get("/api/shifts/demo/html", response_class=HTMLResponse)
+async def get_demo_html_report():
+    """Get demo data as HTML report"""
+    schedule = create_demo_schedule()
+    schedule_data = convert_domain_to_response(schedule)
+    score = str(schedule.score) if schedule.score else None
+    html_report = render_schedule_html(schedule_data, score)
+    return HTMLResponse(content=html_report)
+
+
+@app.get("/api/shifts/solve/{job_id}/html", response_class=HTMLResponse)
+async def get_solution_html_report(job_id: str):
+    """Get optimization result as HTML report"""
+    with job_lock:
+        if job_id not in jobs:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        job = jobs[job_id]
+
+        if job["status"] != "SOLVING_COMPLETED":
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Job is not completed. Current status: {job['status']}"
+            )
+
+        solution = job["solution"]
+        schedule_data = convert_domain_to_response(solution)
+        score = str(solution.score) if solution.score else None
+        html_report = render_schedule_html(schedule_data, score)
+        return HTMLResponse(content=html_report)
+
+
+@app.post("/api/shifts/solve-sync/html", response_class=HTMLResponse)
+async def solve_shifts_sync_html(request: ShiftScheduleRequest):
+    """Shift optimization (synchronous) with HTML report output"""
+    try:
+        problem = convert_request_to_domain(request)
+        solver = solver_factory.build_solver()
+        solution = solver.solve(problem)
+
+        schedule_data = convert_domain_to_response(solution)
+        score = str(solution.score) if solution.score else None
+        html_report = render_schedule_html(schedule_data, score)
+        return HTMLResponse(content=html_report)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -7,6 +7,8 @@ from .tools import (
     analyze_change_impact,
     analyze_weekly_hours,
     get_demo_schedule,
+    get_demo_schedule_html,
+    get_schedule_html_report,
     get_schedule_shifts,
     get_solve_status,
     health_check,
@@ -16,6 +18,7 @@ from .tools import (
     quick_fix_schedule,
     solve_schedule_async,
     solve_schedule_sync,
+    solve_schedule_sync_html,
     test_weekly_constraints,
 )
 
@@ -38,6 +41,11 @@ mcp.tool()(analyze_change_impact)
 mcp.tool()(partial_optimize_schedule)
 mcp.tool()(get_schedule_shifts)
 mcp.tool()(quick_fix_schedule)
+
+# Register HTML report tools
+mcp.tool()(get_demo_schedule_html)
+mcp.tool()(get_schedule_html_report)
+mcp.tool()(solve_schedule_sync_html)
 
 # Add prompts
 @mcp.prompt()
@@ -77,6 +85,11 @@ async def shift_scheduling_prompt() -> str:
 - partial_optimize_schedule: Re-optimize only specific parts of schedule
 - get_schedule_shifts: Inspect completed schedules
 - quick_fix_schedule: Rapidly fix common issues in focused date ranges
+
+### HTML Reports (NEW!)
+- get_demo_schedule_html: Get demo schedule as formatted HTML report
+- get_schedule_html_report: Get completed schedule as HTML report
+- solve_schedule_sync_html: Solve and return HTML report in one step
 
 ## Constraint Guidelines
 - Employee skills must match shift requirements
