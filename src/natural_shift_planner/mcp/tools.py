@@ -355,3 +355,65 @@ async def quick_fix_schedule(
         preserve_locked=True,
         minimize_changes=True
     )
+
+
+# HTML Report tools
+async def call_api_html(endpoint: str, timeout: float = 120.0) -> str:
+    """Make an API call that returns HTML content"""
+    url = f"{API_BASE_URL}{endpoint}"
+    
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        response = await client.get(url)
+        response.raise_for_status()
+        return response.text
+
+
+async def get_demo_schedule_html(ctx: Context) -> str:
+    """Get a demo shift schedule as HTML report"""
+    return await call_api_html("/api/shifts/demo/html")
+
+
+async def get_schedule_html_report(ctx: Context, job_id: str) -> str:
+    """
+    Get an optimized schedule as HTML report
+    
+    Args:
+        job_id: The job ID returned by solve_schedule_async
+    
+    Returns:
+        HTML report of the completed schedule
+    """
+    return await call_api_html(f"/api/shifts/solve/{job_id}/html")
+
+
+async def solve_schedule_sync_html(
+    ctx: Context,
+    employees: List[EmployeeRequest],
+    shifts: List[ShiftRequest]
+) -> str:
+    """
+    Solve shift scheduling synchronously and return HTML report
+    
+    Args:
+        employees: List of employees with their skills
+        shifts: List of shifts to be assigned
+    
+    Returns:
+        HTML report of the optimized schedule
+    """
+    request_data = {
+        "employees": [emp.model_dump() for emp in employees],
+        "shifts": [shift.model_dump() for shift in shifts]
+    }
+    
+    # Parse datetime strings to ensure they're in ISO format
+    for shift in request_data["shifts"]:
+        shift["start_time"] = datetime.fromisoformat(shift["start_time"]).isoformat()
+        shift["end_time"] = datetime.fromisoformat(shift["end_time"]).isoformat()
+    
+    url = f"{API_BASE_URL}/api/shifts/solve-sync/html"
+    
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        response = await client.post(url, json=request_data)
+        response.raise_for_status()
+        return response.text

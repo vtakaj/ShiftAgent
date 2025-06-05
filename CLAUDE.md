@@ -126,6 +126,11 @@ The solver optimizes using HardMediumSoftScore:
 - `POST /api/shifts/analyze-weekly`: Analyze weekly work hours
 - `GET /api/shifts/test-weekly`: Test weekly constraint calculations
 
+#### HTML Report Endpoints
+- `GET /api/shifts/demo/html`: Demo data as formatted HTML report
+- `POST /api/shifts/solve-sync/html`: Synchronous optimization with HTML report output
+- `GET /api/shifts/solve/{job_id}/html`: Get optimization results as HTML report
+
 ## Development Notes
 
 ### Dependencies
@@ -172,5 +177,8 @@ make mcp
 - `get_solve_status`: Check async job status
 - `analyze_weekly_hours`: Analyze weekly work hours
 - `test_weekly_constraints`: Test weekly constraints with demo data
+- `get_demo_schedule_html`: Get demo schedule as formatted HTML report
+- `get_schedule_html_report`: Get completed schedule as HTML report
+- `solve_schedule_sync_html`: Solve and return HTML report in one step
 
 See `MCP_SERVER.md` for detailed usage and Claude Desktop integration instructions.
