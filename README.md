@@ -127,7 +127,7 @@ shift-scheduler/
 ### 🤖 **MCP Server Integration**
 - **AI Assistant Support**: Built-in MCP (Model Context Protocol) server for Claude Desktop and other AI assistants
 - **Python-based Implementation**: Uses FastMCP for seamless integration
-- **Full API Access**: All shift scheduling and partial modification features available through MCP tools
+- **Full API Access**: All shift scheduling and continuous planning features available through MCP tools
 
 ## 📊 API Specification
 
@@ -144,16 +144,16 @@ GET  /api/shifts/weekly-analysis/{job_id} # Weekly work hours analysis (after so
 GET  /api/shifts/test-weekly          # Weekly work hours constraint test (demo)
 ```
 
-### Partial Modification Endpoints (NEW!)
+### Continuous Planning Endpoints (NEW!)
 
 ```http
-PATCH /api/shifts/{shift_id}                 # Modify individual shift assignment
-POST  /api/shifts/lock                       # Lock/unlock multiple shifts
-GET   /api/shifts/change-impact/{shift_id}   # Analyze change impact
-POST  /api/shifts/partial-solve              # Partial schedule optimization
+POST /api/shifts/swap                        # Swap employees between two shifts
+POST /api/shifts/replace                     # Find replacement for unavailable employee
+POST /api/shifts/pin                         # Pin/unpin shifts for continuous planning
+POST /api/shifts/reassign                    # Reassign shift to specific employee
 ```
 
-### Report Generation Endpoints (NEW!)
+### Report Generation Endpoints
 
 ```http
 # HTML Reports
@@ -229,15 +229,11 @@ make mcp      # Terminal 2: MCP server
 - `analyze_weekly_hours` - Analyze weekly work hours for schedules
 - `test_weekly_constraints` - Test weekly hour constraints with demo data
 
-#### Partial Modifications (NEW!)
-- `modify_shift_assignment` - Change individual shift assignments safely
-- `lock_shifts` - Lock/unlock shifts to prevent modifications
-- `analyze_change_impact` - Preview effects of changes before applying
-- `partial_optimize_schedule` - Re-optimize specific date ranges or employees
+#### Schedule Management
 - `get_schedule_shifts` - Inspect completed schedules in detail
 - `quick_fix_schedule` - Rapidly fix common issues in focused scopes
 
-#### Report Generation (NEW!)
+#### Report Generation
 - `get_demo_schedule_html` - Get demo schedule as HTML report
 - `get_schedule_html_report` - Get completed schedule as HTML report  
 - `solve_schedule_sync_html` - Solve and return HTML report in one step
