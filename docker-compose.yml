@@ -8,7 +8,11 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - JAVA_OPTS=-Xmx1g
+      - JOB_STORAGE_TYPE=filesystem
+      - JOB_STORAGE_DIR=/app/job_storage
     volumes:
+      # Job storage directory (persisted on host)
+      - ./job_storage:/app/job_storage
       # 開発時のみ有効にする
       # - ./main.py:/app/main.py
       # - ./models.py:/app/models.py

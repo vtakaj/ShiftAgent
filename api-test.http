@@ -281,3 +281,21 @@ Content-Type: application/json
   "shift_id": "morning_shift",
   "new_employee_id": null
 }
+################################################################################
+# Job Management Endpoints
+################################################################################
+
+### List all jobs
+GET {{baseUrl}}/api/jobs
+
+### Get specific job result (replace with actual job ID)
+GET {{baseUrl}}/api/shifts/solve/YOUR-JOB-ID-HERE
+
+### Delete a specific job
+DELETE {{baseUrl}}/api/jobs/YOUR-JOB-ID-HERE
+
+### Clean up old jobs (older than 24 hours)
+POST {{baseUrl}}/api/jobs/cleanup
+
+### Clean up old jobs (older than 1 hour)
+POST {{baseUrl}}/api/jobs/cleanup?max_age_hours=1

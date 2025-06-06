@@ -186,3 +186,5 @@ tmp/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+# Job storage directory
+job_storage/

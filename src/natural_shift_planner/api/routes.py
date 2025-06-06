@@ -25,7 +25,8 @@ from .analysis import analyze_weekly_hours, generate_recommendations
 from .app import app
 from .continuous_planning import ContinuousPlanningService
 from .converters import convert_domain_to_response, convert_request_to_domain
-from .jobs import job_lock, jobs, solve_problem_async
+from .job_store import job_store
+from .jobs import job_lock, jobs, solve_problem_async, _sync_job_to_store
 from .schemas import (
     ContinuousPlanningResponse,
     ShiftPinRequest,
@@ -75,6 +76,7 @@ async def solve_shifts(request: ShiftScheduleRequest):
             "created_at": datetime.now(),
             "problem": problem,
         }
+        _sync_job_to_store(job_id)
 
     # Start optimization asynchronously
     thread = threading.Thread(target=solve_problem_async, args=(job_id, problem))
@@ -88,6 +90,13 @@ async def solve_shifts(request: ShiftScheduleRequest):
 async def get_solution(job_id: str):
     """Get optimization result"""
     with job_lock:
+        # First check in-memory jobs
+        if job_id not in jobs and job_store:
+            # Try to load from persistent storage
+            stored_job = job_store.get_job(job_id)
+            if stored_job:
+                jobs[job_id] = stored_job
+        
         if job_id not in jobs:
             raise HTTPException(status_code=404, detail="Job not found")
 
@@ -469,3 +478,106 @@ async def reassign_shift(request: ShiftReassignRequest):
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
+
+# Job Management endpoints
+@app.get("/api/jobs")
+async def list_jobs():
+    """List all jobs (both in-memory and persistent)"""
+    all_job_ids = set(jobs.keys())
+    
+    # Add persistent job IDs if available
+    if job_store:
+        all_job_ids.update(job_store.list_jobs())
+    
+    job_summaries = []
+    for job_id in all_job_ids:
+        # Try to get from memory first
+        if job_id in jobs:
+            job = jobs[job_id]
+        elif job_store:
+            job = job_store.get_job(job_id)
+        else:
+            continue
+        
+        if job:
+            job_summaries.append({
+                "job_id": job_id,
+                "status": job.get("status"),
+                "created_at": job.get("created_at"),
+                "completed_at": job.get("completed_at")
+            })
+    
+    # Sort by created_at descending (newest first)
+    job_summaries.sort(key=lambda x: x.get("created_at") or datetime.min, reverse=True)
+    
+    return {
+        "total": len(job_summaries),
+        "jobs": job_summaries
+    }
+
+
+@app.delete("/api/jobs/{job_id}")
+async def delete_job(job_id: str):
+    """Delete a job from both memory and persistent storage"""
+    deleted = False
+    
+    # Delete from memory
+    with job_lock:
+        if job_id in jobs:
+            # Don't delete if actively solving
+            if jobs[job_id].get("status") in ["SOLVING_ACTIVE", "SOLVING_SCHEDULED"]:
+                if "solver" in jobs[job_id]:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Cannot delete job that is currently solving"
+                    )
+            del jobs[job_id]
+            deleted = True
+    
+    # Delete from persistent storage
+    if job_store:
+        try:
+            job_store.delete_job(job_id)
+            deleted = True
+        except Exception:
+            pass
+    
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    return {"message": f"Job {job_id} deleted successfully"}
+
+
+@app.post("/api/jobs/cleanup")
+async def cleanup_old_jobs(max_age_hours: int = 24):
+    """Clean up old jobs from storage"""
+    deleted_count = 0
+    
+    if job_store and hasattr(job_store, 'cleanup_old_jobs'):
+        deleted_count = job_store.cleanup_old_jobs(max_age_hours)
+    
+    # Also clean up old in-memory jobs
+    with job_lock:
+        cutoff = datetime.now()
+        cutoff = cutoff.replace(hour=cutoff.hour - max_age_hours)
+        
+        to_delete = []
+        for job_id, job in jobs.items():
+            # Skip active jobs
+            if job.get("status") in ["SOLVING_ACTIVE", "SOLVING_SCHEDULED"]:
+                continue
+            
+            # Check if old enough
+            created_at = job.get("created_at") or job.get("completed_at")
+            if created_at and created_at < cutoff:
+                to_delete.append(job_id)
+        
+        for job_id in to_delete:
+            del jobs[job_id]
+            deleted_count += 1
+    
+    return {
+        "deleted_count": deleted_count,
+        "message": f"Cleaned up {deleted_count} jobs older than {max_age_hours} hours"
+    }
