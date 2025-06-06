@@ -5,7 +5,6 @@ FastMCP server for Shift Scheduler
 from fastmcp import FastMCP
 
 from .tools import (
-    analyze_change_impact,
     analyze_weekly_hours,
     get_demo_schedule,
     get_demo_schedule_html,
@@ -15,9 +14,6 @@ from .tools import (
     get_schedule_shifts,
     get_solve_status,
     health_check,
-    lock_shifts,
-    modify_shift_assignment,
-    partial_optimize_schedule,
     quick_fix_schedule,
     solve_schedule_async,
     solve_schedule_sync,
@@ -38,11 +34,7 @@ mcp.tool()(get_solve_status)
 mcp.tool()(analyze_weekly_hours)
 mcp.tool()(test_weekly_constraints)
 
-# Register partial modification tools
-mcp.tool()(modify_shift_assignment)
-mcp.tool()(lock_shifts)
-mcp.tool()(analyze_change_impact)
-mcp.tool()(partial_optimize_schedule)
+# Register remaining tools
 mcp.tool()(get_schedule_shifts)
 mcp.tool()(quick_fix_schedule)
 
@@ -70,13 +62,6 @@ async def shift_scheduling_prompt() -> str:
 4. Managing weekly working hours constraints
 5. Analyzing schedule fairness and compliance
 
-## Advanced Partial Modifications
-6. Modifying individual shift assignments with constraint checking
-7. Locking/unlocking shifts to prevent unwanted changes
-8. Analyzing impact of proposed changes before applying
-9. Partial schedule optimization for specific date ranges or employees
-10. Quick fixes for common scheduling issues
-
 ## Available Tools
 
 ### Basic Operations
@@ -88,20 +73,16 @@ async def shift_scheduling_prompt() -> str:
 - analyze_weekly_hours: Analyze hours and violations
 - test_weekly_constraints: Test with demo data
 
-### Partial Modifications (NEW!)
-- modify_shift_assignment: Change individual shift assignments safely
-- lock_shifts: Lock confirmed shifts to prevent changes
-- analyze_change_impact: Preview effects of changes before applying
-- partial_optimize_schedule: Re-optimize only specific parts of schedule
+### Schedule Inspection
 - get_schedule_shifts: Inspect completed schedules
 - quick_fix_schedule: Rapidly fix common issues in focused date ranges
 
-### HTML Reports (NEW!)
+### HTML Reports
 - get_demo_schedule_html: Get demo schedule as formatted HTML report
 - get_schedule_html_report: Get completed schedule as HTML report
 - solve_schedule_sync_html: Solve and return HTML report in one step
 
-### PDF Reports (NEW!)
+### PDF Reports
 - get_demo_schedule_pdf: Get demo schedule as PDF report
 - get_schedule_pdf_report: Get completed schedule as PDF report
 - solve_schedule_sync_pdf: Solve and return PDF report in one step
@@ -113,19 +94,6 @@ async def shift_scheduling_prompt() -> str:
 - Maximum 45 hours/week (hard limit)
 - Minimum 8 hours rest between shifts
 - Fair distribution of shifts
-
-## Best Practices for Partial Modifications
-1. Always use analyze_change_impact before making changes
-2. Lock confirmed shifts before partial optimization
-3. Use partial_optimize_schedule for targeted fixes
-4. Check constraint violations and weekly hour impacts
-5. Use dry_run mode to test changes safely
-
-## Common Workflows
-- **Emergency reassignment**: analyze_change_impact → modify_shift_assignment
-- **Weekly optimization**: lock_shifts → partial_optimize_schedule
-- **Quick fixes**: quick_fix_schedule for common issues
-- **Schedule confirmation**: lock_shifts for approved assignments
 """
 
 
