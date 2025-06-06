@@ -170,6 +170,8 @@ make mcp
 ```
 
 ### Available MCP Tools
+
+#### Basic Operations
 - `health_check`: Check API health
 - `get_demo_schedule`: Get demo shift schedule
 - `solve_schedule_sync`: Synchronous shift optimization
@@ -177,6 +179,14 @@ make mcp
 - `get_solve_status`: Check async job status
 - `analyze_weekly_hours`: Analyze weekly work hours
 - `test_weekly_constraints`: Test weekly constraints with demo data
+
+#### Continuous Planning (Real-time Modifications)
+- `swap_shifts`: Swap employees between two shifts during optimization
+- `find_shift_replacement`: Find replacement when employee becomes unavailable
+- `pin_shifts`: Pin/unpin shifts to prevent changes during optimization
+- `reassign_shift`: Reassign shift to specific employee or unassign
+
+#### Report Generation
 - `get_demo_schedule_html`: Get demo schedule as formatted HTML report
 - `get_schedule_html_report`: Get completed schedule as HTML report
 - `solve_schedule_sync_html`: Solve and return HTML report in one step

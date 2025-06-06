@@ -6,6 +6,7 @@ from fastmcp import FastMCP
 
 from .tools import (
     analyze_weekly_hours,
+    find_shift_replacement,
     get_demo_schedule,
     get_demo_schedule_html,
     get_demo_schedule_pdf,
@@ -14,11 +15,14 @@ from .tools import (
     get_schedule_shifts,
     get_solve_status,
     health_check,
+    pin_shifts,
     quick_fix_schedule,
+    reassign_shift,
     solve_schedule_async,
     solve_schedule_sync,
     solve_schedule_sync_html,
     solve_schedule_sync_pdf,
+    swap_shifts,
     test_weekly_constraints,
 )
 
@@ -48,6 +52,12 @@ mcp.tool()(get_demo_schedule_pdf)
 mcp.tool()(get_schedule_pdf_report)
 mcp.tool()(solve_schedule_sync_pdf)
 
+# Register continuous planning tools
+mcp.tool()(swap_shifts)
+mcp.tool()(find_shift_replacement)
+mcp.tool()(pin_shifts)
+mcp.tool()(reassign_shift)
+
 
 # Add prompts
 @mcp.prompt()
@@ -61,6 +71,7 @@ async def shift_scheduling_prompt() -> str:
 3. Preventing scheduling conflicts (no double-booking)
 4. Managing weekly working hours constraints
 5. Analyzing schedule fairness and compliance
+6. Real-time schedule modifications and continuous planning
 
 ## Available Tools
 
@@ -76,6 +87,12 @@ async def shift_scheduling_prompt() -> str:
 ### Schedule Inspection
 - get_schedule_shifts: Inspect completed schedules
 - quick_fix_schedule: Rapidly fix common issues in focused date ranges
+
+### Continuous Planning (Real-time Modifications)
+- swap_shifts: Swap employees between two shifts during optimization
+- find_shift_replacement: Find replacement when employee becomes unavailable
+- pin_shifts: Pin/unpin shifts to prevent changes during optimization
+- reassign_shift: Reassign shift to specific employee or unassign
 
 ### HTML Reports
 - get_demo_schedule_html: Get demo schedule as formatted HTML report
@@ -94,6 +111,13 @@ async def shift_scheduling_prompt() -> str:
 - Maximum 45 hours/week (hard limit)
 - Minimum 8 hours rest between shifts
 - Fair distribution of shifts
+
+## Continuous Planning Usage
+- Continuous planning tools require an active solving session
+- Start with solve_schedule_async, then use continuous planning tools
+- Pin shifts to lock them before making changes
+- Use find_shift_replacement for emergency coverage
+- Swap shifts for quick employee exchanges
 """
 
 

@@ -11,7 +11,14 @@ from typing import Optional
 from fastapi import HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse
 
-from ..templates.pdf_renderer import generate_schedule_pdf
+try:
+    from ..templates.pdf_renderer import generate_schedule_pdf
+    PDF_AVAILABLE = True
+except ImportError:
+    PDF_AVAILABLE = False
+    
+    def generate_schedule_pdf(*args, **kwargs):
+        raise ImportError("PDF generation not available. Install WeasyPrint dependencies.")
 from ..templates.renderer import render_schedule_html
 from ..utils import create_demo_schedule
 from .analysis import analyze_weekly_hours, generate_recommendations
