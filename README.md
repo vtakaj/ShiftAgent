@@ -111,12 +111,12 @@ shift-scheduler/
 - **Weekly Work Hours Constraints**: 40-hour limit, minimum work hours, target time adjustment
 - **Fairness Optimization**: Equal distribution of work hours
 
-### 🔧 **Partial Modifications** (NEW!)
-- **Individual Shift Changes**: Modify single shift assignments with constraint validation
-- **Shift Locking**: Lock confirmed shifts to prevent unwanted modifications
-- **Impact Analysis**: Preview weekly hours and constraint effects before applying changes
-- **Partial Optimization**: Re-optimize only specific date ranges, employees, or locations
-- **Quick Fixes**: Rapidly address common scheduling issues in focused scopes
+### 🔧 **Continuous Planning** (NEW!)
+- **Real-time Modifications**: Modify schedules during optimization without full re-solving
+- **Shift Swapping**: Exchange employees between shifts using ProblemChangeDirector
+- **Emergency Replacements**: Find suitable replacements when employees become unavailable
+- **Shift Pinning**: Lock specific shifts to prevent changes during optimization
+- **Live Reassignment**: Reassign shifts to specific employees or unassign them
 
 ### 📄 **Report Generation** (NEW!)
 - **HTML Reports**: Formatted web-based schedule reports with statistics and styling
@@ -229,9 +229,14 @@ make mcp      # Terminal 2: MCP server
 - `analyze_weekly_hours` - Analyze weekly work hours for schedules
 - `test_weekly_constraints` - Test weekly hour constraints with demo data
 
-#### Schedule Management
+#### Schedule Management  
 - `get_schedule_shifts` - Inspect completed schedules in detail
-- `quick_fix_schedule` - Rapidly fix common issues in focused scopes
+
+#### Continuous Planning (Real-time Modifications)
+- `swap_shifts` - Swap employees between two shifts during optimization
+- `find_shift_replacement` - Find replacement when employee becomes unavailable
+- `pin_shifts` - Pin/unpin shifts to prevent changes during optimization
+- `reassign_shift` - Reassign shift to specific employee or unassign
 
 #### Report Generation
 - `get_demo_schedule_html` - Get demo schedule as HTML report
