@@ -179,34 +179,6 @@ async def get_schedule_shifts(ctx: Context, job_id: str) -> Dict[str, Any]:
     return await call_api("GET", f"/api/shifts/solve/{job_id}")
 
 
-async def quick_fix_schedule(
-    ctx: Context, base_schedule_id: str, issues: List[str], date_range_days: int = 7
-) -> Dict[str, Any]:
-    """
-    Quick fix common scheduling issues using partial optimization
-
-    Args:
-        base_schedule_id: ID of the existing schedule
-        issues: List of issues to fix ("overtime", "unassigned", "skills")
-        date_range_days: Number of days to optimize (from today)
-
-    Returns:
-        Optimization result focusing on fixing specified issues
-    """
-    from datetime import datetime, timedelta
-
-    today = datetime.now().date()
-    end_date = today + timedelta(days=date_range_days)
-
-    # Use partial optimization with focused scope
-    return await partial_optimize_schedule(
-        ctx,
-        base_schedule_id=base_schedule_id,
-        start_date=today.isoformat(),
-        end_date=end_date.isoformat(),
-        preserve_locked=True,
-        minimize_changes=True,
-    )
 
 
 # HTML Report tools
