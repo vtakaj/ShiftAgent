@@ -1,6 +1,7 @@
 """
 Tests for employee preference functionality
 """
+
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -10,15 +11,22 @@ import pytest
 # Add src directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from natural_shift_planner.api.converters import convert_request_to_domain, convert_domain_to_response
-from natural_shift_planner.api.schemas import EmployeeRequest, ShiftRequest, ShiftScheduleRequest
+from natural_shift_planner.api.converters import (
+    convert_domain_to_response,
+    convert_request_to_domain,
+)
+from natural_shift_planner.api.schemas import (
+    EmployeeRequest,
+    ShiftRequest,
+    ShiftScheduleRequest,
+)
 from natural_shift_planner.core.models import Employee, Shift, ShiftSchedule
 
 
 def test_api_converter_with_preferences():
     """Test API converter with employee preferences"""
     test_date = datetime(2025, 6, 5, 10, 0, 0)
-    
+
     # Create API request with preferences
     employee_request = EmployeeRequest(
         id="emp1",
@@ -26,24 +34,23 @@ def test_api_converter_with_preferences():
         skills=["Nurse", "CPR"],
         preferred_days_off=["friday", "saturday"],
         preferred_work_days=["monday", "tuesday"],
-        unavailable_dates=[test_date]
+        unavailable_dates=[test_date],
     )
-    
+
     shift_request = ShiftRequest(
         id="shift1",
         start_time=datetime(2025, 6, 2, 9, 0),
         end_time=datetime(2025, 6, 2, 17, 0),
-        required_skills=["Nurse"]
+        required_skills=["Nurse"],
     )
-    
+
     schedule_request = ShiftScheduleRequest(
-        employees=[employee_request],
-        shifts=[shift_request]
+        employees=[employee_request], shifts=[shift_request]
     )
-    
+
     # Convert to domain
     domain_schedule = convert_request_to_domain(schedule_request)
-    
+
     # Verify conversion
     employee = domain_schedule.employees[0]
     assert employee.id == "emp1"
@@ -52,15 +59,15 @@ def test_api_converter_with_preferences():
     assert employee.preferred_days_off == {"friday", "saturday"}
     assert employee.preferred_work_days == {"monday", "tuesday"}
     assert test_date in employee.unavailable_dates
-    
+
     # Test preference methods
     assert employee.prefers_day_off("friday")
     assert employee.prefers_work_day("monday")
     assert employee.is_unavailable_on_date(test_date)
-    
+
     # Convert back to response
     response = convert_domain_to_response(domain_schedule)
-    
+
     # Verify round-trip conversion
     response_employee = response["employees"][0]
     assert response_employee["id"] == "emp1"
@@ -74,22 +81,28 @@ def test_api_converter_with_preferences():
 def test_demo_data_with_preferences():
     """Test demo data includes preferences"""
     from natural_shift_planner.utils.demo_data import create_demo_schedule
-    
+
     schedule = create_demo_schedule()
-    
+
     # Verify we have employees with preferences
-    employees_with_prefs = [emp for emp in schedule.employees if emp.preferred_days_off or emp.preferred_work_days]
+    employees_with_prefs = [
+        emp
+        for emp in schedule.employees
+        if emp.preferred_days_off or emp.preferred_work_days
+    ]
     assert len(employees_with_prefs) > 0
-    
+
     # Check specific employee preferences (John Smith)
     john = next((emp for emp in schedule.employees if emp.name == "John Smith"), None)
     assert john is not None
     assert "friday" in john.preferred_days_off
     assert "saturday" in john.preferred_days_off
     assert "monday" in john.preferred_work_days
-    
+
     # Check Sarah Johnson has unavailable dates
-    sarah = next((emp for emp in schedule.employees if emp.name == "Sarah Johnson"), None)
+    sarah = next(
+        (emp for emp in schedule.employees if emp.name == "Sarah Johnson"), None
+    )
     assert sarah is not None
     assert len(sarah.unavailable_dates) > 0
 
@@ -97,14 +110,14 @@ def test_demo_data_with_preferences():
 def test_constraint_helper_functions():
     """Test constraint helper functions"""
     from natural_shift_planner.core.constraints.shift_constraints import get_day_name
-    
+
     # Test get_day_name function
     monday = datetime(2025, 6, 2)  # This is a Monday
     tuesday = datetime(2025, 6, 3)  # This is a Tuesday
-    
+
     assert get_day_name(monday) == "monday"
     assert get_day_name(tuesday) == "tuesday"
-    
+
     # Test with different times on same day
     monday_evening = monday.replace(hour=20)
     assert get_day_name(monday_evening) == "monday"
@@ -114,20 +127,20 @@ def test_employee_preference_edge_cases():
     """Test edge cases for employee preferences"""
     employee = Employee(
         "emp1",
-        "Test Employee", 
+        "Test Employee",
         {"Nurse"},
         preferred_days_off={"Friday", "SATURDAY"},  # Mixed case
         preferred_work_days={"monday"},
-        unavailable_dates=set()
+        unavailable_dates=set(),
     )
-    
+
     # Test case insensitive matching
     assert employee.prefers_day_off("friday")
     assert employee.prefers_day_off("saturday")
     assert employee.prefers_day_off("FRIDAY")
     assert employee.prefers_work_day("MONDAY")
     assert employee.prefers_work_day("Monday")
-    
+
     # Test no conflicts
     assert not employee.prefers_day_off("monday")
     assert not employee.prefers_work_day("friday")

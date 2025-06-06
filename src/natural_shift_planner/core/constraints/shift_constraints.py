@@ -44,9 +44,7 @@ def locked_shift_constraint(constraint_factory: ConstraintFactory) -> Constraint
         constraint_factory.for_each(Shift)
         .filter(
             lambda shift: (
-                shift.is_locked
-                and hasattr(shift, '_pinned')
-                and shift._pinned
+                shift.is_locked and hasattr(shift, "_pinned") and shift._pinned
             )
         )
         .penalize(HardMediumSoftScore.ZERO)  # No penalty needed if pinning works
@@ -253,7 +251,9 @@ def preferred_days_off_constraint(constraint_factory: ConstraintFactory) -> Cons
                 and shift.employee.prefers_day_off(get_day_name(shift.start_time))
             )
         )
-        .penalize(HardMediumSoftScore.of_soft(5))  # Medium penalty for preferred days off
+        .penalize(
+            HardMediumSoftScore.of_soft(5)
+        )  # Medium penalty for preferred days off
         .as_constraint("Preferred days off constraint")
     )
 
@@ -275,4 +275,4 @@ def preferred_work_days_constraint(constraint_factory: ConstraintFactory) -> Con
 
 def get_day_name(date: datetime) -> str:
     """Get day name from datetime"""
-    return date.strftime('%A').lower()  # Returns 'monday', 'tuesday', etc.
+    return date.strftime("%A").lower()  # Returns 'monday', 'tuesday', etc.
