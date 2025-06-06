@@ -224,3 +224,60 @@ Content-Type: application/json
 
 ### Get job results as HTML report (use job_id from async solve response)
 # GET {{baseUrl}}/api/shifts/solve/{job_id}/html
+
+### Continuous Planning endpoints
+
+### Swap shifts between two employees
+POST {{baseUrl}}/api/shifts/swap
+Content-Type: application/json
+
+{
+  "shift1_id": "morning_shift",
+  "shift2_id": "evening_shift"
+}
+
+### Find replacement for a shift
+POST {{baseUrl}}/api/shifts/replace
+Content-Type: application/json
+
+{
+  "shift_id": "morning_shift",
+  "unavailable_employee_id": "emp1",
+  "excluded_employee_ids": []
+}
+
+### Pin shifts to prevent changes
+POST {{baseUrl}}/api/shifts/pin
+Content-Type: application/json
+
+{
+  "shift_ids": ["morning_shift", "evening_shift"],
+  "action": "pin"
+}
+
+### Unpin shifts to allow changes
+POST {{baseUrl}}/api/shifts/pin
+Content-Type: application/json
+
+{
+  "shift_ids": ["morning_shift"],
+  "action": "unpin"
+}
+
+### Reassign a shift to specific employee
+POST {{baseUrl}}/api/shifts/reassign
+Content-Type: application/json
+
+{
+  "shift_id": "morning_shift",
+  "new_employee_id": "emp2"
+}
+
+### Reassign a shift to unassigned
+POST {{baseUrl}}/api/shifts/reassign
+Content-Type: application/json
+
+{
+  "shift_id": "morning_shift",
+  "new_employee_id": null
+}

@@ -1,8 +1,9 @@
 """
 API request/response schemas using Pydantic
 """
+
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Literal
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -11,9 +12,17 @@ class EmployeeRequest(BaseModel):
     id: str
     name: str
     skills: List[str]
-    preferred_days_off: List[str] = Field(default_factory=list, description="Days employee prefers not to work (e.g., ['friday', 'saturday'])")
-    preferred_work_days: List[str] = Field(default_factory=list, description="Days employee prefers to work (e.g., ['sunday', 'monday'])")
-    unavailable_dates: List[datetime] = Field(default_factory=list, description="Specific dates when employee is unavailable")
+    preferred_days_off: List[str] = Field(
+        default_factory=list,
+        description="Days employee prefers not to work (e.g., ['friday', 'saturday'])",
+    )
+    preferred_work_days: List[str] = Field(
+        default_factory=list,
+        description="Days employee prefers to work (e.g., ['sunday', 'monday'])",
+    )
+    unavailable_dates: List[datetime] = Field(
+        default_factory=list, description="Specific dates when employee is unavailable"
+    )
 
 
 class ShiftRequest(BaseModel):
@@ -48,13 +57,19 @@ class SolutionResponse(BaseModel):
 # Partial modification schemas
 class ShiftModificationRequest(BaseModel):
     """Request to modify an individual shift assignment"""
-    employee_id: Optional[str] = Field(None, description="New employee ID, null to unassign")
-    check_constraints: bool = Field(True, description="Check constraints before applying")
+
+    employee_id: Optional[str] = Field(
+        None, description="New employee ID, null to unassign"
+    )
+    check_constraints: bool = Field(
+        True, description="Check constraints before applying"
+    )
     dry_run: bool = Field(False, description="Simulate change without applying")
 
 
 class ShiftLockRequest(BaseModel):
     """Request to lock or unlock shifts"""
+
     shift_ids: List[str] = Field(..., min_items=1)
     action: Literal["lock", "unlock"]
     reason: Optional[str] = Field(None, description="Reason for locking")
@@ -63,12 +78,14 @@ class ShiftLockRequest(BaseModel):
 
 class DateRange(BaseModel):
     """Date range for partial optimization"""
+
     start_date: datetime
     end_date: datetime
 
 
 class OptimizationScope(BaseModel):
     """Scope definition for partial optimization"""
+
     date_range: Optional[DateRange] = None
     employees: Optional[List[str]] = Field(None, description="Employee IDs to include")
     locations: Optional[List[str]] = Field(None, description="Locations to include")
@@ -77,15 +94,21 @@ class OptimizationScope(BaseModel):
 
 class PartialOptimizationRequest(BaseModel):
     """Request for partial schedule optimization"""
+
     base_schedule_id: str = Field(..., description="ID of existing schedule to modify")
     optimization_scope: OptimizationScope
     preserve_locked: bool = Field(True, description="Keep locked shifts unchanged")
-    minimize_changes: bool = Field(False, description="Minimize changes from current state")
-    max_reassignments: Optional[int] = Field(None, description="Maximum number of reassignments")
+    minimize_changes: bool = Field(
+        False, description="Minimize changes from current state"
+    )
+    max_reassignments: Optional[int] = Field(
+        None, description="Maximum number of reassignments"
+    )
 
 
 class WeeklyImpact(BaseModel):
     """Weekly hours impact for an employee"""
+
     employee_id: str
     employee_name: str
     old_hours: float
@@ -96,6 +119,7 @@ class WeeklyImpact(BaseModel):
 
 class ConstraintViolation(BaseModel):
     """Details of a constraint violation"""
+
     type: Literal["hard", "medium", "soft"]
     constraint_name: str
     description: str
@@ -104,6 +128,7 @@ class ConstraintViolation(BaseModel):
 
 class ShiftModificationResponse(BaseModel):
     """Response from shift modification"""
+
     shift: Dict[str, Any]
     success: bool
     warnings: List[str] = Field(default_factory=list)
@@ -113,6 +138,7 @@ class ShiftModificationResponse(BaseModel):
 
 class ShiftLockResponse(BaseModel):
     """Response from shift lock/unlock operation"""
+
     success: bool
     locked_count: int = 0
     unlocked_count: int = 0
@@ -122,6 +148,7 @@ class ShiftLockResponse(BaseModel):
 
 class ImpactSummary(BaseModel):
     """Summary of change impact analysis"""
+
     constraint_violations: List[ConstraintViolation]
     warnings: List[str]
     affected_employees: List[str]
@@ -131,13 +158,61 @@ class ImpactSummary(BaseModel):
 
 class ChangeImpactResponse(BaseModel):
     """Response from change impact analysis"""
+
     impact_summary: ImpactSummary
     is_valid: bool
 
 
 class PartialOptimizationResponse(BaseModel):
     """Response from partial optimization request"""
+
     job_id: str
     status: str
     scope_summary: Dict[str, int]
     message: Optional[str] = None
+
+
+# Continuous Planning Schemas
+class ShiftSwapRequest(BaseModel):
+    """Request to swap employees between two shifts"""
+
+    shift1_id: str = Field(..., description="ID of the first shift")
+    shift2_id: str = Field(..., description="ID of the second shift")
+
+
+class ShiftReplacementRequest(BaseModel):
+    """Request to find replacement for a shift"""
+
+    shift_id: str = Field(..., description="ID of the shift needing replacement")
+    unavailable_employee_id: str = Field(
+        ..., description="ID of the employee who cannot work"
+    )
+    excluded_employee_ids: List[str] = Field(
+        default_factory=list, description="Additional employees to exclude"
+    )
+
+
+class ShiftPinRequest(BaseModel):
+    """Request to pin/unpin shifts for continuous planning"""
+
+    shift_ids: List[str] = Field(..., min_items=1, description="Shift IDs to pin/unpin")
+    action: Literal["pin", "unpin"] = Field(..., description="Pin or unpin action")
+
+
+class ShiftReassignRequest(BaseModel):
+    """Request to reassign a shift to a specific employee"""
+
+    shift_id: str = Field(..., description="ID of the shift to reassign")
+    new_employee_id: Optional[str] = Field(
+        None, description="ID of new employee (None to unassign)"
+    )
+
+
+class ContinuousPlanningResponse(BaseModel):
+    """Response from continuous planning operations"""
+
+    success: bool
+    message: str
+    operation: str
+    affected_shifts: List[Dict[str, Any]] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)

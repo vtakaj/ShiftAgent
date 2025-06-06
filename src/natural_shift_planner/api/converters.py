@@ -1,6 +1,7 @@
 """
 Converters between API schemas and domain models
 """
+
 from typing import Any, Dict
 
 from ..core.models import Employee, Shift, ShiftSchedule
@@ -17,7 +18,7 @@ def convert_request_to_domain(request: ShiftScheduleRequest) -> ShiftSchedule:
             skills=set(emp.skills),
             preferred_days_off=set(emp.preferred_days_off),
             preferred_work_days=set(emp.preferred_work_days),
-            unavailable_dates=set(emp.unavailable_dates)
+            unavailable_dates=set(emp.unavailable_dates),
         )
         for emp in request.employees
     ]
@@ -48,7 +49,9 @@ def convert_domain_to_response(schedule: ShiftSchedule) -> Dict[str, Any]:
                 "skills": list(emp.skills),
                 "preferred_days_off": list(emp.preferred_days_off),
                 "preferred_work_days": list(emp.preferred_work_days),
-                "unavailable_dates": [date.isoformat() for date in emp.unavailable_dates]
+                "unavailable_dates": [
+                    date.isoformat() for date in emp.unavailable_dates
+                ],
             }
             for emp in schedule.employees
         ],
@@ -65,6 +68,7 @@ def convert_domain_to_response(schedule: ShiftSchedule) -> Dict[str, Any]:
                     if shift.employee
                     else None
                 ),
+                "pinned": shift.pinned,
             }
             for shift in schedule.shifts
         ],

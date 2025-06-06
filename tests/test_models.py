@@ -7,7 +7,11 @@ import pytest
 # Add src directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from natural_shift_planner.api.analysis import get_target_hours, get_week_key, is_full_time_employee
+from natural_shift_planner.api.analysis import (
+    get_target_hours,
+    get_week_key,
+    is_full_time_employee,
+)
 from natural_shift_planner.core.models import Employee, Shift, ShiftSchedule
 
 
@@ -212,30 +216,30 @@ def test_schedule_statistics(sample_schedule):
 def test_employee_preferences():
     """Test employee preference functionality"""
     test_date = datetime(2025, 6, 5)  # This is a Thursday
-    
+
     employee = Employee(
-        "emp1", 
-        "John Smith", 
+        "emp1",
+        "John Smith",
         {"Nurse"},
         preferred_days_off={"friday", "saturday"},
         preferred_work_days={"monday", "tuesday"},
-        unavailable_dates={test_date}
+        unavailable_dates={test_date},
     )
-    
+
     # Test preferred days off
     assert employee.prefers_day_off("friday")
     assert employee.prefers_day_off("Saturday")  # Case insensitive
     assert not employee.prefers_day_off("monday")
-    
+
     # Test preferred work days
     assert employee.prefers_work_day("monday")
     assert employee.prefers_work_day("Tuesday")  # Case insensitive
     assert not employee.prefers_work_day("friday")
-    
+
     # Test unavailable dates
     assert employee.is_unavailable_on_date(test_date)
     assert not employee.is_unavailable_on_date(test_date + timedelta(days=1))
-    
+
     # Test with different time on same date
     same_day_different_time = test_date.replace(hour=15, minute=30)
     assert employee.is_unavailable_on_date(same_day_different_time)
@@ -244,7 +248,7 @@ def test_employee_preferences():
 def test_employee_preferences_empty():
     """Test employee with no preferences"""
     employee = Employee("emp1", "John Smith", {"Nurse"})
-    
+
     # No preferences should return False
     assert not employee.prefers_day_off("friday")
     assert not employee.prefers_work_day("monday")
@@ -254,10 +258,10 @@ def test_employee_preferences_empty():
 def test_day_name_helper():
     """Test day name helper function"""
     from natural_shift_planner.core.constraints.shift_constraints import get_day_name
-    
+
     # Test specific dates
     monday = datetime(2025, 6, 2)  # This is a Monday
     friday = datetime(2025, 6, 6)  # This is a Friday
-    
+
     assert get_day_name(monday) == "monday"
     assert get_day_name(friday) == "friday"

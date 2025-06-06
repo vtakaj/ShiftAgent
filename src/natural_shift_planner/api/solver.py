@@ -1,6 +1,7 @@
 """
 Timefold Solver configuration and factory
 """
+
 from timefold.solver import SolverFactory
 from timefold.solver.config import (
     Duration,
@@ -9,9 +10,9 @@ from timefold.solver.config import (
     TerminationConfig,
 )
 
-from ..core.models.shift import Shift
-from ..core.models.schedule import ShiftSchedule
 from ..core.constraints.shift_constraints import shift_scheduling_constraints
+from ..core.models.schedule import ShiftSchedule
+from ..core.models.shift import Shift
 
 # Solver settings
 solver_config = SolverConfig(

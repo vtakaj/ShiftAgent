@@ -1,6 +1,7 @@
 """
 Shift Schedule domain model
 """
+
 from dataclasses import dataclass, field
 from typing import Annotated, List
 

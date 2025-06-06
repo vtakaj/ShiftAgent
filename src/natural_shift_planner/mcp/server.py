@@ -1,6 +1,7 @@
 """
 FastMCP server for Shift Scheduler
 """
+
 from fastmcp import FastMCP
 
 from .tools import (
@@ -54,6 +55,7 @@ mcp.tool()(solve_schedule_sync_html)
 mcp.tool()(get_demo_schedule_pdf)
 mcp.tool()(get_schedule_pdf_report)
 mcp.tool()(solve_schedule_sync_pdf)
+
 
 # Add prompts
 @mcp.prompt()

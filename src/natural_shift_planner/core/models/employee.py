@@ -1,6 +1,7 @@
 """
 Employee domain model
 """
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Set
@@ -14,9 +15,15 @@ class Employee:
     name: str
     skills: Set[str] = field(default_factory=set)
     # Employee preference fields
-    preferred_days_off: Set[str] = field(default_factory=set)  # e.g., {"friday", "saturday"}
-    preferred_work_days: Set[str] = field(default_factory=set)  # e.g., {"sunday", "monday"}
-    unavailable_dates: Set[datetime] = field(default_factory=set)  # Specific dates (hard constraint)
+    preferred_days_off: Set[str] = field(
+        default_factory=set
+    )  # e.g., {"friday", "saturday"}
+    preferred_work_days: Set[str] = field(
+        default_factory=set
+    )  # e.g., {"sunday", "monday"}
+    unavailable_dates: Set[datetime] = field(
+        default_factory=set
+    )  # Specific dates (hard constraint)
 
     def has_skill(self, skill: str) -> bool:
         """指定されたスキルを持っているかチェック"""

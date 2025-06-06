@@ -1,6 +1,7 @@
 """
 Weekly working hours analysis functions
 """
+
 from datetime import datetime
 from typing import Any, Dict, List
 
@@ -54,15 +55,9 @@ def analyze_weekly_hours(schedule: ShiftSchedule) -> Dict[str, Any]:
                 "shifts": [],
             }
 
-        weekly_hours_by_employee[emp_id][week_key][
-            "total_minutes"
-        ] += duration_minutes
-        weekly_hours_by_employee[emp_id][week_key][
-            "shift_count"
-        ] += 1
-        weekly_hours_by_employee[emp_id][week_key][
-            "shifts"
-        ].append(
+        weekly_hours_by_employee[emp_id][week_key]["total_minutes"] += duration_minutes
+        weekly_hours_by_employee[emp_id][week_key]["shift_count"] += 1
+        weekly_hours_by_employee[emp_id][week_key]["shifts"].append(
             {
                 "id": shift.id,
                 "start_time": shift.start_time.isoformat(),
@@ -219,9 +214,7 @@ def analyze_weekly_hours(schedule: ShiftSchedule) -> Dict[str, Any]:
         analysis["by_week"][week_key] = {
             "total_shifts": summary["total_shifts"],
             "assigned_shifts": summary["assigned_shifts"],
-            "unassigned_shifts": (
-                summary["total_shifts"] - summary["assigned_shifts"]
-            ),
+            "unassigned_shifts": (summary["total_shifts"] - summary["assigned_shifts"]),
             "total_hours": round(summary["total_hours"], 1),
             "active_employees": len(summary["employees"]),
             "average_hours_per_employee": round(

@@ -1,6 +1,7 @@
 """
 Main server entry point
 """
+
 from .app import app
 from .routes import *  # noqa: F401, F403 - Import all routes to register them
 
