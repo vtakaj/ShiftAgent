@@ -16,7 +16,6 @@ from .tools import (
     get_solve_status,
     health_check,
     pin_shifts,
-    quick_fix_schedule,
     reassign_shift,
     solve_schedule_async,
     solve_schedule_sync,
@@ -40,7 +39,6 @@ mcp.tool()(test_weekly_constraints)
 
 # Register remaining tools
 mcp.tool()(get_schedule_shifts)
-mcp.tool()(quick_fix_schedule)
 
 # Register HTML report tools
 mcp.tool()(get_demo_schedule_html)
@@ -86,7 +84,6 @@ async def shift_scheduling_prompt() -> str:
 
 ### Schedule Inspection
 - get_schedule_shifts: Inspect completed schedules
-- quick_fix_schedule: Rapidly fix common issues in focused date ranges
 
 ### Continuous Planning (Real-time Modifications)
 - swap_shifts: Swap employees between two shifts during optimization
