@@ -179,8 +179,6 @@ async def get_schedule_shifts(ctx: Context, job_id: str) -> Dict[str, Any]:
     return await call_api("GET", f"/api/shifts/solve/{job_id}")
 
 
-
-
 # HTML Report tools
 async def call_api_html(endpoint: str, timeout: float = 120.0) -> str:
     """Make an API call that returns HTML content"""
