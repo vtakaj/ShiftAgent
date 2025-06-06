@@ -269,6 +269,122 @@ async def solve_schedule_sync_html(
         return response.text
 
 
+# Continuous Planning tools
+class ShiftSwapRequest(BaseModel):
+    """Request to swap employees between two shifts"""
+    shift1_id: str = Field(..., description="ID of the first shift")
+    shift2_id: str = Field(..., description="ID of the second shift")
+
+
+class ShiftReplacementRequest(BaseModel):
+    """Request to find replacement for a shift"""
+    shift_id: str = Field(..., description="ID of the shift needing replacement")
+    unavailable_employee_id: str = Field(..., description="ID of the employee who cannot work")
+    excluded_employee_ids: List[str] = Field(default_factory=list, description="Additional employees to exclude")
+
+
+class ShiftPinRequest(BaseModel):
+    """Request to pin/unpin shifts for continuous planning"""
+    shift_ids: List[str] = Field(..., min_items=1, description="Shift IDs to pin/unpin")
+    action: str = Field(..., description="Pin or unpin action", pattern="^(pin|unpin)$")
+
+
+class ShiftReassignRequest(BaseModel):
+    """Request to reassign a shift to a specific employee"""
+    shift_id: str = Field(..., description="ID of the shift to reassign")
+    new_employee_id: Optional[str] = Field(None, description="ID of new employee (None to unassign)")
+
+
+async def swap_shifts(ctx: Context, shift1_id: str, shift2_id: str) -> Dict[str, Any]:
+    """
+    Swap employees between two shifts during continuous planning
+    
+    Args:
+        shift1_id: ID of the first shift
+        shift2_id: ID of the second shift
+    
+    Returns:
+        Success status and details of the swap operation
+    """
+    request_data = {
+        "shift1_id": shift1_id,
+        "shift2_id": shift2_id
+    }
+    return await call_api("POST", "/api/shifts/swap", request_data)
+
+
+async def find_shift_replacement(
+    ctx: Context, 
+    shift_id: str, 
+    unavailable_employee_id: str, 
+    excluded_employee_ids: Optional[List[str]] = None
+) -> Dict[str, Any]:
+    """
+    Find replacement for a shift when an employee becomes unavailable
+    
+    Args:
+        shift_id: ID of the shift needing replacement
+        unavailable_employee_id: ID of the employee who cannot work
+        excluded_employee_ids: Additional employees to exclude from consideration
+    
+    Returns:
+        Success status and replacement details
+    """
+    request_data = {
+        "shift_id": shift_id,
+        "unavailable_employee_id": unavailable_employee_id,
+        "excluded_employee_ids": excluded_employee_ids or []
+    }
+    return await call_api("POST", "/api/shifts/replace", request_data)
+
+
+async def pin_shifts(
+    ctx: Context, 
+    shift_ids: List[str], 
+    action: str = "pin"
+) -> Dict[str, Any]:
+    """
+    Pin or unpin shifts to prevent changes during optimization
+    
+    Args:
+        shift_ids: List of shift IDs to pin/unpin
+        action: Either "pin" or "unpin"
+    
+    Returns:
+        Success status and details of the pin operation
+    """
+    if action not in ["pin", "unpin"]:
+        raise ValueError("Action must be 'pin' or 'unpin'")
+    
+    request_data = {
+        "shift_ids": shift_ids,
+        "action": action
+    }
+    return await call_api("POST", "/api/shifts/pin", request_data)
+
+
+async def reassign_shift(
+    ctx: Context, 
+    shift_id: str, 
+    new_employee_id: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Reassign a shift to a specific employee or unassign it
+    
+    Args:
+        shift_id: ID of the shift to reassign
+        new_employee_id: ID of new employee (None to unassign)
+    
+    Returns:
+        Success status and reassignment details
+    """
+    request_data = {
+        "shift_id": shift_id,
+        "new_employee_id": new_employee_id
+    }
+    return await call_api("POST", "/api/shifts/reassign", request_data)
+
+
 # PDF Report tools
 async def call_api_pdf(
     endpoint: str, data: Optional[Dict[str, Any]] = None, timeout: float = 120.0
