@@ -77,6 +77,8 @@
     "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
   ],
   "remoteEnv": {
-    "SSH_AUTH_SOCK": "${localEnv:SSH_AUTH_SOCK}"
+    "SSH_AUTH_SOCK": "${localEnv:SSH_AUTH_SOCK}",
+    "JOB_STORAGE_TYPE": "filesystem",
+    "JOB_STORAGE_DIR": "/workspace/job_storage"
   }
 }
