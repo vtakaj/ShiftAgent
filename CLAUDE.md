@@ -190,5 +190,8 @@ make mcp
 - `get_demo_schedule_html`: Get demo schedule as formatted HTML report
 - `get_schedule_html_report`: Get completed schedule as HTML report
 - `solve_schedule_sync_html`: Solve and return HTML report in one step
+- `get_demo_schedule_pdf`: Get demo schedule as PDF report
+- `get_schedule_pdf_report`: Get completed schedule as PDF report
+- `solve_schedule_sync_pdf`: Solve and return PDF report in one step
 
 See `MCP_SERVER.md` for detailed usage and Claude Desktop integration instructions.

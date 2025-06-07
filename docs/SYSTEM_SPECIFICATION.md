@@ -206,7 +206,7 @@ class ShiftSchedule:
 
 ### Base URL
 ```
-http://localhost:8000
+http://localhost:8081
 ```
 
 ### Authentication
@@ -259,18 +259,23 @@ GET /api/shifts/solve/{job_id}
 Response: SolutionResponse
 ```
 
-#### 5. Shift Pinning Feature
+#### 5. Continuous Planning Features
 ```http
-POST /api/shifts/pin
-Request: {"shift_id": string, "employee_id": string}
-Response: PinningResponse
+POST /api/shifts/{job_id}/swap
+Request: {"shift1_id": string, "shift2_id": string}
+Response: ContinuousPlanningResponse
 
-POST /api/shifts/unpin  
-Request: {"shift_id": string}
-Response: PinningResponse
+POST /api/shifts/{job_id}/replace
+Request: {"shift_id": string, "unavailable_employee_id": string}
+Response: ContinuousPlanningResponse
 
-GET /api/shifts/pinning-status/{job_id}
-Response: PinningStatusResponse
+POST /api/shifts/{job_id}/pin
+Request: {"shift_ids": array, "action": "pin" | "unpin"}
+Response: ContinuousPlanningResponse
+
+POST /api/shifts/{job_id}/reassign
+Request: {"shift_id": string, "new_employee_id": string}
+Response: ContinuousPlanningResponse
 ```
 
 #### 6. Weekly Work Hours Analysis

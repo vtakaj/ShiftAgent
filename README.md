@@ -147,10 +147,18 @@ GET  /api/shifts/test-weekly          # Weekly work hours constraint test (demo)
 ### Continuous Planning Endpoints (NEW!)
 
 ```http
-POST /api/shifts/swap                        # Swap employees between two shifts
-POST /api/shifts/replace                     # Find replacement for unavailable employee
-POST /api/shifts/pin                         # Pin/unpin shifts for continuous planning
-POST /api/shifts/reassign                    # Reassign shift to specific employee
+POST /api/shifts/{job_id}/swap               # Swap employees between two shifts
+POST /api/shifts/{job_id}/replace            # Find replacement for unavailable employee
+POST /api/shifts/{job_id}/pin                # Pin/unpin shifts for continuous planning
+POST /api/shifts/{job_id}/reassign           # Reassign shift to specific employee
+```
+
+### Job Management Endpoints (NEW!)
+
+```http
+GET  /api/jobs                               # List all jobs
+DELETE /api/jobs/{job_id}                    # Delete specific job
+POST /api/jobs/cleanup                       # Clean up old jobs
 ```
 
 ### Report Generation Endpoints
