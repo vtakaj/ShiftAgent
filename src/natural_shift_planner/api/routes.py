@@ -311,25 +311,29 @@ async def solve_shifts_sync_pdf(request: ShiftScheduleRequest):
 
 
 # Continuous Planning endpoints
-@app.post("/api/shifts/swap", response_model=ContinuousPlanningResponse)
-async def swap_shifts(request: ShiftSwapRequest):
+@app.post("/api/shifts/{job_id}/swap", response_model=ContinuousPlanningResponse)
+async def swap_shifts(job_id: str, request: ShiftSwapRequest):
     """Swap employees between two shifts"""
     with job_lock:
-        # Find an active solving job
-        active_solver = None
-        active_job_id = None
+        # Find the specific job
+        if job_id not in jobs and job_store:
+            # Try to load from persistent storage
+            stored_job = job_store.get_job(job_id)
+            if stored_job:
+                jobs[job_id] = stored_job
+        
+        if job_id not in jobs:
+            raise HTTPException(status_code=404, detail="Job not found")
 
-        for job_id, job in jobs.items():
-            if job["status"] == "SOLVING_SCHEDULED" and "solver" in job:
-                active_solver = job["solver"]
-                active_job_id = job_id
-                break
-
-        if not active_solver:
+        job = jobs[job_id]
+        
+        if job["status"] != "SOLVING_SCHEDULED" or "solver" not in job:
             raise HTTPException(
                 status_code=400,
-                detail="No active solving session. Please start a solve operation first.",
+                detail=f"Job {job_id} is not in an active solving state. Current status: {job['status']}",
             )
+        
+        active_solver = job["solver"]
 
         try:
             # Apply the swap using ProblemChangeDirector
@@ -368,23 +372,29 @@ async def swap_shifts(request: ShiftSwapRequest):
             raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/shifts/replace", response_model=ContinuousPlanningResponse)
-async def find_replacement(request: ShiftReplacementRequest):
+@app.post("/api/shifts/{job_id}/replace", response_model=ContinuousPlanningResponse)
+async def find_replacement(job_id: str, request: ShiftReplacementRequest):
     """Find replacement for a shift when an employee becomes unavailable"""
     with job_lock:
-        # Find an active solving job
-        active_solver = None
+        # Find the specific job
+        if job_id not in jobs and job_store:
+            # Try to load from persistent storage
+            stored_job = job_store.get_job(job_id)
+            if stored_job:
+                jobs[job_id] = stored_job
+        
+        if job_id not in jobs:
+            raise HTTPException(status_code=404, detail="Job not found")
 
-        for job_id, job in jobs.items():
-            if job["status"] == "SOLVING_SCHEDULED" and "solver" in job:
-                active_solver = job["solver"]
-                break
-
-        if not active_solver:
+        job = jobs[job_id]
+        
+        if job["status"] != "SOLVING_SCHEDULED" or "solver" not in job:
             raise HTTPException(
                 status_code=400,
-                detail="No active solving session. Please start a solve operation first.",
+                detail=f"Job {job_id} is not in an active solving state. Current status: {job['status']}",
             )
+        
+        active_solver = job["solver"]
 
         try:
             # Apply the replacement using ProblemChangeDirector
@@ -403,23 +413,29 @@ async def find_replacement(request: ShiftReplacementRequest):
             raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/shifts/pin", response_model=ContinuousPlanningResponse)
-async def pin_shifts(request: ShiftPinRequest):
+@app.post("/api/shifts/{job_id}/pin", response_model=ContinuousPlanningResponse)
+async def pin_shifts(job_id: str, request: ShiftPinRequest):
     """Pin or unpin shifts for continuous planning"""
     with job_lock:
-        # Find an active solving job
-        active_solver = None
+        # Find the specific job
+        if job_id not in jobs and job_store:
+            # Try to load from persistent storage
+            stored_job = job_store.get_job(job_id)
+            if stored_job:
+                jobs[job_id] = stored_job
+        
+        if job_id not in jobs:
+            raise HTTPException(status_code=404, detail="Job not found")
 
-        for job_id, job in jobs.items():
-            if job["status"] == "SOLVING_SCHEDULED" and "solver" in job:
-                active_solver = job["solver"]
-                break
-
-        if not active_solver:
+        job = jobs[job_id]
+        
+        if job["status"] != "SOLVING_SCHEDULED" or "solver" not in job:
             raise HTTPException(
                 status_code=400,
-                detail="No active solving session. Please start a solve operation first.",
+                detail=f"Job {job_id} is not in an active solving state. Current status: {job['status']}",
             )
+        
+        active_solver = job["solver"]
 
         try:
             if request.action == "pin":
@@ -440,23 +456,29 @@ async def pin_shifts(request: ShiftPinRequest):
             raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/shifts/reassign", response_model=ContinuousPlanningResponse)
-async def reassign_shift(request: ShiftReassignRequest):
+@app.post("/api/shifts/{job_id}/reassign", response_model=ContinuousPlanningResponse)
+async def reassign_shift(job_id: str, request: ShiftReassignRequest):
     """Reassign a shift to a specific employee"""
     with job_lock:
-        # Find an active solving job
-        active_solver = None
+        # Find the specific job
+        if job_id not in jobs and job_store:
+            # Try to load from persistent storage
+            stored_job = job_store.get_job(job_id)
+            if stored_job:
+                jobs[job_id] = stored_job
+        
+        if job_id not in jobs:
+            raise HTTPException(status_code=404, detail="Job not found")
 
-        for job_id, job in jobs.items():
-            if job["status"] == "SOLVING_SCHEDULED" and "solver" in job:
-                active_solver = job["solver"]
-                break
-
-        if not active_solver:
+        job = jobs[job_id]
+        
+        if job["status"] != "SOLVING_SCHEDULED" or "solver" not in job:
             raise HTTPException(
                 status_code=400,
-                detail="No active solving session. Please start a solve operation first.",
+                detail=f"Job {job_id} is not in an active solving state. Current status: {job['status']}",
             )
+        
+        active_solver = job["solver"]
 
         try:
             ContinuousPlanningService.reassign_shift(
