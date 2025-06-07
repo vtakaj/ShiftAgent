@@ -265,11 +265,12 @@ class ShiftReassignRequest(BaseModel):
     new_employee_id: Optional[str] = Field(None, description="ID of new employee (None to unassign)")
 
 
-async def swap_shifts(ctx: Context, shift1_id: str, shift2_id: str) -> Dict[str, Any]:
+async def swap_shifts(ctx: Context, job_id: str, shift1_id: str, shift2_id: str) -> Dict[str, Any]:
     """
     Swap employees between two shifts during continuous planning
     
     Args:
+        job_id: ID of the active optimization job
         shift1_id: ID of the first shift
         shift2_id: ID of the second shift
     
@@ -280,11 +281,12 @@ async def swap_shifts(ctx: Context, shift1_id: str, shift2_id: str) -> Dict[str,
         "shift1_id": shift1_id,
         "shift2_id": shift2_id
     }
-    return await call_api("POST", "/api/shifts/swap", request_data)
+    return await call_api("POST", f"/api/shifts/{job_id}/swap", request_data)
 
 
 async def find_shift_replacement(
     ctx: Context, 
+    job_id: str,
     shift_id: str, 
     unavailable_employee_id: str, 
     excluded_employee_ids: Optional[List[str]] = None
@@ -293,6 +295,7 @@ async def find_shift_replacement(
     Find replacement for a shift when an employee becomes unavailable
     
     Args:
+        job_id: ID of the active optimization job
         shift_id: ID of the shift needing replacement
         unavailable_employee_id: ID of the employee who cannot work
         excluded_employee_ids: Additional employees to exclude from consideration
@@ -305,11 +308,12 @@ async def find_shift_replacement(
         "unavailable_employee_id": unavailable_employee_id,
         "excluded_employee_ids": excluded_employee_ids or []
     }
-    return await call_api("POST", "/api/shifts/replace", request_data)
+    return await call_api("POST", f"/api/shifts/{job_id}/replace", request_data)
 
 
 async def pin_shifts(
     ctx: Context, 
+    job_id: str,
     shift_ids: List[str], 
     action: str = "pin"
 ) -> Dict[str, Any]:
@@ -317,6 +321,7 @@ async def pin_shifts(
     Pin or unpin shifts to prevent changes during optimization
     
     Args:
+        job_id: ID of the active optimization job
         shift_ids: List of shift IDs to pin/unpin
         action: Either "pin" or "unpin"
     
@@ -330,11 +335,12 @@ async def pin_shifts(
         "shift_ids": shift_ids,
         "action": action
     }
-    return await call_api("POST", "/api/shifts/pin", request_data)
+    return await call_api("POST", f"/api/shifts/{job_id}/pin", request_data)
 
 
 async def reassign_shift(
     ctx: Context, 
+    job_id: str,
     shift_id: str, 
     new_employee_id: Optional[str] = None
 ) -> Dict[str, Any]:
@@ -342,6 +348,7 @@ async def reassign_shift(
     Reassign a shift to a specific employee or unassign it
     
     Args:
+        job_id: ID of the active optimization job
         shift_id: ID of the shift to reassign
         new_employee_id: ID of new employee (None to unassign)
     
@@ -352,7 +359,7 @@ async def reassign_shift(
         "shift_id": shift_id,
         "new_employee_id": new_employee_id
     }
-    return await call_api("POST", "/api/shifts/reassign", request_data)
+    return await call_api("POST", f"/api/shifts/{job_id}/reassign", request_data)
 
 
 # PDF Report tools

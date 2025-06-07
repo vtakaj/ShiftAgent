@@ -226,9 +226,10 @@ Content-Type: application/json
 # GET {{baseUrl}}/api/shifts/solve/{job_id}/html
 
 ### Continuous Planning endpoints
+# NOTE: Replace {job_id} with an actual job ID from a completed async solve operation
 
 ### Swap shifts between two employees
-POST {{baseUrl}}/api/shifts/swap
+POST {{baseUrl}}/api/shifts/{job_id}/swap
 Content-Type: application/json
 
 {
@@ -237,7 +238,7 @@ Content-Type: application/json
 }
 
 ### Find replacement for a shift
-POST {{baseUrl}}/api/shifts/replace
+POST {{baseUrl}}/api/shifts/{job_id}/replace
 Content-Type: application/json
 
 {
@@ -247,7 +248,7 @@ Content-Type: application/json
 }
 
 ### Pin shifts to prevent changes
-POST {{baseUrl}}/api/shifts/pin
+POST {{baseUrl}}/api/shifts/{job_id}/pin
 Content-Type: application/json
 
 {
@@ -256,7 +257,7 @@ Content-Type: application/json
 }
 
 ### Unpin shifts to allow changes
-POST {{baseUrl}}/api/shifts/pin
+POST {{baseUrl}}/api/shifts/{job_id}/pin
 Content-Type: application/json
 
 {
@@ -265,7 +266,7 @@ Content-Type: application/json
 }
 
 ### Reassign a shift to specific employee
-POST {{baseUrl}}/api/shifts/reassign
+POST {{baseUrl}}/api/shifts/{job_id}/reassign
 Content-Type: application/json
 
 {
@@ -274,7 +275,7 @@ Content-Type: application/json
 }
 
 ### Reassign a shift to unassigned
-POST {{baseUrl}}/api/shifts/reassign
+POST {{baseUrl}}/api/shifts/{job_id}/reassign
 Content-Type: application/json
 
 {
