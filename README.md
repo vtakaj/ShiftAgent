@@ -441,3 +441,101 @@ All development for this project must be done inside the VS Code Dev Container. 
 1. Install Visual Studio Code
 2. Install the Remote - Containers extension
 3. Open this repository in VS Code and select "Remote-Containers: Open Folder in Container..."
+
+## Shift Creation Flow
+
+The following diagram explains the flow of shift creation.
+
+```mermaid
+sequenceDiagram
+    participant Human as Human
+    participant LLM as Claude Desktop (LLM)
+    participant Tool as Tool
+    participant Solver as Solver
+
+    Human->>LLM: Shift Creation Request
+    Note over Human: "Please create a one-month work schedule."
+
+    LLM->>LLM: 1. Employee Preference Collection
+    Note over LLM: - Collect employee preferences<br>- Preferred days off<br>- Preferred work days<br>- Unavailable dates<br>- Skill information
+
+    LLM->>LLM: 2. Shift Data Creation
+    Note over LLM: - Create empty shifts for one month<br>- Set time slots<br>- Set required skills<br>- Set priorities<br>- Set locations<br>- Incorporate employee preferences
+
+    LLM->>Tool: 3. Shift Data Analysis
+    Note over Tool: Process employee data<br>- Skill information<br>- Preferred days off<br>- Unavailable dates
+
+    Tool->>Solver: 4. Shift Optimization Problem Construction
+    Note over Solver: - Set constraints<br>- Set objective function<br>- Set optimization parameters
+
+    Solver->>Solver: 5. Optimization Calculation
+    Note over Solver: - Constraint satisfaction<br>- Objective function optimization<br>- Solution generation
+
+    Solver->>Tool: 6. Optimization Result Reception
+    Note over Tool: - Solution validation<br>- Result formatting
+
+    Tool->>LLM: 7. Result Display
+    Note over LLM: - Display shift table<br>- Display optimization score
+
+    LLM->>Human: 8. Result Presentation
+    Note over Human: - Review shift table<br>- Review optimization results
+```
+
+### Step-by-Step Explanation
+
+1. **Employee Preference Collection (LLM)**
+   - Gather employee information
+     - Preferred days off
+     - Preferred work days
+     - Unavailable dates
+     - Skill information
+     - Employment type preferences
+
+2. **Shift Data Creation (LLM)**
+   - Create empty shifts for one month
+     - Weekday shifts (Mon-Fri)
+     - Weekend shifts
+   - Configure each shift
+     - Time slots (Morning, Afternoon)
+     - Required skills
+     - Priority levels
+     - Locations
+   - Special shift settings
+     - Saturday special shifts, etc.
+   - Incorporate employee preferences
+     - Match skills with required positions
+     - Consider preferred work days
+     - Avoid unavailable dates
+
+3. **Shift Data Analysis (Tool)**
+   - Create employee data
+     - Skill information
+     - Preferred days off
+     - Unavailable dates
+     - Employment type
+
+4. **Shift Optimization Problem Construction (Solver)**
+   - Set hard constraints
+     - Skill requirements
+     - Unavailable dates
+   - Set soft constraints
+     - Preferred days off
+     - Preferred work days
+
+5. **Optimization Calculation (Solver)**
+   - Solve constraint satisfaction problem
+   - Optimize objective function
+   - Generate and evaluate solutions
+
+6. **Optimization Result Reception (Tool)**
+   - Validate generated solutions
+   - Format and structure results
+
+7. **Result Display (LLM)**
+   - Display shift table in tabular format
+   - Display optimization score
+   - Display constraint satisfaction status
+
+8. **Result Presentation (Human)**
+   - Review shift table in tabular format
+   - Review optimization results explanation
