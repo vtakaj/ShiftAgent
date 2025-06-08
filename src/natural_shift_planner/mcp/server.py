@@ -8,9 +8,7 @@ from .tools import (
     analyze_weekly_hours,
     find_shift_replacement,
     get_demo_schedule,
-    get_demo_schedule_html,
     get_demo_schedule_pdf,
-    get_schedule_html_report,
     get_schedule_pdf_report,
     get_schedule_shifts,
     get_solve_status,
@@ -19,7 +17,6 @@ from .tools import (
     reassign_shift,
     solve_schedule_async,
     solve_schedule_sync,
-    solve_schedule_sync_html,
     solve_schedule_sync_pdf,
     swap_shifts,
     test_weekly_constraints,
@@ -39,11 +36,6 @@ mcp.tool()(test_weekly_constraints)
 
 # Register remaining tools
 mcp.tool()(get_schedule_shifts)
-
-# Register HTML report tools
-mcp.tool()(get_demo_schedule_html)
-mcp.tool()(get_schedule_html_report)
-mcp.tool()(solve_schedule_sync_html)
 
 # Register PDF report tools
 mcp.tool()(get_demo_schedule_pdf)
@@ -90,11 +82,6 @@ async def shift_scheduling_prompt() -> str:
 - find_shift_replacement: Find replacement when employee becomes unavailable
 - pin_shifts: Pin/unpin shifts to prevent changes during optimization
 - reassign_shift: Reassign shift to specific employee or unassign
-
-### HTML Reports
-- get_demo_schedule_html: Get demo schedule as formatted HTML report
-- get_schedule_html_report: Get completed schedule as HTML report
-- solve_schedule_sync_html: Solve and return HTML report in one step
 
 ### PDF Reports
 - get_demo_schedule_pdf: Get demo schedule as PDF report

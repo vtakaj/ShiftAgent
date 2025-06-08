@@ -126,10 +126,10 @@ The solver optimizes using HardMediumSoftScore:
 - `POST /api/shifts/analyze-weekly`: Analyze weekly work hours
 - `GET /api/shifts/test-weekly`: Test weekly constraint calculations
 
-#### HTML Report Endpoints
-- `GET /api/shifts/demo/html`: Demo data as formatted HTML report
-- `POST /api/shifts/solve-sync/html`: Synchronous optimization with HTML report output
-- `GET /api/shifts/solve/{job_id}/html`: Get optimization results as HTML report
+#### PDF Report Endpoints
+- `GET /api/shifts/demo/pdf`: Demo data as PDF report
+- `POST /api/shifts/solve-sync/pdf`: Synchronous optimization with PDF report output
+- `GET /api/shifts/solve/{job_id}/pdf`: Get optimization results as PDF report
 
 ## Development Notes
 
