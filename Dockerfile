@@ -23,10 +23,18 @@ FROM --platform=$TARGETPLATFORM python:3.11-slim
 # Build arguments
 ARG TARGETPLATFORM
 
-# Update system packages and install Java (platform-specific)
+# Update system packages and install Java and fonts (platform-specific)
 RUN apt-get update && apt-get install -y \
     openjdk-17-jre-headless \
     curl \
+    # WeasyPrint dependencies
+    python3-cffi \
+    python3-brotli \
+    libpango-1.0-0 \
+    libpangoft2-1.0-0 \
+    # Japanese fonts
+    fonts-noto-cjk \
+    fonts-noto-cjk-extra \
     && rm -rf /var/lib/apt/lists/*
 
 # Set JAVA_HOME (platform-specific)
