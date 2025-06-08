@@ -52,7 +52,10 @@
         "github.copilot",
         "github.copilot-chat",
         "ms-python.debugpy",
-        "humao.rest-client"
+        "humao.rest-client",
+        "ms-python.vscode-pylance",
+        "eamodio.gitlens",
+        "shd101wyy.markdown-preview-enhanced"
       ]
     }
   },
