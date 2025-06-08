@@ -59,8 +59,17 @@ class SchedulePDFRenderer:
             margin: 1cm;
         }
         
+        /* Japanese font support */
+        @font-face {
+            font-family: 'Japanese';
+            src: local('Hiragino Sans'), local('Hiragino Kaku Gothic ProN'),
+                 local('Yu Gothic'), local('Meiryo'), local('MS Gothic'),
+                 local('Noto Sans CJK JP'), local('Noto Sans JP');
+        }
+        
         body {
             background-color: white !important;
+            font-family: 'Japanese', 'Helvetica Neue', Arial, sans-serif;
         }
         
         .container {
