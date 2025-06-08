@@ -114,6 +114,52 @@ class FileSystemJobStore:
         with open(job_path, 'w', encoding='utf-8') as f:
             json.dump(serializable_data, f, indent=2, ensure_ascii=False)
     
+    def _deserialize_employee(self, emp_data: Optional[Dict[str, Any]]) -> Optional[Employee]:
+        """Convert dict to Employee"""
+        if not emp_data:
+            return None
+        return Employee(
+            id=emp_data["id"],
+            name=emp_data["name"],
+            skills=set(emp_data["skills"]),
+            preferred_days_off=set(emp_data.get("preferred_days_off", [])),
+            preferred_work_days=set(emp_data.get("preferred_work_days", [])),
+            unavailable_dates=set(
+                self._deserialize_datetime(d) for d in emp_data.get("unavailable_dates", [])
+                if d is not None
+            )
+        )
+    
+    def _deserialize_shift(self, shift_data: Optional[Dict[str, Any]]) -> Optional[Shift]:
+        """Convert dict to Shift"""
+        if not shift_data:
+            return None
+        shift = Shift(
+            id=shift_data["id"],
+            start_time=self._deserialize_datetime(shift_data["start_time"]),
+            end_time=self._deserialize_datetime(shift_data["end_time"]),
+            required_skills=set(shift_data["required_skills"]),
+            location=shift_data["location"],
+            priority=shift_data["priority"],
+            pinned=shift_data.get("pinned", False)
+        )
+        # Set employee if present
+        if shift_data.get("employee"):
+            shift.employee = self._deserialize_employee(shift_data["employee"])
+        return shift
+    
+    def _deserialize_schedule(self, schedule_data: Optional[Dict[str, Any]]) -> Optional[ShiftSchedule]:
+        """Convert dict to ShiftSchedule"""
+        if not schedule_data:
+            return None
+        employees = [self._deserialize_employee(emp) for emp in schedule_data["employees"]]
+        shifts = [self._deserialize_shift(shift) for shift in schedule_data["shifts"]]
+        schedule = ShiftSchedule(employees=employees, shifts=shifts)
+        if schedule_data.get("score"):
+            # Note: Score reconstruction from string is complex, skip for now
+            pass
+        return schedule
+
     def get_job(self, job_id: str) -> Optional[Dict[str, Any]]:
         """Retrieve job data from file"""
         job_path = self._get_job_path(job_id)
@@ -129,6 +175,12 @@ class FileSystemJobStore:
                 data["created_at"] = self._deserialize_datetime(data["created_at"])
             if data.get("completed_at"):
                 data["completed_at"] = self._deserialize_datetime(data["completed_at"])
+            
+            # Convert problem and solution back to domain objects
+            if data.get("problem"):
+                data["problem"] = self._deserialize_schedule(data["problem"])
+            if data.get("solution"):
+                data["solution"] = self._deserialize_schedule(data["solution"])
             
             return data
         except Exception as e:
