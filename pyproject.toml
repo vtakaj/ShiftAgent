@@ -3,6 +3,7 @@ name = "shift-scheduler"
 version = "1.0.0"
 description = "Employee shift scheduling using Timefold Solver"
 readme = "README.md"
+license = { text = "Apache-2.0" }
 requires-python = ">=3.11"
 authors = [
     { name = "Your Name", email = "your.email@example.com" }
