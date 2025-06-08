@@ -1,0 +1,94 @@
+name: ❓ Question
+description: Ask a question about the project
+title: "[Question]: "
+labels: ["question", "needs-response"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about the Shift Scheduler? We're here to help!
+        
+        **Note**: For general discussions, consider using [GitHub Discussions](../../discussions) instead.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission checklist
+      description: Please verify these items before asking
+      options:
+        - label: I checked the documentation (README.md, CLAUDE.md, CONTRIBUTING.md)
+          required: true
+        - label: I searched existing issues and discussions
+          required: true
+        - label: I looked at the API documentation (/docs endpoint)
+          required: false
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Question Category
+      description: What area is your question about?
+      options:
+        - Setup and Installation
+        - API Usage
+        - Solver Configuration
+        - Constraint Development
+        - MCP Integration
+        - Performance Optimization
+        - Contributing Guidelines
+        - Architecture/Design
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: Please describe your question clearly
+      placeholder: "How do I configure custom constraints for shift scheduling?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Provide context about what you're trying to achieve
+      placeholder: |
+        I'm trying to implement a scheduling system for a restaurant that needs:
+        - Different skill requirements for lunch vs dinner shifts
+        - Minimum rest time between shifts
+        - Fair distribution of weekend work
+    validations:
+      required: true
+
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What Have You Tried?
+      description: What approaches have you already attempted?
+      placeholder: |
+        I tried:
+        1. Adding a new constraint in shift_constraints.py
+        2. Modifying the Employee model
+        3. Looking at the Timefold documentation
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment (if relevant)
+      description: Your setup details, if relevant to the question
+      placeholder: |
+        - OS: macOS 14.0
+        - Python: 3.11.5
+        - Running in: Docker/Local/Codespace
+        - Browser: Chrome (for API docs)
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Information
+      description: Any other details that might help us answer your question
+      placeholder: "I'm new to constraint programming but have experience with Python and FastAPI..."
