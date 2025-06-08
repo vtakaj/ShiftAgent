@@ -49,7 +49,7 @@ After updating the configuration, restart Claude Desktop for the changes to take
 
 ## 🛠 Available MCP Tools
 
-The MCP server exposes 18 tools organized into 5 categories:
+The MCP server exposes 15 tools organized into 4 categories:
 
 ### Basic Operations (7 tools)
 1. **`health_check`** - Check API health status
@@ -69,15 +69,10 @@ The MCP server exposes 18 tools organized into 5 categories:
 11. **`pin_shifts`** - Pin/unpin shifts to prevent changes during optimization
 12. **`reassign_shift`** - Reassign shift to specific employee or unassign
 
-### HTML Report Generation (3 tools)
-13. **`get_demo_schedule_html`** - Get demo schedule as formatted HTML report
-14. **`get_schedule_html_report`** - Get completed schedule as HTML report
-15. **`solve_schedule_sync_html`** - Solve and return HTML report in one step
-
 ### PDF Report Generation (3 tools)
-16. **`get_demo_schedule_pdf`** - Get demo schedule as PDF report
-17. **`get_schedule_pdf_report`** - Get completed schedule as PDF report
-18. **`solve_schedule_sync_pdf`** - Solve and return PDF report in one step
+13. **`get_demo_schedule_pdf`** - Get demo schedule as PDF report
+14. **`get_schedule_pdf_report`** - Get completed schedule as PDF report
+15. **`solve_schedule_sync_pdf`** - Solve and return PDF report in one step
 
 ## 📋 Usage Examples
 
@@ -147,12 +142,6 @@ All continuous planning tools require:
 - **Valid shift/employee IDs**: Must reference existing entities in the problem
 
 ### Report Generation Features
-
-**HTML Reports:**
-- Formatted web view with styling
-- Statistics and constraint violations
-- Interactive and printable
-- Embedded CSS for standalone viewing
 
 **PDF Reports:**
 - Professional layout optimized for printing
