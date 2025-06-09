@@ -118,11 +118,10 @@ shift-scheduler/
 - **Shift Pinning**: Lock specific shifts to prevent changes during optimization
 - **Live Reassignment**: Reassign shifts to specific employees or unassign them
 
-### 📄 **Report Generation** (NEW!)
+### 📄 **Report Generation**
 - **HTML Reports**: Formatted web-based schedule reports with statistics and styling
-- **PDF Reports**: Professional PDF reports optimized for printing and sharing
+- **Visual Display**: Clear visual representation of shift schedules
 - **Downloadable Files**: Automatic filename generation with timestamps
-- **Multiple Formats**: Same schedule data available in both HTML and PDF formats
 
 ### 🤖 **MCP Server Integration**
 - **AI Assistant Support**: Built-in MCP (Model Context Protocol) server for Claude Desktop and other AI assistants
@@ -169,10 +168,6 @@ GET  /api/shifts/demo/html                   # Demo schedule as HTML report
 GET  /api/shifts/solve/{job_id}/html         # Optimization result as HTML report
 POST /api/shifts/solve-sync/html             # Synchronous solve with HTML report
 
-# PDF Reports  
-GET  /api/shifts/demo/pdf                    # Demo schedule as PDF report
-GET  /api/shifts/solve/{job_id}/pdf          # Optimization result as PDF report
-POST /api/shifts/solve-sync/pdf              # Synchronous solve with PDF report
 ```
 
 ### Request Example
@@ -250,9 +245,6 @@ make mcp      # Terminal 2: MCP server
 - `get_demo_schedule_html` - Get demo schedule as HTML report
 - `get_schedule_html_report` - Get completed schedule as HTML report  
 - `solve_schedule_sync_html` - Solve and return HTML report in one step
-- `get_demo_schedule_pdf` - Get demo schedule as PDF report
-- `get_schedule_pdf_report` - Get completed schedule as PDF report
-- `solve_schedule_sync_pdf` - Solve and return PDF report in one step
 
 ### Claude Desktop Configuration
 

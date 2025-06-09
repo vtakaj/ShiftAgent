@@ -126,10 +126,6 @@ The solver optimizes using HardMediumSoftScore:
 - `POST /api/shifts/analyze-weekly`: Analyze weekly work hours
 - `GET /api/shifts/test-weekly`: Test weekly constraint calculations
 
-#### PDF Report Endpoints
-- `GET /api/shifts/demo/pdf`: Demo data as PDF report
-- `POST /api/shifts/solve-sync/pdf`: Synchronous optimization with PDF report output
-- `GET /api/shifts/solve/{job_id}/pdf`: Get optimization results as PDF report
 
 ## Development Notes
 
@@ -190,8 +186,5 @@ make mcp
 - `get_demo_schedule_html`: Get demo schedule as formatted HTML report
 - `get_schedule_html_report`: Get completed schedule as HTML report
 - `solve_schedule_sync_html`: Solve and return HTML report in one step
-- `get_demo_schedule_pdf`: Get demo schedule as PDF report
-- `get_schedule_pdf_report`: Get completed schedule as PDF report
-- `solve_schedule_sync_pdf`: Solve and return PDF report in one step
 
 See `MCP_SERVER.md` for detailed usage and Claude Desktop integration instructions.
