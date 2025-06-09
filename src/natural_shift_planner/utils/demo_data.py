@@ -167,6 +167,19 @@ def create_demo_schedule() -> ShiftSchedule:
                 )
             )
 
+        # 事務作業（平日のみ）(9:00-18:00) - 9時間
+        if day < 5:  # 平日のみ
+            shifts.append(
+                Shift(
+                    id=f"事務作業_{day_name}",
+                    start_time=day_start.replace(hour=9),
+                    end_time=day_start.replace(hour=18),
+                    required_skills={"正社員"},
+                    location="事務所",
+                    priority=1,
+                )
+            )
+
         # 土曜日の特別シフト（繁忙期対応）
         if day == 5:  # 土曜日
             shifts.append(
