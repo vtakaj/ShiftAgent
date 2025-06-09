@@ -23,15 +23,18 @@ async def lifespan(app: FastAPI):
                 if stored_job:
                     # Only load completed or failed jobs
                     # (active jobs would have been interrupted)
-                    if stored_job.get("status") in ["SOLVING_COMPLETED", "SOLVING_FAILED"]:
+                    if stored_job.get("status") in [
+                        "SOLVING_COMPLETED",
+                        "SOLVING_FAILED",
+                    ]:
                         with job_lock:
                             jobs[job_id] = stored_job
             print(f"Loaded {len(jobs)} jobs from storage")
         except Exception as e:
             print(f"Error loading persisted jobs: {e}")
-    
+
     yield
-    
+
     # Shutdown: Nothing special needed as jobs are saved in real-time
     print("Shutting down Shift Scheduler API")
 

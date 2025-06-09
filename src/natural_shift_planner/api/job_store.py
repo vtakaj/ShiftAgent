@@ -15,19 +15,19 @@ from ..core.models.shift import Shift
 
 class JobStore(Protocol):
     """Interface for job storage implementations"""
-    
+
     def save_job(self, job_id: str, job_data: Dict[str, Any]) -> None:
         """Save job data to storage"""
         ...
-    
+
     def get_job(self, job_id: str) -> Optional[Dict[str, Any]]:
         """Retrieve job data from storage"""
         ...
-    
+
     def list_jobs(self) -> List[str]:
         """List all job IDs"""
         ...
-    
+
     def delete_job(self, job_id: str) -> None:
         """Delete a job from storage"""
         ...
@@ -35,24 +35,26 @@ class JobStore(Protocol):
 
 class FileSystemJobStore:
     """File-based job storage implementation"""
-    
+
     def __init__(self, storage_dir: str = "./job_storage"):
         self.storage_dir = Path(storage_dir)
         self.storage_dir.mkdir(parents=True, exist_ok=True)
-        
+
     def _get_job_path(self, job_id: str) -> Path:
         """Get file path for a job"""
         return self.storage_dir / f"{job_id}.json"
-    
+
     def _serialize_datetime(self, dt: Optional[datetime]) -> Optional[str]:
         """Convert datetime to ISO string"""
         return dt.isoformat() if dt else None
-    
+
     def _deserialize_datetime(self, dt_str: Optional[str]) -> Optional[datetime]:
         """Convert ISO string to datetime"""
         return datetime.fromisoformat(dt_str) if dt_str else None
-    
-    def _serialize_employee(self, employee: Optional[Employee]) -> Optional[Dict[str, Any]]:
+
+    def _serialize_employee(
+        self, employee: Optional[Employee]
+    ) -> Optional[Dict[str, Any]]:
         """Convert Employee to dict"""
         if not employee:
             return None
@@ -62,9 +64,11 @@ class FileSystemJobStore:
             "skills": list(employee.skills),
             "preferred_days_off": list(employee.preferred_days_off),
             "preferred_work_days": list(employee.preferred_work_days),
-            "unavailable_dates": [self._serialize_datetime(d) for d in employee.unavailable_dates]
+            "unavailable_dates": [
+                self._serialize_datetime(d) for d in employee.unavailable_dates
+            ],
         }
-    
+
     def _serialize_shift(self, shift: Optional[Shift]) -> Optional[Dict[str, Any]]:
         """Convert Shift to dict"""
         if not shift:
@@ -77,19 +81,21 @@ class FileSystemJobStore:
             "location": shift.location,
             "priority": shift.priority,
             "employee": self._serialize_employee(shift.employee),
-            "pinned": shift.pinned
+            "pinned": shift.pinned,
         }
-    
-    def _serialize_schedule(self, schedule: Optional[ShiftSchedule]) -> Optional[Dict[str, Any]]:
+
+    def _serialize_schedule(
+        self, schedule: Optional[ShiftSchedule]
+    ) -> Optional[Dict[str, Any]]:
         """Convert ShiftSchedule to dict"""
         if not schedule:
             return None
         return {
             "employees": [self._serialize_employee(emp) for emp in schedule.employees],
             "shifts": [self._serialize_shift(shift) for shift in schedule.shifts],
-            "score": str(schedule.score) if schedule.score else None
+            "score": str(schedule.score) if schedule.score else None,
         }
-    
+
     def save_job(self, job_id: str, job_data: Dict[str, Any]) -> None:
         """Save job data to file"""
         # Create serializable version of job data
@@ -101,20 +107,24 @@ class FileSystemJobStore:
             "error": job_data.get("error"),
             # Don't serialize solver reference or other non-serializable objects
         }
-        
+
         # Serialize problem and solution if they exist
         if "problem" in job_data and job_data["problem"]:
             serializable_data["problem"] = self._serialize_schedule(job_data["problem"])
-        
+
         if "solution" in job_data and job_data["solution"]:
-            serializable_data["solution"] = self._serialize_schedule(job_data["solution"])
-        
+            serializable_data["solution"] = self._serialize_schedule(
+                job_data["solution"]
+            )
+
         # Write to file
         job_path = self._get_job_path(job_id)
-        with open(job_path, 'w', encoding='utf-8') as f:
+        with open(job_path, "w", encoding="utf-8") as f:
             json.dump(serializable_data, f, indent=2, ensure_ascii=False)
-    
-    def _deserialize_employee(self, emp_data: Optional[Dict[str, Any]]) -> Optional[Employee]:
+
+    def _deserialize_employee(
+        self, emp_data: Optional[Dict[str, Any]]
+    ) -> Optional[Employee]:
         """Convert dict to Employee"""
         if not emp_data:
             return None
@@ -125,12 +135,15 @@ class FileSystemJobStore:
             preferred_days_off=set(emp_data.get("preferred_days_off", [])),
             preferred_work_days=set(emp_data.get("preferred_work_days", [])),
             unavailable_dates=set(
-                self._deserialize_datetime(d) for d in emp_data.get("unavailable_dates", [])
+                self._deserialize_datetime(d)
+                for d in emp_data.get("unavailable_dates", [])
                 if d is not None
-            )
+            ),
         )
-    
-    def _deserialize_shift(self, shift_data: Optional[Dict[str, Any]]) -> Optional[Shift]:
+
+    def _deserialize_shift(
+        self, shift_data: Optional[Dict[str, Any]]
+    ) -> Optional[Shift]:
         """Convert dict to Shift"""
         if not shift_data:
             return None
@@ -141,18 +154,22 @@ class FileSystemJobStore:
             required_skills=set(shift_data["required_skills"]),
             location=shift_data["location"],
             priority=shift_data["priority"],
-            pinned=shift_data.get("pinned", False)
+            pinned=shift_data.get("pinned", False),
         )
         # Set employee if present
         if shift_data.get("employee"):
             shift.employee = self._deserialize_employee(shift_data["employee"])
         return shift
-    
-    def _deserialize_schedule(self, schedule_data: Optional[Dict[str, Any]]) -> Optional[ShiftSchedule]:
+
+    def _deserialize_schedule(
+        self, schedule_data: Optional[Dict[str, Any]]
+    ) -> Optional[ShiftSchedule]:
         """Convert dict to ShiftSchedule"""
         if not schedule_data:
             return None
-        employees = [self._deserialize_employee(emp) for emp in schedule_data["employees"]]
+        employees = [
+            self._deserialize_employee(emp) for emp in schedule_data["employees"]
+        ]
         shifts = [self._deserialize_shift(shift) for shift in schedule_data["shifts"]]
         schedule = ShiftSchedule(employees=employees, shifts=shifts)
         if schedule_data.get("score"):
@@ -165,44 +182,44 @@ class FileSystemJobStore:
         job_path = self._get_job_path(job_id)
         if not job_path.exists():
             return None
-        
+
         try:
-            with open(job_path, 'r', encoding='utf-8') as f:
+            with open(job_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            
+
             # Convert datetime strings back to datetime objects
             if data.get("created_at"):
                 data["created_at"] = self._deserialize_datetime(data["created_at"])
             if data.get("completed_at"):
                 data["completed_at"] = self._deserialize_datetime(data["completed_at"])
-            
+
             # Convert problem and solution back to domain objects
             if data.get("problem"):
                 data["problem"] = self._deserialize_schedule(data["problem"])
             if data.get("solution"):
                 data["solution"] = self._deserialize_schedule(data["solution"])
-            
+
             return data
         except Exception as e:
             print(f"Error loading job {job_id}: {e}")
             return None
-    
+
     def list_jobs(self) -> List[str]:
         """List all job IDs"""
         job_files = self.storage_dir.glob("*.json")
         return [f.stem for f in job_files]
-    
+
     def delete_job(self, job_id: str) -> None:
         """Delete a job file"""
         job_path = self._get_job_path(job_id)
         if job_path.exists():
             job_path.unlink()
-    
+
     def cleanup_old_jobs(self, max_age_hours: int = 24) -> int:
         """Remove jobs older than specified hours"""
         cutoff = datetime.now().timestamp() - (max_age_hours * 3600)
         deleted_count = 0
-        
+
         for job_file in self.storage_dir.glob("*.json"):
             # Check file modification time
             if job_file.stat().st_mtime < cutoff:
@@ -211,7 +228,7 @@ class FileSystemJobStore:
                     deleted_count += 1
                 except Exception as e:
                     print(f"Error deleting old job file {job_file}: {e}")
-        
+
         return deleted_count
 
 

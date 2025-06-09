@@ -9,13 +9,14 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import HTTPException
+
 from ..utils import create_demo_schedule
 from .analysis import analyze_weekly_hours, generate_recommendations
 from .app import app
 from .continuous_planning import ContinuousPlanningService
 from .converters import convert_domain_to_response, convert_request_to_domain
 from .job_store import job_store
-from .jobs import job_lock, jobs, solve_problem_async, _sync_job_to_store
+from .jobs import _sync_job_to_store, job_lock, jobs, solve_problem_async
 from .schemas import (
     ContinuousPlanningResponse,
     ShiftPinRequest,
@@ -85,7 +86,7 @@ async def get_solution(job_id: str):
             stored_job = job_store.get_job(job_id)
             if stored_job:
                 jobs[job_id] = stored_job
-        
+
         if job_id not in jobs:
             raise HTTPException(status_code=404, detail="Job not found")
 
@@ -169,8 +170,6 @@ async def test_weekly_constraints():
     }
 
 
-
-
 # Continuous Planning endpoints
 @app.post("/api/shifts/{job_id}/swap", response_model=ContinuousPlanningResponse)
 async def swap_shifts(job_id: str, request: ShiftSwapRequest):
@@ -182,18 +181,25 @@ async def swap_shifts(job_id: str, request: ShiftSwapRequest):
             stored_job = job_store.get_job(job_id)
             if stored_job:
                 jobs[job_id] = stored_job
-        
+
         if job_id not in jobs:
             raise HTTPException(status_code=404, detail="Job not found")
 
         job = jobs[job_id]
-        
+
+        # Check if job has completed
+        if job["status"] == "SOLVING_COMPLETED":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Job {job_id} has already completed. Continuous planning operations are only available during active solving. Use POST /api/shifts/{job_id}/restart to enable modifications on completed jobs.",
+            )
+
         if job["status"] != "SOLVING_SCHEDULED" or "solver" not in job:
             raise HTTPException(
                 status_code=400,
                 detail=f"Job {job_id} is not in an active solving state. Current status: {job['status']}",
             )
-        
+
         active_solver = job["solver"]
 
         try:
@@ -243,18 +249,25 @@ async def find_replacement(job_id: str, request: ShiftReplacementRequest):
             stored_job = job_store.get_job(job_id)
             if stored_job:
                 jobs[job_id] = stored_job
-        
+
         if job_id not in jobs:
             raise HTTPException(status_code=404, detail="Job not found")
 
         job = jobs[job_id]
-        
+
+        # Check if job has completed
+        if job["status"] == "SOLVING_COMPLETED":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Job {job_id} has already completed. Continuous planning operations are only available during active solving. Use POST /api/shifts/{job_id}/restart to enable modifications on completed jobs.",
+            )
+
         if job["status"] != "SOLVING_SCHEDULED" or "solver" not in job:
             raise HTTPException(
                 status_code=400,
                 detail=f"Job {job_id} is not in an active solving state. Current status: {job['status']}",
             )
-        
+
         active_solver = job["solver"]
 
         try:
@@ -284,18 +297,25 @@ async def pin_shifts(job_id: str, request: ShiftPinRequest):
             stored_job = job_store.get_job(job_id)
             if stored_job:
                 jobs[job_id] = stored_job
-        
+
         if job_id not in jobs:
             raise HTTPException(status_code=404, detail="Job not found")
 
         job = jobs[job_id]
-        
+
+        # Check if job has completed
+        if job["status"] == "SOLVING_COMPLETED":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Job {job_id} has already completed. Continuous planning operations are only available during active solving. Use POST /api/shifts/{job_id}/restart to enable modifications on completed jobs.",
+            )
+
         if job["status"] != "SOLVING_SCHEDULED" or "solver" not in job:
             raise HTTPException(
                 status_code=400,
                 detail=f"Job {job_id} is not in an active solving state. Current status: {job['status']}",
             )
-        
+
         active_solver = job["solver"]
 
         try:
@@ -327,18 +347,25 @@ async def reassign_shift(job_id: str, request: ShiftReassignRequest):
             stored_job = job_store.get_job(job_id)
             if stored_job:
                 jobs[job_id] = stored_job
-        
+
         if job_id not in jobs:
             raise HTTPException(status_code=404, detail="Job not found")
 
         job = jobs[job_id]
-        
+
+        # Check if job has completed
+        if job["status"] == "SOLVING_COMPLETED":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Job {job_id} has already completed. Continuous planning operations are only available during active solving. Use POST /api/shifts/{job_id}/restart to enable modifications on completed jobs.",
+            )
+
         if job["status"] != "SOLVING_SCHEDULED" or "solver" not in job:
             raise HTTPException(
                 status_code=400,
                 detail=f"Job {job_id} is not in an active solving state. Current status: {job['status']}",
             )
-        
+
         active_solver = job["solver"]
 
         try:
@@ -363,16 +390,61 @@ async def reassign_shift(job_id: str, request: ShiftReassignRequest):
             raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/api/shifts/{job_id}/restart", response_model=SolveResponse)
+async def restart_job(job_id: str):
+    """Restart a completed job to enable continuous planning modifications"""
+    with job_lock:
+        # Find the specific job
+        if job_id not in jobs and job_store:
+            # Try to load from persistent storage
+            stored_job = job_store.get_job(job_id)
+            if stored_job:
+                jobs[job_id] = stored_job
+
+        if job_id not in jobs:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        job = jobs[job_id]
+
+        # Check if job has completed
+        if job["status"] != "SOLVING_COMPLETED":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Job {job_id} is not completed. Current status: {job['status']}. Only completed jobs can be restarted.",
+            )
+
+        if "solution" not in job:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Job {job_id} does not have a solution to restart from.",
+            )
+
+        # Get the completed solution
+        solution = job["solution"]
+
+        # Create a new solver and restart with the completed solution
+        solver = solver_factory.build_solver()
+        job["solver"] = solver
+        job["status"] = "SOLVING_SCHEDULED"
+        _sync_job_to_store(job_id)
+
+        # Start solving asynchronously with the existing solution as the starting point
+        thread = threading.Thread(target=lambda: solver.solve(solution), daemon=True)
+        thread.start()
+
+        return SolveResponse(job_id=job_id, status="SOLVING_SCHEDULED")
+
+
 # Job Management endpoints
 @app.get("/api/jobs")
 async def list_jobs():
     """List all jobs (both in-memory and persistent)"""
     all_job_ids = set(jobs.keys())
-    
+
     # Add persistent job IDs if available
     if job_store:
         all_job_ids.update(job_store.list_jobs())
-    
+
     job_summaries = []
     for job_id in all_job_ids:
         # Try to get from memory first
@@ -382,29 +454,28 @@ async def list_jobs():
             job = job_store.get_job(job_id)
         else:
             continue
-        
+
         if job:
-            job_summaries.append({
-                "job_id": job_id,
-                "status": job.get("status"),
-                "created_at": job.get("created_at"),
-                "completed_at": job.get("completed_at")
-            })
-    
+            job_summaries.append(
+                {
+                    "job_id": job_id,
+                    "status": job.get("status"),
+                    "created_at": job.get("created_at"),
+                    "completed_at": job.get("completed_at"),
+                }
+            )
+
     # Sort by created_at descending (newest first)
     job_summaries.sort(key=lambda x: x.get("created_at") or datetime.min, reverse=True)
-    
-    return {
-        "total": len(job_summaries),
-        "jobs": job_summaries
-    }
+
+    return {"total": len(job_summaries), "jobs": job_summaries}
 
 
 @app.delete("/api/jobs/{job_id}")
 async def delete_job(job_id: str):
     """Delete a job from both memory and persistent storage"""
     deleted = False
-    
+
     # Delete from memory
     with job_lock:
         if job_id in jobs:
@@ -413,11 +484,11 @@ async def delete_job(job_id: str):
                 if "solver" in jobs[job_id]:
                     raise HTTPException(
                         status_code=400,
-                        detail="Cannot delete job that is currently solving"
+                        detail="Cannot delete job that is currently solving",
                     )
             del jobs[job_id]
             deleted = True
-    
+
     # Delete from persistent storage
     if job_store:
         try:
@@ -425,10 +496,10 @@ async def delete_job(job_id: str):
             deleted = True
         except Exception:
             pass
-    
+
     if not deleted:
         raise HTTPException(status_code=404, detail="Job not found")
-    
+
     return {"message": f"Job {job_id} deleted successfully"}
 
 
@@ -436,31 +507,31 @@ async def delete_job(job_id: str):
 async def cleanup_old_jobs(max_age_hours: int = 24):
     """Clean up old jobs from storage"""
     deleted_count = 0
-    
-    if job_store and hasattr(job_store, 'cleanup_old_jobs'):
+
+    if job_store and hasattr(job_store, "cleanup_old_jobs"):
         deleted_count = job_store.cleanup_old_jobs(max_age_hours)
-    
+
     # Also clean up old in-memory jobs
     with job_lock:
         cutoff = datetime.now()
         cutoff = cutoff.replace(hour=cutoff.hour - max_age_hours)
-        
+
         to_delete = []
         for job_id, job in jobs.items():
             # Skip active jobs
             if job.get("status") in ["SOLVING_ACTIVE", "SOLVING_SCHEDULED"]:
                 continue
-            
+
             # Check if old enough
             created_at = job.get("created_at") or job.get("completed_at")
             if created_at and created_at < cutoff:
                 to_delete.append(job_id)
-        
+
         for job_id in to_delete:
             del jobs[job_id]
             deleted_count += 1
-    
+
     return {
         "deleted_count": deleted_count,
-        "message": f"Cleaned up {deleted_count} jobs older than {max_age_hours} hours"
+        "message": f"Cleaned up {deleted_count} jobs older than {max_age_hours} hours",
     }

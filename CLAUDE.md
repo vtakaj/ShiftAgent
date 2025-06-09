@@ -181,6 +181,9 @@ make mcp
 - `find_shift_replacement`: Find replacement when employee becomes unavailable
 - `pin_shifts`: Pin/unpin shifts to prevent changes during optimization
 - `reassign_shift`: Reassign shift to specific employee or unassign
+- `restart_job`: Restart a completed job to enable further modifications
+
+**Note**: Continuous planning operations require an active optimization job. If a job has completed, use `restart_job` first to re-enable modifications. The MCP tools automatically handle job restart when needed.
 
 #### Report Generation
 - `get_demo_schedule_html`: Get demo schedule as formatted HTML report
