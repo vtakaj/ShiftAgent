@@ -18,7 +18,11 @@ from .converters import convert_domain_to_response, convert_request_to_domain
 from .job_store import job_store
 from .jobs import _sync_job_to_store, job_lock, jobs, solve_problem_async
 from .schemas import (
+    AddEmployeeAndAssignRequest,
+    AddEmployeeRequest,
+    AddEmployeesBatchRequest,
     ContinuousPlanningResponse,
+    EmployeeManagementResponse,
     ShiftPinRequest,
     ShiftReassignRequest,
     ShiftReplacementRequest,
@@ -562,3 +566,259 @@ async def cleanup_old_jobs(max_age_hours: int = 24):
         "deleted_count": deleted_count,
         "message": f"Cleaned up {deleted_count} jobs older than {max_age_hours} hours",
     }
+
+
+# Employee Management endpoints
+@app.post("/api/shifts/{job_id}/add-employee", response_model=EmployeeManagementResponse)
+async def add_employee(job_id: str, request: AddEmployeeRequest):
+    """Add a new employee to an active solving job"""
+    with job_lock:
+        # Find the specific job
+        if job_id not in jobs and job_store:
+            # Try to load from persistent storage
+            stored_job = job_store.get_job(job_id)
+            if stored_job:
+                jobs[job_id] = stored_job
+
+        if job_id not in jobs:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        job = jobs[job_id]
+
+        # Check if job has completed
+        if job["status"] == "SOLVING_COMPLETED":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Job {job_id} has already completed. Continuous planning operations are only available during active solving. Use POST /api/shifts/{job_id}/restart to enable modifications on completed jobs.",
+            )
+
+        if job["status"] != "SOLVING_SCHEDULED" or "solver" not in job:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Job {job_id} is not in an active solving state. Current status: {job['status']}",
+            )
+
+        active_solver = job["solver"]
+
+        try:
+            # Add the employee using ProblemChangeDirector
+            ContinuousPlanningService.add_employee(
+                active_solver,
+                request.id,
+                request.name,
+                set(request.skills),
+                set(request.preferred_days_off),
+                set(request.preferred_work_days),
+                set(request.unavailable_dates),
+            )
+
+            return EmployeeManagementResponse(
+                success=True,
+                message=f"Successfully added employee {request.id} ({request.name})",
+                operation="add",
+                employee_ids=[request.id],
+                affected_shifts=[],
+            )
+
+        except ValueError as e:
+            # Handle validation errors with 400 status
+            raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            # Handle unexpected errors with 500 status
+            raise HTTPException(
+                status_code=500,
+                detail=f"Internal error during add employee operation: {str(e)}",
+            )
+
+
+@app.post("/api/shifts/{job_id}/add-employees", response_model=EmployeeManagementResponse)
+async def add_employees_batch(job_id: str, request: AddEmployeesBatchRequest):
+    """Add multiple employees to an active solving job"""
+    with job_lock:
+        # Find the specific job
+        if job_id not in jobs and job_store:
+            # Try to load from persistent storage
+            stored_job = job_store.get_job(job_id)
+            if stored_job:
+                jobs[job_id] = stored_job
+
+        if job_id not in jobs:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        job = jobs[job_id]
+
+        # Check if job has completed
+        if job["status"] == "SOLVING_COMPLETED":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Job {job_id} has already completed. Continuous planning operations are only available during active solving. Use POST /api/shifts/{job_id}/restart to enable modifications on completed jobs.",
+            )
+
+        if job["status"] != "SOLVING_SCHEDULED" or "solver" not in job:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Job {job_id} is not in an active solving state. Current status: {job['status']}",
+            )
+
+        active_solver = job["solver"]
+
+        try:
+            # Convert employees to dict format
+            employees_data = []
+            for emp in request.employees:
+                employees_data.append(
+                    {
+                        "id": emp.id,
+                        "name": emp.name,
+                        "skills": emp.skills,
+                        "preferred_days_off": emp.preferred_days_off,
+                        "preferred_work_days": emp.preferred_work_days,
+                        "unavailable_dates": emp.unavailable_dates,
+                    }
+                )
+
+            # Add the employees using ProblemChangeDirector
+            ContinuousPlanningService.add_employees_batch(active_solver, employees_data)
+
+            employee_ids = [emp.id for emp in request.employees]
+
+            return EmployeeManagementResponse(
+                success=True,
+                message=f"Successfully added {len(employee_ids)} employees",
+                operation="add_batch",
+                employee_ids=employee_ids,
+                affected_shifts=[],
+            )
+
+        except ValueError as e:
+            # Handle validation errors with 400 status
+            raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            # Handle unexpected errors with 500 status
+            raise HTTPException(
+                status_code=500,
+                detail=f"Internal error during add employees operation: {str(e)}",
+            )
+
+
+@app.delete(
+    "/api/shifts/{job_id}/remove-employee/{employee_id}",
+    response_model=EmployeeManagementResponse,
+)
+async def remove_employee(job_id: str, employee_id: str):
+    """Remove an employee from an active solving job"""
+    with job_lock:
+        # Find the specific job
+        if job_id not in jobs and job_store:
+            # Try to load from persistent storage
+            stored_job = job_store.get_job(job_id)
+            if stored_job:
+                jobs[job_id] = stored_job
+
+        if job_id not in jobs:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        job = jobs[job_id]
+
+        # Check if job has completed
+        if job["status"] == "SOLVING_COMPLETED":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Job {job_id} has already completed. Continuous planning operations are only available during active solving. Use POST /api/shifts/{job_id}/restart to enable modifications on completed jobs.",
+            )
+
+        if job["status"] != "SOLVING_SCHEDULED" or "solver" not in job:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Job {job_id} is not in an active solving state. Current status: {job['status']}",
+            )
+
+        active_solver = job["solver"]
+
+        try:
+            # Remove the employee using ProblemChangeDirector
+            ContinuousPlanningService.remove_employee(active_solver, employee_id)
+
+            return EmployeeManagementResponse(
+                success=True,
+                message=f"Successfully removed employee {employee_id}",
+                operation="remove",
+                employee_ids=[employee_id],
+                affected_shifts=[],
+                warnings=["Any shifts assigned to this employee have been unassigned"],
+            )
+
+        except ValueError as e:
+            # Handle validation errors with 400 status
+            raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            # Handle unexpected errors with 500 status
+            raise HTTPException(
+                status_code=500,
+                detail=f"Internal error during remove employee operation: {str(e)}",
+            )
+
+
+@app.post(
+    "/api/shifts/{job_id}/add-employee-assign", response_model=EmployeeManagementResponse
+)
+async def add_employee_and_assign(job_id: str, request: AddEmployeeAndAssignRequest):
+    """Add a new employee and immediately assign to a shift"""
+    with job_lock:
+        # Find the specific job
+        if job_id not in jobs and job_store:
+            # Try to load from persistent storage
+            stored_job = job_store.get_job(job_id)
+            if stored_job:
+                jobs[job_id] = stored_job
+
+        if job_id not in jobs:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        job = jobs[job_id]
+
+        # Check if job has completed
+        if job["status"] == "SOLVING_COMPLETED":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Job {job_id} has already completed. Continuous planning operations are only available during active solving. Use POST /api/shifts/{job_id}/restart to enable modifications on completed jobs.",
+            )
+
+        if job["status"] != "SOLVING_SCHEDULED" or "solver" not in job:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Job {job_id} is not in an active solving state. Current status: {job['status']}",
+            )
+
+        active_solver = job["solver"]
+
+        try:
+            # Add the employee and assign to shift using ProblemChangeDirector
+            ContinuousPlanningService.add_employee_and_assign_shift(
+                active_solver,
+                request.employee.id,
+                request.employee.name,
+                set(request.employee.skills),
+                request.shift_id,
+                set(request.employee.preferred_days_off),
+                set(request.employee.preferred_work_days),
+                set(request.employee.unavailable_dates),
+            )
+
+            return EmployeeManagementResponse(
+                success=True,
+                message=f"Successfully added employee {request.employee.id} and assigned to shift {request.shift_id}",
+                operation="add_and_assign",
+                employee_ids=[request.employee.id],
+                affected_shifts=[request.shift_id],
+            )
+
+        except ValueError as e:
+            # Handle validation errors with 400 status
+            raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            # Handle unexpected errors with 500 status
+            raise HTTPException(
+                status_code=500,
+                detail=f"Internal error during add and assign operation: {str(e)}",
+            )

@@ -5,6 +5,9 @@ FastMCP server for Shift Scheduler
 from fastmcp import FastMCP
 
 from .tools import (
+    add_employee_and_assign_to_shift,
+    add_employee_to_job,
+    add_employees_batch_to_job,
     analyze_weekly_hours,
     find_shift_replacement,
     get_demo_schedule,
@@ -13,6 +16,7 @@ from .tools import (
     health_check,
     pin_shifts,
     reassign_shift,
+    remove_employee_from_job,
     solve_schedule_async,
     solve_schedule_sync,
     swap_shifts,
@@ -39,6 +43,12 @@ mcp.tool()(swap_shifts)
 mcp.tool()(find_shift_replacement)
 mcp.tool()(pin_shifts)
 mcp.tool()(reassign_shift)
+
+# Register employee management tools
+mcp.tool()(add_employee_to_job)
+mcp.tool()(add_employees_batch_to_job)
+mcp.tool()(remove_employee_from_job)
+mcp.tool()(add_employee_and_assign_to_shift)
 
 
 # Add prompts
@@ -75,6 +85,12 @@ async def shift_scheduling_prompt() -> str:
 - pin_shifts: Pin/unpin shifts to prevent changes during optimization
 - reassign_shift: Reassign shift to specific employee or unassign
 
+### Employee Management (During Active Optimization)
+- add_employee_to_job: Add new employee to active solving job
+- add_employees_batch_to_job: Add multiple employees at once
+- remove_employee_from_job: Remove employee (unassigns their shifts)
+- add_employee_and_assign_to_shift: Add employee and assign to specific shift
+
 
 ## Constraint Guidelines
 - Employee skills must match shift requirements
@@ -90,6 +106,13 @@ async def shift_scheduling_prompt() -> str:
 - Pin shifts to lock them before making changes
 - Use find_shift_replacement for emergency coverage
 - Swap shifts for quick employee exchanges
+
+## Employee Management Usage
+- Employee management tools work during active optimization
+- Add employees to expand available workforce during solving
+- Remove employees when they become unavailable
+- Employee preferences (preferred_days_off, etc.) are supported
+- All changes are applied immediately to the running solver
 """
 
 
