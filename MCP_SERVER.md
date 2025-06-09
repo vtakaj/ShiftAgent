@@ -69,10 +69,6 @@ The MCP server exposes 15 tools organized into 4 categories:
 11. **`pin_shifts`** - Pin/unpin shifts to prevent changes during optimization
 12. **`reassign_shift`** - Reassign shift to specific employee or unassign
 
-### PDF Report Generation (3 tools)
-13. **`get_demo_schedule_pdf`** - Get demo schedule as PDF report
-14. **`get_schedule_pdf_report`** - Get completed schedule as PDF report
-15. **`solve_schedule_sync_pdf`** - Solve and return PDF report in one step
 
 ## 📋 Usage Examples
 
@@ -106,7 +102,7 @@ And I need coverage for:
 ### Report Generation
 
 ```markdown
-@claude Can you generate a PDF report for the completed schedule from job ID xyz789? I need it for the manager meeting.
+@claude Can you generate an HTML report for the completed schedule from job ID xyz789? I need it for the manager meeting.
 ```
 
 ## 🔧 Tool Details
@@ -161,7 +157,6 @@ All continuous planning tools require:
 #### 2. Tool Execution Errors
 - **API Timeout**: Large datasets may require longer processing (default: 120 seconds)
 - **Invalid Job ID**: Ensure job IDs are from active async solve operations
-- **Missing Dependencies**: PDF tools require WeasyPrint dependencies
 
 #### 3. Continuous Planning Failures
 - **Job State**: Job must be in active solving state (not completed)
@@ -188,7 +183,7 @@ Use the health check tool to verify connectivity:
 - **Synchronous Operations**: Block until complete, suitable for small datasets (< 100 shifts)
 - **Asynchronous Operations**: Return immediately, better for large datasets (> 100 shifts)
 - **Continuous Planning**: Minimal overhead, changes applied in real-time during optimization
-- **Report Generation**: HTML is faster, PDF requires additional rendering time
+- **Report Generation**: HTML reports provide a visual representation of the schedule
 
 ## 🔒 Security Notes
 
