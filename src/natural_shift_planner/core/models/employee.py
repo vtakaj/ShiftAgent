@@ -58,10 +58,10 @@ class Employee:
         # Handle None or empty unavailable_dates safely
         if self.unavailable_dates is None or len(self.unavailable_dates) == 0:
             return False
-        
+
         # Normalize the input date to date-only (remove time components)
         date_only = date.replace(hour=0, minute=0, second=0, microsecond=0)
-        
+
         # Check each unavailable date explicitly to avoid generator expression issues
         for unavailable_date in self.unavailable_dates:
             if unavailable_date is None:
@@ -71,7 +71,7 @@ class Employee:
             )
             if unavailable_only == date_only:
                 return True
-        
+
         return False
 
     def __str__(self):

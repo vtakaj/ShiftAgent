@@ -59,6 +59,41 @@ async def call_api(
         return response.json()
 
 
+async def call_continuous_planning_api(
+    endpoint: str,
+    data: Dict[str, Any],
+    timeout: float = 120.0,
+) -> Dict[str, Any]:
+    """
+    Make a continuous planning API call with automatic job restart if needed
+    """
+    try:
+        return await call_api("POST", endpoint, data, timeout)
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 400 and "has already completed" in e.response.text:
+            # Extract job_id from endpoint
+            job_id = endpoint.split("/")[3]  # /api/shifts/{job_id}/operation
+
+            # Try to restart the job
+            try:
+                restart_response = await call_api(
+                    "POST", f"/api/shifts/{job_id}/restart"
+                )
+                # Wait a moment for the job to restart
+                import asyncio
+
+                await asyncio.sleep(1)
+
+                # Retry the original operation
+                return await call_api("POST", endpoint, data, timeout)
+            except Exception as restart_error:
+                raise Exception(
+                    f"Failed to restart job {job_id}: {restart_error}"
+                ) from e
+        else:
+            raise
+
+
 # Tool functions
 async def health_check(ctx: Context) -> Dict[str, Any]:
     """Check if the Shift Scheduler API is healthy"""
@@ -182,122 +217,137 @@ async def get_schedule_shifts(ctx: Context, job_id: str) -> Dict[str, Any]:
 # Continuous Planning tools
 class ShiftSwapRequest(BaseModel):
     """Request to swap employees between two shifts"""
+
     shift1_id: str = Field(..., description="ID of the first shift")
     shift2_id: str = Field(..., description="ID of the second shift")
 
 
 class ShiftReplacementRequest(BaseModel):
     """Request to find replacement for a shift"""
+
     shift_id: str = Field(..., description="ID of the shift needing replacement")
-    unavailable_employee_id: str = Field(..., description="ID of the employee who cannot work")
-    excluded_employee_ids: List[str] = Field(default_factory=list, description="Additional employees to exclude")
+    unavailable_employee_id: str = Field(
+        ..., description="ID of the employee who cannot work"
+    )
+    excluded_employee_ids: List[str] = Field(
+        default_factory=list, description="Additional employees to exclude"
+    )
 
 
 class ShiftPinRequest(BaseModel):
     """Request to pin/unpin shifts for continuous planning"""
+
     shift_ids: List[str] = Field(..., min_items=1, description="Shift IDs to pin/unpin")
     action: str = Field(..., description="Pin or unpin action", pattern="^(pin|unpin)$")
 
 
 class ShiftReassignRequest(BaseModel):
     """Request to reassign a shift to a specific employee"""
+
     shift_id: str = Field(..., description="ID of the shift to reassign")
-    new_employee_id: Optional[str] = Field(None, description="ID of new employee (None to unassign)")
+    new_employee_id: Optional[str] = Field(
+        None, description="ID of new employee (None to unassign)"
+    )
 
 
-async def swap_shifts(ctx: Context, job_id: str, shift1_id: str, shift2_id: str) -> Dict[str, Any]:
+async def swap_shifts(
+    ctx: Context, job_id: str, shift1_id: str, shift2_id: str
+) -> Dict[str, Any]:
     """
     Swap employees between two shifts during continuous planning
-    
+
     Args:
         job_id: ID of the active optimization job
         shift1_id: ID of the first shift
         shift2_id: ID of the second shift
-    
+
     Returns:
         Success status and details of the swap operation
     """
-    request_data = {
-        "shift1_id": shift1_id,
-        "shift2_id": shift2_id
-    }
-    return await call_api("POST", f"/api/shifts/{job_id}/swap", request_data)
+    request_data = {"shift1_id": shift1_id, "shift2_id": shift2_id}
+    return await call_continuous_planning_api(
+        f"/api/shifts/{job_id}/swap", request_data
+    )
 
 
 async def find_shift_replacement(
-    ctx: Context, 
+    ctx: Context,
     job_id: str,
-    shift_id: str, 
-    unavailable_employee_id: str, 
-    excluded_employee_ids: Optional[List[str]] = None
+    shift_id: str,
+    unavailable_employee_id: str,
+    excluded_employee_ids: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """
     Find replacement for a shift when an employee becomes unavailable
-    
+
     Args:
         job_id: ID of the active optimization job
         shift_id: ID of the shift needing replacement
         unavailable_employee_id: ID of the employee who cannot work
         excluded_employee_ids: Additional employees to exclude from consideration
-    
+
     Returns:
         Success status and replacement details
     """
     request_data = {
         "shift_id": shift_id,
         "unavailable_employee_id": unavailable_employee_id,
-        "excluded_employee_ids": excluded_employee_ids or []
+        "excluded_employee_ids": excluded_employee_ids or [],
     }
-    return await call_api("POST", f"/api/shifts/{job_id}/replace", request_data)
+    return await call_continuous_planning_api(
+        f"/api/shifts/{job_id}/replace", request_data
+    )
 
 
 async def pin_shifts(
-    ctx: Context, 
-    job_id: str,
-    shift_ids: List[str], 
-    action: str = "pin"
+    ctx: Context, job_id: str, shift_ids: List[str], action: str = "pin"
 ) -> Dict[str, Any]:
     """
     Pin or unpin shifts to prevent changes during optimization
-    
+
     Args:
         job_id: ID of the active optimization job
         shift_ids: List of shift IDs to pin/unpin
         action: Either "pin" or "unpin"
-    
+
     Returns:
         Success status and details of the pin operation
     """
     if action not in ["pin", "unpin"]:
         raise ValueError("Action must be 'pin' or 'unpin'")
-    
-    request_data = {
-        "shift_ids": shift_ids,
-        "action": action
-    }
-    return await call_api("POST", f"/api/shifts/{job_id}/pin", request_data)
+
+    request_data = {"shift_ids": shift_ids, "action": action}
+    return await call_continuous_planning_api(f"/api/shifts/{job_id}/pin", request_data)
 
 
 async def reassign_shift(
-    ctx: Context, 
-    job_id: str,
-    shift_id: str, 
-    new_employee_id: Optional[str] = None
+    ctx: Context, job_id: str, shift_id: str, new_employee_id: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Reassign a shift to a specific employee or unassign it
-    
+
     Args:
         job_id: ID of the active optimization job
         shift_id: ID of the shift to reassign
         new_employee_id: ID of new employee (None to unassign)
-    
+
     Returns:
         Success status and reassignment details
     """
-    request_data = {
-        "shift_id": shift_id,
-        "new_employee_id": new_employee_id
-    }
-    return await call_api("POST", f"/api/shifts/{job_id}/reassign", request_data)
+    request_data = {"shift_id": shift_id, "new_employee_id": new_employee_id}
+    return await call_continuous_planning_api(
+        f"/api/shifts/{job_id}/reassign", request_data
+    )
 
+
+async def restart_job(ctx: Context, job_id: str) -> Dict[str, Any]:
+    """
+    Restart a completed job to enable continuous planning modifications
+
+    Args:
+        job_id: ID of the completed optimization job
+
+    Returns:
+        Success status and new job status
+    """
+    return await call_api("POST", f"/api/shifts/{job_id}/restart")
