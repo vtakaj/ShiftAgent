@@ -235,8 +235,15 @@ async def swap_shifts(job_id: str, request: ShiftSwapRequest):
                 affected_shifts=affected_shifts,
             )
 
+        except ValueError as e:
+            # Handle validation errors with 400 status
+            raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            # Handle unexpected errors with 500 status
+            raise HTTPException(
+                status_code=500,
+                detail=f"Internal error during swap operation: {str(e)}",
+            )
 
 
 @app.post("/api/shifts/{job_id}/replace", response_model=ContinuousPlanningResponse)
@@ -283,8 +290,15 @@ async def find_replacement(job_id: str, request: ShiftReplacementRequest):
                 affected_shifts=[],
             )
 
+        except ValueError as e:
+            # Handle validation errors with 400 status
+            raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            # Handle unexpected errors with 500 status
+            raise HTTPException(
+                status_code=500,
+                detail=f"Internal error during replacement operation: {str(e)}",
+            )
 
 
 @app.post("/api/shifts/{job_id}/pin", response_model=ContinuousPlanningResponse)
@@ -333,8 +347,14 @@ async def pin_shifts(job_id: str, request: ShiftPinRequest):
                 affected_shifts=[],
             )
 
+        except ValueError as e:
+            # Handle validation errors with 400 status
+            raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            # Handle unexpected errors with 500 status
+            raise HTTPException(
+                status_code=500, detail=f"Internal error during pin operation: {str(e)}"
+            )
 
 
 @app.post("/api/shifts/{job_id}/reassign", response_model=ContinuousPlanningResponse)
@@ -386,8 +406,15 @@ async def reassign_shift(job_id: str, request: ShiftReassignRequest):
                 affected_shifts=[],
             )
 
+        except ValueError as e:
+            # Handle validation errors with 400 status
+            raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            # Handle unexpected errors with 500 status
+            raise HTTPException(
+                status_code=500,
+                detail=f"Internal error during reassign operation: {str(e)}",
+            )
 
 
 @app.post("/api/shifts/{job_id}/restart", response_model=SolveResponse)
