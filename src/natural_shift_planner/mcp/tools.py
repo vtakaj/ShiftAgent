@@ -363,3 +363,148 @@ async def restart_job(ctx: Context, job_id: str) -> Dict[str, Any]:
         Success status and new job status
     """
     return await call_api("POST", f"/api/shifts/{job_id}/restart")
+
+
+# Employee Management tools
+class AddEmployeeRequest(BaseModel):
+    """Request to add a single employee"""
+
+    id: str = Field(..., description="Unique employee ID")
+    name: str = Field(..., description="Employee name")
+    skills: List[str] = Field(..., min_items=1, description="Employee skills")
+    preferred_days_off: List[str] = Field(
+        default_factory=list, description="Days employee prefers not to work"
+    )
+    preferred_work_days: List[str] = Field(
+        default_factory=list, description="Days employee prefers to work"
+    )
+    unavailable_dates: List[str] = Field(
+        default_factory=list, description="Specific dates when employee is unavailable (ISO format)"
+    )
+
+
+class AddEmployeesBatchRequest(BaseModel):
+    """Request to add multiple employees"""
+
+    employees: List[AddEmployeeRequest] = Field(
+        ..., min_items=1, description="List of employees to add"
+    )
+
+
+class AddEmployeeAndAssignRequest(BaseModel):
+    """Request to add employee and assign to shift"""
+
+    employee: AddEmployeeRequest = Field(..., description="Employee to add")
+    shift_id: str = Field(..., description="ID of shift to assign employee to")
+
+
+async def add_employee_to_job(
+    ctx: Context,
+    job_id: str,
+    employee_id: str,
+    name: str,
+    skills: List[str],
+    preferred_days_off: Optional[List[str]] = None,
+    preferred_work_days: Optional[List[str]] = None,
+    unavailable_dates: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """
+    Add a new employee to an active solving job
+
+    Args:
+        job_id: ID of the active optimization job
+        employee_id: Unique employee ID
+        name: Employee name
+        skills: List of employee skills
+        preferred_days_off: Days employee prefers not to work
+        preferred_work_days: Days employee prefers to work
+        unavailable_dates: Specific dates when employee is unavailable (ISO format)
+
+    Returns:
+        Success status and employee addition details
+    """
+    request_data = {
+        "id": employee_id,
+        "name": name,
+        "skills": skills,
+        "preferred_days_off": preferred_days_off or [],
+        "preferred_work_days": preferred_work_days or [],
+        "unavailable_dates": unavailable_dates or [],
+    }
+    return await call_continuous_planning_api(
+        f"/api/shifts/{job_id}/add-employee", request_data
+    )
+
+
+async def add_employees_batch_to_job(
+    ctx: Context, job_id: str, employees: List[AddEmployeeRequest]
+) -> Dict[str, Any]:
+    """
+    Add multiple employees to an active solving job
+
+    Args:
+        job_id: ID of the active optimization job
+        employees: List of employees to add
+
+    Returns:
+        Success status and batch addition details
+    """
+    request_data = {"employees": [emp.model_dump() for emp in employees]}
+    return await call_continuous_planning_api(
+        f"/api/shifts/{job_id}/add-employees", request_data
+    )
+
+
+async def remove_employee_from_job(ctx: Context, job_id: str, employee_id: str) -> Dict[str, Any]:
+    """
+    Remove an employee from an active solving job
+
+    Args:
+        job_id: ID of the active optimization job
+        employee_id: ID of the employee to remove
+
+    Returns:
+        Success status and removal details (any assigned shifts will be unassigned)
+    """
+    return await call_api("DELETE", f"/api/shifts/{job_id}/remove-employee/{employee_id}")
+
+
+async def add_employee_and_assign_to_shift(
+    ctx: Context,
+    job_id: str,
+    employee_id: str,
+    name: str,
+    skills: List[str],
+    shift_id: str,
+    preferred_days_off: Optional[List[str]] = None,
+    preferred_work_days: Optional[List[str]] = None,
+    unavailable_dates: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """
+    Add a new employee and immediately assign them to a specific shift
+
+    Args:
+        job_id: ID of the active optimization job
+        employee_id: Unique employee ID
+        name: Employee name
+        skills: List of employee skills
+        shift_id: ID of shift to assign the new employee to
+        preferred_days_off: Days employee prefers not to work
+        preferred_work_days: Days employee prefers to work
+        unavailable_dates: Specific dates when employee is unavailable (ISO format)
+
+    Returns:
+        Success status and assignment details
+    """
+    employee_data = {
+        "id": employee_id,
+        "name": name,
+        "skills": skills,
+        "preferred_days_off": preferred_days_off or [],
+        "preferred_work_days": preferred_work_days or [],
+        "unavailable_dates": unavailable_dates or [],
+    }
+    request_data = {"employee": employee_data, "shift_id": shift_id}
+    return await call_continuous_planning_api(
+        f"/api/shifts/{job_id}/add-employee-assign", request_data
+    )

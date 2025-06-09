@@ -98,3 +98,47 @@ class ContinuousPlanningResponse(BaseModel):
     operation: str
     affected_shifts: List[Dict[str, Any]] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
+
+
+# Employee Management Schemas
+class AddEmployeeRequest(BaseModel):
+    """Request to add a single employee"""
+
+    id: str = Field(..., description="Unique employee ID")
+    name: str = Field(..., description="Employee name")
+    skills: List[str] = Field(..., min_items=1, description="Employee skills")
+    preferred_days_off: List[str] = Field(
+        default_factory=list, description="Days employee prefers not to work"
+    )
+    preferred_work_days: List[str] = Field(
+        default_factory=list, description="Days employee prefers to work"
+    )
+    unavailable_dates: List[datetime] = Field(
+        default_factory=list, description="Specific dates when employee is unavailable"
+    )
+
+
+class AddEmployeesBatchRequest(BaseModel):
+    """Request to add multiple employees"""
+
+    employees: List[AddEmployeeRequest] = Field(
+        ..., min_items=1, description="List of employees to add"
+    )
+
+
+class AddEmployeeAndAssignRequest(BaseModel):
+    """Request to add employee and assign to shift"""
+
+    employee: AddEmployeeRequest = Field(..., description="Employee to add")
+    shift_id: str = Field(..., description="ID of shift to assign employee to")
+
+
+class EmployeeManagementResponse(BaseModel):
+    """Response from employee management operations"""
+
+    success: bool
+    message: str
+    operation: Literal["add", "add_batch", "remove", "add_and_assign"]
+    employee_ids: List[str] = Field(default_factory=list)
+    affected_shifts: List[str] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)

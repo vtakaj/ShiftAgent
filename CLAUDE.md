@@ -118,6 +118,7 @@ The solver optimizes using HardMediumSoftScore:
 
 ### API Endpoints
 
+#### Basic Operations
 - `GET /health`: Health check
 - `GET /api/shifts/demo`: Demo data with sample schedule
 - `POST /api/shifts/solve-sync`: Synchronous optimization (blocks until complete)
@@ -125,6 +126,24 @@ The solver optimizes using HardMediumSoftScore:
 - `GET /api/shifts/solve/{job_id}`: Get optimization results
 - `POST /api/shifts/analyze-weekly`: Analyze weekly work hours
 - `GET /api/shifts/test-weekly`: Test weekly constraint calculations
+
+#### Continuous Planning Operations
+- `POST /api/shifts/{job_id}/swap`: Swap employees between two shifts
+- `POST /api/shifts/{job_id}/replace`: Find replacement for unavailable employee
+- `POST /api/shifts/{job_id}/pin`: Pin/unpin shifts to prevent changes
+- `POST /api/shifts/{job_id}/reassign`: Reassign shift to specific employee
+- `POST /api/shifts/{job_id}/restart`: Restart completed job for modifications
+
+#### Employee Management (New Feature)
+- `POST /api/shifts/{job_id}/add-employee`: Add single employee to active job
+- `POST /api/shifts/{job_id}/add-employees`: Add multiple employees in batch
+- `DELETE /api/shifts/{job_id}/remove-employee/{employee_id}`: Remove employee from job
+- `POST /api/shifts/{job_id}/add-employee-assign`: Add employee and assign to shift
+
+#### Job Management
+- `GET /api/jobs`: List all jobs with status
+- `DELETE /api/jobs/{job_id}`: Delete specific job
+- `POST /api/jobs/cleanup`: Clean up old jobs
 
 
 ## Development Notes
@@ -183,7 +202,13 @@ make mcp
 - `reassign_shift`: Reassign shift to specific employee or unassign
 - `restart_job`: Restart a completed job to enable further modifications
 
-**Note**: Continuous planning operations require an active optimization job. If a job has completed, use `restart_job` first to re-enable modifications. The MCP tools automatically handle job restart when needed.
+#### Employee Management (New Feature)
+- `add_employee_to_job`: Add single employee to active solving job
+- `add_employees_batch_to_job`: Add multiple employees at once
+- `remove_employee_from_job`: Remove employee from job (unassigns their shifts)
+- `add_employee_and_assign_to_shift`: Add employee and assign to specific shift
+
+**Note**: Continuous planning and employee management operations require an active optimization job. If a job has completed, use `restart_job` first to re-enable modifications. The MCP tools automatically handle job restart when needed.
 
 #### Report Generation
 - `get_demo_schedule_html`: Get demo schedule as formatted HTML report
