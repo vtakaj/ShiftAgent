@@ -569,7 +569,9 @@ async def cleanup_old_jobs(max_age_hours: int = 24):
 
 
 # Employee Management endpoints
-@app.post("/api/shifts/{job_id}/add-employee", response_model=EmployeeManagementResponse)
+@app.post(
+    "/api/shifts/{job_id}/add-employee", response_model=EmployeeManagementResponse
+)
 async def add_employee(job_id: str, request: AddEmployeeRequest):
     """Add a new employee to an active solving job"""
     with job_lock:
@@ -631,7 +633,9 @@ async def add_employee(job_id: str, request: AddEmployeeRequest):
             )
 
 
-@app.post("/api/shifts/{job_id}/add-employees", response_model=EmployeeManagementResponse)
+@app.post(
+    "/api/shifts/{job_id}/add-employees", response_model=EmployeeManagementResponse
+)
 async def add_employees_batch(job_id: str, request: AddEmployeesBatchRequest):
     """Add multiple employees to an active solving job"""
     with job_lock:
@@ -760,7 +764,8 @@ async def remove_employee(job_id: str, employee_id: str):
 
 
 @app.post(
-    "/api/shifts/{job_id}/add-employee-assign", response_model=EmployeeManagementResponse
+    "/api/shifts/{job_id}/add-employee-assign",
+    response_model=EmployeeManagementResponse,
 )
 async def add_employee_and_assign(job_id: str, request: AddEmployeeAndAssignRequest):
     """Add a new employee and immediately assign to a shift"""

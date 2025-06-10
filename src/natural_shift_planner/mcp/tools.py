@@ -2,9 +2,10 @@
 MCP tools for shift scheduler operations
 """
 
+import json
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import httpx
 from fastmcp import Context
@@ -12,6 +13,26 @@ from pydantic import BaseModel, Field
 
 # Configuration
 API_BASE_URL = os.getenv("SHIFT_SCHEDULER_API_URL", "http://localhost:8081")
+
+
+# Helper functions
+def parse_list_param(param: Union[None, str, List[str]]) -> List[str]:
+    """Parse a parameter that could be a list or JSON string"""
+    if param is None:
+        return []
+    if isinstance(param, str):
+        try:
+            parsed = json.loads(param)
+            # Ensure the parsed value is a list
+            if isinstance(parsed, list):
+                return parsed
+            else:
+                # If it's not a list after parsing, treat original as single item
+                return [param]
+        except json.JSONDecodeError:
+            # If it's not valid JSON, treat as single item list
+            return [param]
+    return param
 
 
 # Pydantic models for API requests
@@ -88,9 +109,7 @@ async def call_continuous_planning_api(
 
             # Try to restart the job
             try:
-                restart_response = await call_api(
-                    "POST", f"/api/shifts/{job_id}/restart"
-                )
+                await call_api("POST", f"/api/shifts/{job_id}/restart")
                 # Wait a moment for the job to restart
                 import asyncio
 
@@ -379,7 +398,8 @@ class AddEmployeeRequest(BaseModel):
         default_factory=list, description="Days employee prefers to work"
     )
     unavailable_dates: List[str] = Field(
-        default_factory=list, description="Specific dates when employee is unavailable (ISO format)"
+        default_factory=list,
+        description="Specific dates when employee is unavailable (ISO format)",
     )
 
 
@@ -427,9 +447,9 @@ async def add_employee_to_job(
         "id": employee_id,
         "name": name,
         "skills": skills,
-        "preferred_days_off": preferred_days_off or [],
-        "preferred_work_days": preferred_work_days or [],
-        "unavailable_dates": unavailable_dates or [],
+        "preferred_days_off": parse_list_param(preferred_days_off),
+        "preferred_work_days": parse_list_param(preferred_work_days),
+        "unavailable_dates": parse_list_param(unavailable_dates),
     }
     return await call_continuous_planning_api(
         f"/api/shifts/{job_id}/add-employee", request_data
@@ -455,7 +475,9 @@ async def add_employees_batch_to_job(
     )
 
 
-async def remove_employee_from_job(ctx: Context, job_id: str, employee_id: str) -> Dict[str, Any]:
+async def remove_employee_from_job(
+    ctx: Context, job_id: str, employee_id: str
+) -> Dict[str, Any]:
     """
     Remove an employee from an active solving job
 
@@ -466,7 +488,9 @@ async def remove_employee_from_job(ctx: Context, job_id: str, employee_id: str) 
     Returns:
         Success status and removal details (any assigned shifts will be unassigned)
     """
-    return await call_api("DELETE", f"/api/shifts/{job_id}/remove-employee/{employee_id}")
+    return await call_api(
+        "DELETE", f"/api/shifts/{job_id}/remove-employee/{employee_id}"
+    )
 
 
 async def add_employee_and_assign_to_shift(
@@ -500,9 +524,9 @@ async def add_employee_and_assign_to_shift(
         "id": employee_id,
         "name": name,
         "skills": skills,
-        "preferred_days_off": preferred_days_off or [],
-        "preferred_work_days": preferred_work_days or [],
-        "unavailable_dates": unavailable_dates or [],
+        "preferred_days_off": parse_list_param(preferred_days_off),
+        "preferred_work_days": parse_list_param(preferred_work_days),
+        "unavailable_dates": parse_list_param(unavailable_dates),
     }
     request_data = {"employee": employee_data, "shift_id": shift_id}
     return await call_continuous_planning_api(
