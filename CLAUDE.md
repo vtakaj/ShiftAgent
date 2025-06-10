@@ -19,6 +19,15 @@ make setup
 # Start FastAPI server only
 make run
 
+# Start with extended solver timeout (5 minutes)
+SOLVER_TIMEOUT_SECONDS=300 make run
+
+# Start with verbose solver logging
+SOLVER_LOG_LEVEL=DEBUG make run
+
+# Start with all optimizations
+SOLVER_TIMEOUT_SECONDS=300 SOLVER_LOG_LEVEL=DEBUG make run
+
 # Start both API and MCP servers together
 make run-mcp
 
