@@ -47,6 +47,9 @@ make setup
 # Start application
 make run  # → http://localhost:8081
 
+# Start with extended solver timeout and verbose logging
+SOLVER_TIMEOUT_SECONDS=300 SOLVER_LOG_LEVEL=DEBUG make run
+
 # Run tests
 make test
 
@@ -127,6 +130,12 @@ shift-scheduler/
 - **AI Assistant Support**: Built-in MCP (Model Context Protocol) server for Claude Desktop and other AI assistants
 - **Python-based Implementation**: Uses FastMCP for seamless integration
 - **Full API Access**: All shift scheduling and continuous planning features available through MCP tools
+
+### ⚙️ **Configurable Solver** (NEW!)
+- **Extended Timeout**: Configure solver runtime via `SOLVER_TIMEOUT_SECONDS` (default: 120s)
+- **Verbose Logging**: Real-time optimization progress with `SOLVER_LOG_LEVEL=DEBUG`
+- **Progress Tracking**: Monitor score improvements and constraint violations
+- **Better Solutions**: Longer solving time for more optimal shift assignments
 
 ## 📊 API Specification
 

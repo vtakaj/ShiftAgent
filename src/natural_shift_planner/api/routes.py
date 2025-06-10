@@ -113,10 +113,44 @@ async def get_solution(job_id: str):
 @app.post("/api/shifts/solve-sync")
 async def solve_shifts_sync(request: ShiftScheduleRequest):
     """Shift optimization (synchronous)"""
+    import logging
+    from datetime import datetime
+
+    from .solver import SOLVER_LOG_LEVEL, SOLVER_TIMEOUT_SECONDS
+
+    logger = logging.getLogger(__name__)
+
     try:
         problem = convert_request_to_domain(request)
         solver = solver_factory.build_solver()
+
+        start_time = datetime.now()
+        logger.info(
+            f"[Sync] Starting optimization with {len(problem.shifts)} shifts "
+            f"and {len(problem.employees)} employees (timeout: {SOLVER_TIMEOUT_SECONDS}s)"
+        )
+
         solution = solver.solve(problem)
+
+        elapsed = (datetime.now() - start_time).total_seconds()
+        assigned_count = sum(
+            1 for shift in solution.shifts if shift.employee is not None
+        )
+
+        logger.info(
+            f"[Sync] Optimization completed in {elapsed:.1f}s. "
+            f"Final score: {solution.score}, "
+            f"Assigned shifts: {assigned_count}/{len(solution.shifts)}"
+        )
+
+        # Log score breakdown in debug mode
+        if SOLVER_LOG_LEVEL == "DEBUG" and solution.score:
+            logger.debug(
+                f"[Sync] Score breakdown - "
+                f"Hard: {solution.score.hard_score}, "
+                f"Medium: {solution.score.medium_score}, "
+                f"Soft: {solution.score.soft_score}"
+            )
 
         return convert_domain_to_response(solution)
 
