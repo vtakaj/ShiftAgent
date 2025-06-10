@@ -210,10 +210,13 @@ class ContinuousPlanningService:
 
     @staticmethod
     def add_employee(
-        solver: Solver, employee_id: str, name: str, skills: set[str],
+        solver: Solver,
+        employee_id: str,
+        name: str,
+        skills: set[str],
         preferred_days_off: set[str] = None,
         preferred_work_days: set[str] = None,
-        unavailable_dates: set = None
+        unavailable_dates: set = None,
     ) -> None:
         """
         Add a new employee to the running solver
@@ -246,13 +249,12 @@ class ContinuousPlanningService:
                 skills=skills,
                 preferred_days_off=preferred_days_off or set(),
                 preferred_work_days=preferred_work_days or set(),
-                unavailable_dates=unavailable_dates or set()
+                unavailable_dates=unavailable_dates or set(),
             )
 
             # Add employee to the solution using ProblemChangeDirector
             problem_change_director.add_problem_fact(
-                new_employee,
-                working_solution.employees
+                new_employee, working_solution.employees
             )
 
         solver.add_problem_change(add_employee_problem_change)
@@ -272,7 +274,7 @@ class ContinuousPlanningService:
         ):
             # Get existing employee IDs
             existing_ids = {e.id for e in working_solution.employees}
-            
+
             new_employees = []
             for emp_data in employees:
                 if emp_data["id"] in existing_ids:
@@ -285,16 +287,15 @@ class ContinuousPlanningService:
                     skills=set(emp_data["skills"]),
                     preferred_days_off=set(emp_data.get("preferred_days_off", [])),
                     preferred_work_days=set(emp_data.get("preferred_work_days", [])),
-                    unavailable_dates=set(emp_data.get("unavailable_dates", []))
+                    unavailable_dates=set(emp_data.get("unavailable_dates", [])),
                 )
                 new_employees.append(new_employee)
 
                 # Add employee to the solution
                 problem_change_director.add_problem_fact(
-                    new_employee,
-                    working_solution.employees
+                    new_employee, working_solution.employees
                 )
-            
+
             if not new_employees:
                 raise ValueError("No new employees to add (all IDs already exist)")
 
@@ -328,8 +329,7 @@ class ContinuousPlanningService:
 
             # Then remove the employee from the solution
             problem_change_director.remove_problem_fact(
-                employee_to_remove,
-                working_solution.employees
+                employee_to_remove, working_solution.employees
             )
 
         solver.add_problem_change(remove_employee_problem_change)
@@ -343,7 +343,7 @@ class ContinuousPlanningService:
         shift_id: str,
         preferred_days_off: set[str] = None,
         preferred_work_days: set[str] = None,
-        unavailable_dates: set = None
+        unavailable_dates: set = None,
     ) -> None:
         """
         Add a new employee and immediately assign them to a specific shift
@@ -385,20 +385,17 @@ class ContinuousPlanningService:
                 skills=skills,
                 preferred_days_off=preferred_days_off or set(),
                 preferred_work_days=preferred_work_days or set(),
-                unavailable_dates=unavailable_dates or set()
+                unavailable_dates=unavailable_dates or set(),
             )
 
             # Add employee to the solution
             problem_change_director.add_problem_fact(
-                new_employee,
-                working_solution.employees
+                new_employee, working_solution.employees
             )
 
             # Assign the employee to the shift
             problem_change_director.change_variable(
-                target_shift,
-                "employee",
-                new_employee
+                target_shift, "employee", new_employee
             )
 
         solver.add_problem_change(add_and_assign_problem_change)
