@@ -61,7 +61,7 @@ class ShiftSchedule:
         self.shifts.append(shift)
 
     def __str__(self):
-        score_str = str(self.score) if self.score is not None else "None"
+        score_str = str(self.score) if hasattr(self, 'score') and self.score is not None else "None"
         return (
             f"ShiftSchedule("
             f"employees={len(self.employees)}, "
