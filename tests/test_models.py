@@ -50,6 +50,48 @@ def test_shift_creation():
     assert shift.employee is None
 
 
+def test_shift_pinning_functionality():
+    """Test basic pinning functionality for shifts"""
+    # Create a shift
+    shift = Shift(
+        id="test_shift",
+        start_time=datetime(2025, 6, 1, 8, 0),
+        end_time=datetime(2025, 6, 1, 16, 0),
+        required_skills={"Nurse"},
+    )
+
+    # Test initial state
+    assert shift.pinned is False
+    assert not shift.is_pinned()
+
+    # Test pinning
+    shift.pin()
+    assert shift.pinned is True
+    assert shift.is_pinned()
+
+    # Test unpinning
+    shift.unpin()
+    assert shift.pinned is False
+    assert not shift.is_pinned()
+
+
+def test_shift_model_with_pinning():
+    """Test that Shift model works with new pinning field"""
+    employee = Employee(id="emp1", name="John Smith", skills={"Nurse"})
+
+    shift = Shift(
+        id="shift1",
+        start_time=datetime(2025, 6, 1, 8, 0),
+        end_time=datetime(2025, 6, 1, 16, 0),
+        required_skills={"Nurse"},
+        employee=employee,
+        pinned=True,  # Test creating with pinned=True
+    )
+
+    assert shift.pinned is True
+    assert shift.employee == employee
+
+
 def test_shift_assignment():
     """Test for shift assignment"""
     employee = Employee("emp1", "John Smith", {"Nurse"})
