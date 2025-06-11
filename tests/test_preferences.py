@@ -92,19 +92,19 @@ def test_demo_data_with_preferences():
     ]
     assert len(employees_with_prefs) > 0
 
-    # Check specific employee preferences (John Smith)
-    john = next((emp for emp in schedule.employees if emp.name == "John Smith"), None)
-    assert john is not None
-    assert "friday" in john.preferred_days_off
-    assert "saturday" in john.preferred_days_off
-    assert "monday" in john.preferred_work_days
+    # Check specific employee preferences (田中太郎)
+    tanaka = next((emp for emp in schedule.employees if emp.name == "田中太郎"), None)
+    assert tanaka is not None
+    assert "friday" in tanaka.preferred_days_off
+    assert "saturday" in tanaka.preferred_days_off
+    assert "monday" in tanaka.preferred_work_days
 
-    # Check Sarah Johnson has unavailable dates
-    sarah = next(
-        (emp for emp in schedule.employees if emp.name == "Sarah Johnson"), None
+    # Check 佐藤花子 has unavailable dates
+    sato = next(
+        (emp for emp in schedule.employees if emp.name == "佐藤花子"), None
     )
-    assert sarah is not None
-    assert len(sarah.unavailable_dates) > 0
+    assert sato is not None
+    assert len(sato.unavailable_dates) > 0
 
 
 def test_constraint_helper_functions():
