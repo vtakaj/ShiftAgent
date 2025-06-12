@@ -58,7 +58,7 @@ format:
 # Check code
 lint:
 	@echo "🔍 Checking code..."
-	uv run flake8 . || true
+	uv run ruff check . || true
 	uv run mypy . || true
 
 # Clear cache

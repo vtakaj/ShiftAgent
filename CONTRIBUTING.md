@@ -242,7 +242,7 @@ Any alternative approaches considered?
 | `make run-mcp` | Start API + MCP servers |
 | `make test` | Run all tests |
 | `make format` | Format code with Black |
-| `make lint` | Run linters (flake8, mypy) |
+| `make lint` | Run linters (ruff, mypy) |
 | `make clean` | Clean cache and artifacts |
 | `make debug` | Start server in debug mode |
 

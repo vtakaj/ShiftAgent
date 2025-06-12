@@ -495,7 +495,7 @@ make run
 
 ### **Code Quality**
 - Auto-format on save (Black, isort)
-- Linting (flake8, mypy)
+- Linting (ruff, mypy)
 - Type hints recommended
 
 ### **Testing**
