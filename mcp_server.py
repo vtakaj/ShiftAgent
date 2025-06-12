@@ -26,5 +26,11 @@ if solver_log_level == "DEBUG":
 
 from natural_shift_planner.mcp.server import mcp
 
-if __name__ == "__main__":
+
+def main():
+    """Main entry point for uvx support"""
     mcp.run()
+
+
+if __name__ == "__main__":
+    main()

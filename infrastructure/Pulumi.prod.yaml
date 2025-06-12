@@ -1,0 +1,5 @@
+config:
+  azure-native:location: East US
+  shift-scheduler-infra:environment: production
+  shift-scheduler-infra:instance_count: 3
+  shift-scheduler-infra:sku_size: Standard

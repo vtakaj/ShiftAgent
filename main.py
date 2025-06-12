@@ -26,8 +26,14 @@ if solver_log_level == "DEBUG":
 
 from natural_shift_planner.api.server import app
 
-if __name__ == "__main__":
-    import uvicorn
 
+def main():
+    """Main entry point for uvx support"""
+    import uvicorn
+    
     # Configure uvicorn logging
     uvicorn.run(app, host="0.0.0.0", port=8081, log_level=log_level.lower())
+
+
+if __name__ == "__main__":
+    main()
