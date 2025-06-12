@@ -1,0 +1,58 @@
+"""
+Container Registry module for Azure infrastructure
+"""
+import pulumi
+import pulumi_azure_native as azure_native
+from typing import Dict, Any
+
+
+class ContainerRegistryModule:
+    """Module for managing Azure Container Registry"""
+    
+    def __init__(self, name: str, resource_group_name: pulumi.Input[str],
+                 location: pulumi.Input[str], sku: str = "Basic", 
+                 tags: Dict[str, Any] = None):
+        """
+        Initialize Container Registry module
+        
+        Args:
+            name: Registry name (must be globally unique, alphanumeric)
+            resource_group_name: Resource group name
+            location: Azure location
+            sku: Registry SKU (Basic, Standard, Premium)
+            tags: Resource tags
+        """
+        self.name = name.lower()
+        self.resource_group_name = resource_group_name
+        self.location = location
+        self.sku = sku
+        self.tags = tags or {}
+        
+        # Create container registry
+        self.registry = azure_native.containerregistry.Registry(
+            resource_name=self.name,
+            registry_name=self.name,
+            resource_group_name=resource_group_name,
+            location=location,
+            sku=azure_native.containerregistry.SkuArgs(
+                name=sku
+            ),
+            admin_user_enabled=True,  # Enable for simplicity, use managed identity in production
+            public_network_access=azure_native.containerregistry.PublicNetworkAccess.ENABLED,
+            zone_redundancy=azure_native.containerregistry.ZoneRedundancy.DISABLED if sku == "Basic" else azure_native.containerregistry.ZoneRedundancy.ENABLED,
+            tags=self.tags
+        )
+    
+    def get_admin_credentials(self) -> pulumi.Output[dict]:
+        """Get admin credentials for the registry"""
+        return pulumi.Output.all(
+            self.resource_group_name,
+            self.registry.name
+        ).apply(lambda args: azure_native.containerregistry.list_registry_credentials(
+            resource_group_name=args[0],
+            registry_name=args[1]
+        ))
+    
+    def get_login_server(self) -> pulumi.Output[str]:
+        """Get registry login server URL"""
+        return self.registry.login_server

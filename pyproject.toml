@@ -1,5 +1,5 @@
 [project]
-name = "shift-scheduler"
+name = "shift-scheduler-mcp"
 version = "1.0.0"
 description = "Employee shift scheduling using Timefold Solver"
 readme = "README.md"
@@ -31,9 +31,10 @@ dev = [
     "mypy>=1.5.0",
 ]
 
-# Console scriptsは削除（Makefileで代替）
-# [project.scripts]
-# serve = "uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+# Console scripts for uvx support
+[project.scripts]
+shift-scheduler-api = "main:main"
+shift-scheduler-mcp = "mcp_server:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -41,9 +42,10 @@ build-backend = "hatchling.build"
 
 # シンプルなhatchling設定
 [tool.hatch.build.targets.wheel]
-# ルートディレクトリのPythonファイルを含める
+# ルートディレクトリのPythonファイルと src ディレクトリを含める
 include = [
     "/*.py",
+    "/src/**/*.py",
 ]
 
 # 不要なファイルを除外

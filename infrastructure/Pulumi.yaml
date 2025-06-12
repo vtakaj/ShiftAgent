@@ -1,0 +1,8 @@
+name: shift-scheduler-infra
+runtime: python
+description: Infrastructure as code for Shift Scheduler application using Azure
+template:
+  config:
+    azure-native:location:
+      description: The Azure location to deploy to
+      default: East US
