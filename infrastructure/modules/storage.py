@@ -4,26 +4,29 @@ Storage module for Azure infrastructure
 import pulumi
 import pulumi_azure_native as azure_native
 from typing import Dict, Any
+from ..config.naming import get_naming_convention
 
 
 class StorageModule:
     """Module for managing Azure Storage Account"""
     
-    def __init__(self, name: str, resource_group_name: pulumi.Input[str], 
-                 location: pulumi.Input[str], tags: Dict[str, Any] = None):
+    def __init__(self, resource_group_name: pulumi.Input[str], 
+                 location: pulumi.Input[str], purpose: str = "data",
+                 additional_tags: Dict[str, Any] = None):
         """
         Initialize Storage module
         
         Args:
-            name: Storage account name (must be globally unique, lowercase, alphanumeric)
             resource_group_name: Resource group name
             location: Azure location
-            tags: Resource tags
+            purpose: Storage purpose (e.g., 'data', 'logs', 'backup')
+            additional_tags: Additional resource tags
         """
-        self.name = name.lower()[:24]  # Storage account names must be <= 24 chars
+        self.naming = get_naming_convention()
+        self.name = self.naming.storage_account(purpose)
         self.resource_group_name = resource_group_name
         self.location = location
-        self.tags = tags or {}
+        self.tags = self.naming.get_resource_tags(additional_tags)
         
         # Create storage account
         self.storage_account = azure_native.storage.StorageAccount(

@@ -4,29 +4,30 @@ Container Registry module for Azure infrastructure
 import pulumi
 import pulumi_azure_native as azure_native
 from typing import Dict, Any
+from ..config.naming import get_naming_convention
 
 
 class ContainerRegistryModule:
     """Module for managing Azure Container Registry"""
     
-    def __init__(self, name: str, resource_group_name: pulumi.Input[str],
+    def __init__(self, resource_group_name: pulumi.Input[str],
                  location: pulumi.Input[str], sku: str = "Basic", 
-                 tags: Dict[str, Any] = None):
+                 additional_tags: Dict[str, Any] = None):
         """
         Initialize Container Registry module
         
         Args:
-            name: Registry name (must be globally unique, alphanumeric)
             resource_group_name: Resource group name
             location: Azure location
             sku: Registry SKU (Basic, Standard, Premium)
-            tags: Resource tags
+            additional_tags: Additional resource tags
         """
-        self.name = name.lower()
+        self.naming = get_naming_convention()
+        self.name = self.naming.container_registry()
         self.resource_group_name = resource_group_name
         self.location = location
         self.sku = sku
-        self.tags = tags or {}
+        self.tags = self.naming.get_resource_tags(additional_tags)
         
         # Create container registry
         self.registry = azure_native.containerregistry.Registry(

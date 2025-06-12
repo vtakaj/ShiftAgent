@@ -4,31 +4,33 @@ Container Apps module for Azure infrastructure
 import pulumi
 import pulumi_azure_native as azure_native
 from typing import Dict, Any
+from ..config.naming import get_naming_convention
 
 
 class ContainerAppsModule:
     """Module for managing Azure Container Apps Environment"""
     
-    def __init__(self, name: str, resource_group_name: pulumi.Input[str],
-                 location: pulumi.Input[str], tags: Dict[str, Any] = None):
+    def __init__(self, resource_group_name: pulumi.Input[str],
+                 location: pulumi.Input[str], additional_tags: Dict[str, Any] = None):
         """
         Initialize Container Apps module
         
         Args:
-            name: Container Apps Environment name
             resource_group_name: Resource group name
             location: Azure location
-            tags: Resource tags
+            additional_tags: Additional resource tags
         """
-        self.name = name
+        self.naming = get_naming_convention()
+        self.name = self.naming.container_apps_environment()
+        self.log_workspace_name = self.naming.log_analytics_workspace()
         self.resource_group_name = resource_group_name
         self.location = location
-        self.tags = tags or {}
+        self.tags = self.naming.get_resource_tags(additional_tags)
         
         # Create Log Analytics Workspace for Container Apps
         self.log_analytics_workspace = azure_native.operationalinsights.Workspace(
-            resource_name=f"{name}-logs",
-            workspace_name=f"{name}-logs",
+            resource_name=self.log_workspace_name,
+            workspace_name=self.log_workspace_name,
             resource_group_name=resource_group_name,
             location=location,
             sku=azure_native.operationalinsights.WorkspaceSkuArgs(
@@ -49,8 +51,8 @@ class ContainerAppsModule:
         
         # Create Container Apps Environment
         self.environment = azure_native.app.ManagedEnvironment(
-            resource_name=name,
-            environment_name=name,
+            resource_name=self.name,
+            environment_name=self.name,
             resource_group_name=resource_group_name,
             location=location,
             app_logs_configuration=azure_native.app.AppLogsConfigurationArgs(

@@ -6,29 +6,23 @@ from modules.resource_group import ResourceGroupModule
 from modules.storage import StorageModule
 from modules.container_registry import ContainerRegistryModule
 from modules.container_apps import ContainerAppsModule
+from config.naming import get_naming_convention
 
 
 def main():
     """Main infrastructure deployment function"""
     
-    # Get configuration
+    # Get configuration and naming convention
     config = pulumi.Config()
-    stack = pulumi.get_stack()
-    project = pulumi.get_project()
+    naming = get_naming_convention()
     
-    # Common tags
-    common_tags = {
-        "Project": project,
-        "Stack": stack,
-        "ManagedBy": "Pulumi",
-        "Application": "shift-scheduler"
-    }
-    
-    # Create resource group
+    # Create resource group using Microsoft CAF naming convention
     rg_module = ResourceGroupModule(
-        name=f"rg-{project}-{stack}",
-        location=config.get("azure-native:location") or "East US",
-        tags=common_tags
+        workload="core",
+        additional_tags={
+            "Workload": "core-infrastructure",
+            "Purpose": "Main infrastructure components"
+        }
     )
     
     # Export resource group information
@@ -38,10 +32,12 @@ def main():
     
     # Create storage account (for job data and future use)
     storage_module = StorageModule(
-        name=f"st{project.replace('-', '')}{stack}",
         resource_group_name=rg_module.resource_group.name,
         location=rg_module.resource_group.location,
-        tags=common_tags
+        purpose="data",
+        additional_tags={
+            "Purpose": "Job data and application storage"
+        }
     )
     
     # Export storage information
@@ -50,11 +46,12 @@ def main():
     
     # Create container registry (for Docker images)
     registry_module = ContainerRegistryModule(
-        name=f"cr{project.replace('-', '')}{stack}",
         resource_group_name=rg_module.resource_group.name,
         location=rg_module.resource_group.location,
         sku="Basic",
-        tags=common_tags
+        additional_tags={
+            "Purpose": "Container image registry"
+        }
     )
     
     # Export registry information
@@ -63,10 +60,11 @@ def main():
     
     # Create Container Apps environment (for application hosting)
     container_apps_module = ContainerAppsModule(
-        name=f"cae-{project}-{stack}",
         resource_group_name=rg_module.resource_group.name,
         location=rg_module.resource_group.location,
-        tags=common_tags
+        additional_tags={
+            "Purpose": "Container Apps hosting environment"
+        }
     )
     
     # Export Container Apps information

@@ -4,28 +4,32 @@ Resource Group module for Azure infrastructure
 import pulumi
 import pulumi_azure_native as azure_native
 from typing import Dict, Any
+from ..config.naming import get_naming_convention
 
 
 class ResourceGroupModule:
     """Module for managing Azure Resource Group"""
     
-    def __init__(self, name: str, location: str, tags: Dict[str, Any] = None):
+    def __init__(self, workload: str = "core", location: str = None, 
+                 additional_tags: Dict[str, Any] = None):
         """
         Initialize Resource Group module
         
         Args:
-            name: Resource group name
+            workload: Workload name (e.g., 'core', 'data', 'web')
             location: Azure location
-            tags: Resource tags
+            additional_tags: Additional resource tags
         """
-        self.name = name
-        self.location = location
-        self.tags = tags or {}
+        self.naming = get_naming_convention()
+        self.name = self.naming.resource_group(workload)
+        self.location = location or self.naming.location
+        self.tags = self.naming.get_resource_tags(additional_tags)
         
         # Create the resource group
         self.resource_group = azure_native.resources.ResourceGroup(
-            resource_name=name,
-            location=location,
+            resource_name=self.name,
+            resource_group_name=self.name,
+            location=self.location,
             tags=self.tags,
             opts=pulumi.ResourceOptions(
                 protect=False  # Set to True in production
