@@ -57,6 +57,112 @@ make test
 # → http://localhost:8081/docs (Swagger UI)
 ```
 
+## 🐳 Docker Deployment
+
+The project includes Docker Compose configurations for both development and production environments.
+
+### Development with Docker Compose
+
+```bash
+# Copy environment variables template
+cp .env.example .env
+
+# Start development environment (API + PostgreSQL)
+docker-compose up
+
+# Start with MCP server included
+docker-compose --profile mcp up
+
+# Start in background
+docker-compose up -d
+```
+
+**Features:**
+- Hot reload with source code volume mounts
+- PostgreSQL database for future use
+- Persistent job storage
+- Development-optimized settings
+
+### Production Deployment
+
+```bash
+# Use production configuration
+docker-compose -f docker-compose.prod.yml up -d
+
+# Full production stack with reverse proxy and cache
+docker-compose -f docker-compose.prod.yml --profile nginx --profile cache up -d
+```
+
+**Features:**
+- Optimized container settings
+- Nginx reverse proxy
+- Resource limits and health checks
+- Redis cache (optional)
+- Production-grade logging
+
+### Environment Variables
+
+All configuration is managed through environment variables. See `.env.example` for a complete list.
+
+**Key Variables:**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LOG_LEVEL` | `INFO` | Application logging level |
+| `SOLVER_TIMEOUT_SECONDS` | `120` | Solver optimization timeout |
+| `SHIFT_SCHEDULER_PORT` | `8081` | API server port |
+| `POSTGRES_PASSWORD` | - | Database password (required in production) |
+| `JAVA_OPTS` | `-Xmx1g` | JVM memory and optimization settings |
+
+**Development Example:**
+```bash
+# .env file for development
+LOG_LEVEL=DEBUG
+SOLVER_TIMEOUT_SECONDS=60
+JAVA_OPTS=-Xmx512m
+```
+
+**Production Example:**
+```bash
+# .env file for production
+LOG_LEVEL=WARN
+SOLVER_TIMEOUT_SECONDS=300
+JAVA_OPTS=-Xmx2g -XX:+UseG1GC
+POSTGRES_PASSWORD=secure_password_here
+```
+
+### Service Profiles
+
+Use Docker Compose profiles to control which services are started:
+
+```bash
+# Default: API + Database
+docker-compose up
+
+# Include MCP server
+docker-compose --profile mcp up
+
+# Production with reverse proxy
+docker-compose -f docker-compose.prod.yml --profile nginx up
+
+# Full stack with cache
+docker-compose -f docker-compose.prod.yml --profile nginx --profile cache up
+```
+
+### Health Checks and Monitoring
+
+All services include health checks:
+- **API**: `GET /health` endpoint
+- **PostgreSQL**: `pg_isready` command
+- **Redis**: `redis-cli ping` command
+- **Nginx**: Process and port monitoring
+
+Access points:
+- **API**: http://localhost:8081
+- **API Documentation**: http://localhost:8081/docs
+- **MCP Server**: http://localhost:8082 (if enabled)
+- **Web Interface**: http://localhost (if nginx profile enabled)
+
 ## 📁 Project Structure
 
 ```
