@@ -1,49 +1,99 @@
-version: '3.8'
-
 services:
   shift-scheduler:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "${SHIFT_SCHEDULER_PORT:-8081}:8081"
     environment:
       - PYTHONUNBUFFERED=1
-      - JAVA_OPTS=-Xmx1g
-      - JOB_STORAGE_TYPE=filesystem
-      - JOB_STORAGE_DIR=/app/job_storage
+      # Logging configuration
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - SOLVER_LOG_LEVEL=${SOLVER_LOG_LEVEL:-INFO}
+      # Java configuration
+      - JAVA_OPTS=${JAVA_OPTS:--Xmx1g}
+      # Job storage configuration
+      - JOB_STORAGE_TYPE=${JOB_STORAGE_TYPE:-filesystem}
+      - JOB_STORAGE_DIR=${JOB_STORAGE_DIR:-/app/job_storage}
+      # Solver configuration
+      - SOLVER_TIMEOUT_SECONDS=${SOLVER_TIMEOUT_SECONDS:-120}
+      # MCP configuration
+      - SHIFT_SCHEDULER_API_URL=${SHIFT_SCHEDULER_API_URL:-http://shift-scheduler:8081}
     volumes:
       # Job storage directory (persisted on host)
-      - ./job_storage:/app/job_storage
-      # 開発時のみ有効にする
-      # - ./main.py:/app/main.py
-      # - ./models.py:/app/models.py
-      # - ./constraints.py:/app/constraints.py
+      - ${HOST_JOB_STORAGE_DIR:-./job_storage}:/app/job_storage
+      # Development: Hot reload for source code
+      - ./src:/app/src:ro
+      - ./main.py:/app/main.py:ro
+      - ./mcp_server.py:/app/mcp_server.py:ro
+      # Development: Configuration files
+      - ./pyproject.toml:/app/pyproject.toml:ro
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
     restart: unless-stopped
+    depends_on:
+      - postgres
     networks:
       - shift-network
 
-  # (Optional)
-  # postgres:
-  #   image: postgres:15
-  #   environment:
-  #     POSTGRES_DB: shiftdb
-  #     POSTGRES_USER: shiftuser
-  #     POSTGRES_PASSWORD: shiftpass
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #   networks:
-  #     - shift-network
+  # PostgreSQL database (optional for future use)
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-shiftdb}
+      - POSTGRES_USER=${POSTGRES_USER:-shiftuser}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-shiftpass}
+      - POSTGRES_INITDB_ARGS=${POSTGRES_INITDB_ARGS:---encoding=UTF-8 --lc-collate=C --lc-ctype=C}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-shiftuser} -d ${POSTGRES_DB:-shiftdb}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - shift-network
+
+  # MCP Server (for AI assistant integration)
+  mcp-server:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    command: ["python", "mcp_server.py"]
+    ports:
+      - "${MCP_SERVER_PORT:-8082}:8082"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - SOLVER_LOG_LEVEL=${SOLVER_LOG_LEVEL:-INFO}
+      - SHIFT_SCHEDULER_API_URL=http://shift-scheduler:8081
+    volumes:
+      # Development: Hot reload for source code
+      - ./src:/app/src:ro
+      - ./mcp_server.py:/app/mcp_server.py:ro
+      - ./pyproject.toml:/app/pyproject.toml:ro
+    depends_on:
+      - shift-scheduler
+    restart: unless-stopped
+    networks:
+      - shift-network
+    profiles:
+      - mcp
 
 volumes:
   postgres_data:
+    driver: local
 
 networks:
   shift-network:
     driver: bridge
+    name: shift-scheduler-network
