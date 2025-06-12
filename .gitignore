@@ -133,8 +133,6 @@ cython_debug/
 
 # uv
 .uv/
-# Exclude uv.lock as it is auto-generated
-uv.lock
 
 # Docker
 .dockerignore
