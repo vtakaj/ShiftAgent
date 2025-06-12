@@ -1,69 +1,89 @@
-# Shift Scheduler Infrastructure
+# Infrastructure Deployment
 
-Infrastructure as Code (IaC) for the Shift Scheduler application using Pulumi and Azure.
+This directory contains Pulumi Infrastructure as Code for deploying the Shift Scheduler application to Azure.
 
-## 🏗️ Architecture
+## Setup Required Secrets
 
-This infrastructure deploys the following Azure resources:
+### GitHub Repository Secrets
 
-- **Resource Group**: Container for all resources
-- **Storage Account**: For job data and application storage
-- **Container Registry**: For Docker images
-- **Container Apps Environment**: For hosting the application
-- **Log Analytics Workspace**: For monitoring and logging
+1. **PULUMI_ACCESS_TOKEN**: Pulumi access token for state management
+   - Go to [Pulumi Console](https://app.pulumi.com/) → Settings → Access Tokens
+   - Create new token and add to GitHub repository secrets
 
-## 📁 Project Structure
+2. **AZURE_CREDENTIALS**: Azure service principal credentials
+   ```bash
+   # Create service principal
+   az ad sp create-for-rbac --name "shift-scheduler-github" \
+     --role contributor \
+     --scopes /subscriptions/{subscription-id} \
+     --sdk-auth
+   ```
+   - Copy the JSON output and add to GitHub repository secrets
 
+### Environment Configuration
+
+Create environment protection rules in GitHub:
+- **development**: Auto-deploy from main branch
+- **production**: Require manual approval
+
+## Deployment Workflows
+
+### Infrastructure Deployment (`.github/workflows/infrastructure.yml`)
+
+**Automatic:**
+- **PR**: Runs `pulumi preview` and comments on PR
+- **Main branch push**: Deploys to dev environment
+
+**Manual:**
 ```
-infrastructure/
-├── __main__.py              # Main Pulumi program
-├── Pulumi.yaml             # Project configuration
-├── Pulumi.dev.yaml         # Development stack config
-├── Pulumi.prod.yaml        # Production stack config
-├── requirements.txt        # Python dependencies
-├── modules/                # Reusable infrastructure modules
-│   ├── resource_group.py   # Resource group module
-│   ├── storage.py          # Storage account module
-│   ├── container_registry.py # Container registry module
-│   └── container_apps.py   # Container Apps module
-├── config/                 # Configuration helpers
-│   └── common.py          # Common configuration
-└── scripts/               # Deployment scripts
-    ├── deploy-dev.sh      # Deploy development
-    ├── deploy-prod.sh     # Deploy production
-    └── destroy.sh         # Destroy resources
+Actions → Infrastructure Deployment → Run workflow
+- Stack: dev/prod
+- Action: preview/up/destroy
 ```
 
-## 🚀 Getting Started
+### Application Deployment (`.github/workflows/application.yml`)
 
-### Prerequisites
+**Automatic:**
+- **Main branch push**: 
+  1. Runs tests and linting
+  2. Builds multi-arch Docker image
+  3. Pushes to GitHub Container Registry
+  4. Deploys to dev environment
 
-1. **Install Pulumi CLI**:
-   ```bash
-   brew install pulumi  # macOS
-   # or visit https://www.pulumi.com/docs/install/
-   ```
+**Manual:**
+```
+Actions → Application Deployment → Run workflow
+- Environment: dev/prod
+```
 
-2. **Install Azure CLI**:
-   ```bash
-   brew install azure-cli  # macOS
-   az login
-   ```
+## Resource Naming Convention
 
-3. **Install Python dependencies**:
-   ```bash
-   cd infrastructure
-   pip install -r requirements.txt
-   ```
+Following Microsoft Cloud Adoption Framework (CAF):
 
-4. **Set up Pulumi backend**:
-   ```bash
-   # Option 1: Use Pulumi Cloud (recommended)
-   pulumi login
-   
-   # Option 2: Use local backend
-   pulumi login --local
-   ```
+| Resource Type | Naming Pattern | Example |
+|---------------|----------------|---------|
+| Resource Group | `rg-{org}-{project}-{workload}-{env}-{location}-{instance}` | `rg-org-shift-scheduler-core-dev-eastus-001` |
+| Storage Account | `st{org}{project}{env}{location}{instance}` | `storgshiftschedulerdeveus001` |
+| Container Registry | `cr{org}{project}{env}{location}{instance}` | `crorgshiftschedulerdeveus001` |
+| Container Apps Env | `cae-{org}-{project}-{workload}-{env}-{location}-{instance}` | `cae-org-shift-scheduler-core-dev-eastus-001` |
+| Log Analytics | `log-{org}-{project}-{workload}-{env}-{location}-{instance}` | `log-org-shift-scheduler-core-dev-eastus-001` |
+
+## Local Development (without pip)
+
+```bash
+# Install uv if not already installed
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install Pulumi dependencies
+cd infrastructure
+uv sync --frozen
+
+# Preview changes
+uv run pulumi preview --stack dev
+
+# Deploy changes  
+uv run pulumi up --stack dev
+```
 
 ### 🏃‍♂️ Quick Deployment
 

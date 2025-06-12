@@ -49,7 +49,7 @@ make test-api
 # Format code with Black and isort
 make format
 
-# Run linters (flake8, mypy)
+# Run linters (ruff, mypy)
 make lint
 ```
 
