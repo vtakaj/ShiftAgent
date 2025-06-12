@@ -1,40 +1,39 @@
-# Production Dockerfile (Multi-platform support)
+# ==== Build Stage ====
 FROM --platform=$BUILDPLATFORM python:3.11-slim as builder
 
 # Build arguments
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
-# Install uv
+# Install uv for fast dependency management
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
 # Set working directory
 WORKDIR /app
 
-# Copy project files
+# Copy dependency files first for better layer caching
 COPY pyproject.toml uv.lock ./
 
-# Install dependencies (production only)
-RUN uv sync --frozen --no-dev
+# Install dependencies (production only, no dev dependencies)
+RUN uv sync --frozen --no-dev --no-install-project
 
-# ===== Runtime stage =====
-FROM --platform=$TARGETPLATFORM python:3.11-slim
+# ==== Runtime Stage ====
+FROM --platform=$TARGETPLATFORM python:3.11-slim as runtime
 
 # Build arguments
 ARG TARGETPLATFORM
 
-# Update system packages and install Java (platform-specific)
-RUN apt-get update && apt-get install -y \
+# Install minimal system dependencies and Java runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
     openjdk-17-jre-headless \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# Set JAVA_HOME (platform-specific)
-RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-    echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64' >> /etc/environment; \
-    else \
-    echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >> /etc/environment; \
-    fi
+# Set JAVA_HOME dynamically based on platform
+RUN JAVA_HOME_PATH=$(find /usr/lib/jvm -name "java-17-openjdk-*" -type d | head -1) && \
+    echo "export JAVA_HOME=$JAVA_HOME_PATH" >> /etc/environment && \
+    echo "JAVA_HOME=$JAVA_HOME_PATH" >> /etc/environment
 
 # Set working directory
 WORKDIR /app
@@ -45,23 +44,24 @@ COPY --from=builder /app/.venv /app/.venv
 # Add virtual environment to PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Copy application code
-COPY main.py models.py constraints.py ./
+# Copy application source code
+COPY main.py ./
+COPY src/ ./src/
 
-# Create non-root user
-RUN useradd --create-home --shell /bin/bash app \
+# Create non-root user for security
+RUN useradd --create-home --shell /bin/bash --uid 1000 app \
     && chown -R app:app /app
 USER app
 
-# Platform-specific JAVA_HOME setting
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
+# Set JAVA_HOME for runtime (will be dynamically set by the environment file)
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+# Health check using the correct port and endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8081/health || exit 1
 
-# Expose port 8000
-EXPOSE 8000
+# Expose the correct port (8081 as per main.py)
+EXPOSE 8081
 
-# Run application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run application with the correct entry point
+CMD ["python", "main.py"]
