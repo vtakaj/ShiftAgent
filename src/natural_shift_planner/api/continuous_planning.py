@@ -2,6 +2,8 @@
 Continuous planning service for partial schedule modifications
 """
 
+from typing import Optional
+from datetime import datetime
 from timefold.solver import Solver
 
 from ..core.models.employee import Employee
@@ -49,7 +51,7 @@ class ContinuousPlanningService:
             problem_change_director.change_variable(shift2, "employee", employee1)
 
         # Add the problem change to the solver
-        solver.add_problem_change(shift_swap_problem_change)
+        solver.add_problem_change(shift_swap_problem_change)  # type: ignore[arg-type]
 
     @staticmethod
     def find_replacement_for_shift(
@@ -89,7 +91,7 @@ class ContinuousPlanningService:
             problem_change_director.change_variable(shift, "employee", None)
             # The solver will continue running and find a suitable replacement
 
-        solver.add_problem_change(shift_replacement_problem_change)
+        solver.add_problem_change(shift_replacement_problem_change)  # type: ignore[arg-type]
 
     @staticmethod
     def pin_shifts(solver: Solver, shift_ids: list[str]) -> None:
@@ -127,7 +129,7 @@ class ContinuousPlanningService:
                     f"Shifts not found in solution: {', '.join(missing_shifts)}"
                 )
 
-        solver.add_problem_change(pin_shifts_problem_change)
+        solver.add_problem_change(pin_shifts_problem_change)  # type: ignore[arg-type]
 
     @staticmethod
     def unpin_shifts(solver: Solver, shift_ids: list[str]) -> None:
@@ -165,7 +167,7 @@ class ContinuousPlanningService:
                     f"Shifts not found in solution: {', '.join(missing_shifts)}"
                 )
 
-        solver.add_problem_change(unpin_shifts_problem_change)
+        solver.add_problem_change(unpin_shifts_problem_change)  # type: ignore[arg-type]
 
     @staticmethod
     def reassign_shift(
@@ -203,7 +205,7 @@ class ContinuousPlanningService:
 
             problem_change_director.change_variable(shift, "employee", new_employee)
 
-        solver.add_problem_change(reassign_shift_problem_change)
+        solver.add_problem_change(reassign_shift_problem_change)  # type: ignore[arg-type]
 
     @staticmethod
     def add_employee(
@@ -211,9 +213,9 @@ class ContinuousPlanningService:
         employee_id: str,
         name: str,
         skills: set[str],
-        preferred_days_off: set[str] = None,
-        preferred_work_days: set[str] = None,
-        unavailable_dates: set = None,
+        preferred_days_off: Optional[set[str]] = None,
+        preferred_work_days: Optional[set[str]] = None,
+        unavailable_dates: Optional[set[datetime]] = None,
     ) -> None:
         """
         Add a new employee to the running solver
@@ -254,7 +256,7 @@ class ContinuousPlanningService:
                 new_employee, working_solution.employees
             )
 
-        solver.add_problem_change(add_employee_problem_change)
+        solver.add_problem_change(add_employee_problem_change)  # type: ignore[arg-type]
 
     @staticmethod
     def add_employees_batch(solver: Solver, employees: list[dict]) -> None:
@@ -296,7 +298,7 @@ class ContinuousPlanningService:
             if not new_employees:
                 raise ValueError("No new employees to add (all IDs already exist)")
 
-        solver.add_problem_change(add_employees_problem_change)
+        solver.add_problem_change(add_employees_problem_change)  # type: ignore[arg-type]
 
     @staticmethod
     def remove_employee(solver: Solver, employee_id: str) -> None:
@@ -329,7 +331,7 @@ class ContinuousPlanningService:
                 employee_to_remove, working_solution.employees
             )
 
-        solver.add_problem_change(remove_employee_problem_change)
+        solver.add_problem_change(remove_employee_problem_change)  # type: ignore[arg-type]
 
     @staticmethod
     def add_employee_and_assign_shift(
@@ -338,9 +340,9 @@ class ContinuousPlanningService:
         name: str,
         skills: set[str],
         shift_id: str,
-        preferred_days_off: set[str] = None,
-        preferred_work_days: set[str] = None,
-        unavailable_dates: set = None,
+        preferred_days_off: Optional[set[str]] = None,
+        preferred_work_days: Optional[set[str]] = None,
+        unavailable_dates: Optional[set[datetime]] = None,
     ) -> None:
         """
         Add a new employee and immediately assign them to a specific shift
@@ -395,4 +397,4 @@ class ContinuousPlanningService:
                 target_shift, "employee", new_employee
             )
 
-        solver.add_problem_change(add_and_assign_problem_change)
+        solver.add_problem_change(add_and_assign_problem_change)  # type: ignore[arg-type]
