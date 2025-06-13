@@ -44,6 +44,9 @@ def main():
         "storage_primary_endpoint",
         storage_module.storage_account.primary_endpoints.blob,
     )
+    pulumi.export("storage_connection_string", storage_module.get_connection_string())
+    pulumi.export("storage_job_data_container", storage_module.job_data_container.name)
+    pulumi.export("storage_logs_container", storage_module.logs_container.name)
 
     # Create container registry (for Docker images)
     registry_module = ContainerRegistryModule(
