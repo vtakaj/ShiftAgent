@@ -128,6 +128,23 @@ The solver optimizes using HardMediumSoftScore:
 - Medium constraints are important but can be violated (8-hour rest periods)
 - Soft constraints are optimization goals (fairness, target hours)
 
+### Date Format Specification
+
+**Employee Unavailable Dates**:
+- **Format**: ISO 8601 (`YYYY-MM-DDTHH:MM:SS` or `YYYY-MM-DD`)
+- **Examples**: 
+  - `"2024-01-15T00:00:00"` (with time)
+  - `"2024-01-15"` (date only)
+  - `"2024-12-25T09:30:00"` (specific time)
+- **Behavior**: Time component is optional and normalized to date-only for comparison
+- **Use Cases**: Employee vacation days, sick leave, personal unavailability
+
+**Shift Times**:
+- **Format**: ISO 8601 with time (`YYYY-MM-DDTHH:MM:SS`)
+- **Examples**: 
+  - `"2024-01-15T09:00:00"` (9:00 AM start)
+  - `"2024-01-15T17:30:00"` (5:30 PM end)
+
 ### API Endpoints
 
 #### Basic Operations

@@ -50,7 +50,7 @@ class EmployeeRequest(BaseModel):
     )
     unavailable_dates: list[str] = Field(
         default_factory=list,
-        description="Specific dates when employee is unavailable (ISO format)",
+        description="Specific dates when employee is unavailable. Format: ISO 8601 (YYYY-MM-DDTHH:MM:SS or YYYY-MM-DD). Examples: '2024-01-15T00:00:00', '2024-01-15'. Time component is optional and will be normalized to date-only for comparison.",
     )
 
 
@@ -438,7 +438,7 @@ async def add_employee_to_job(
         skills: List of employee skills
         preferred_days_off: Days employee prefers not to work
         preferred_work_days: Days employee prefers to work
-        unavailable_dates: Specific dates when employee is unavailable (ISO format)
+        unavailable_dates: Specific dates when employee is unavailable. Format: ISO 8601 (YYYY-MM-DDTHH:MM:SS or YYYY-MM-DD). Examples: ['2024-01-15T00:00:00', '2024-01-15']
 
     Returns:
         Success status and employee addition details
@@ -515,7 +515,7 @@ async def add_employee_and_assign_to_shift(
         shift_id: ID of shift to assign the new employee to
         preferred_days_off: Days employee prefers not to work
         preferred_work_days: Days employee prefers to work
-        unavailable_dates: Specific dates when employee is unavailable (ISO format)
+        unavailable_dates: Specific dates when employee is unavailable. Format: ISO 8601 (YYYY-MM-DDTHH:MM:SS or YYYY-MM-DD). Examples: ['2024-01-15T00:00:00', '2024-01-15']
 
     Returns:
         Success status and assignment details

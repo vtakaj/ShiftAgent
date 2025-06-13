@@ -21,7 +21,8 @@ class EmployeeRequest(BaseModel):
         description="Days employee prefers to work (e.g., ['sunday', 'monday'])",
     )
     unavailable_dates: list[datetime] = Field(
-        default_factory=list, description="Specific dates when employee is unavailable"
+        default_factory=list,
+        description="Specific dates when employee is unavailable. Format: ISO 8601 (YYYY-MM-DDTHH:MM:SS or YYYY-MM-DD). Examples: '2024-01-15T00:00:00', '2024-01-15'. Time component is optional and will be normalized to date-only for comparison.",
     )
 
 
@@ -114,7 +115,8 @@ class AddEmployeeRequest(BaseModel):
         default_factory=list, description="Days employee prefers to work"
     )
     unavailable_dates: list[datetime] = Field(
-        default_factory=list, description="Specific dates when employee is unavailable"
+        default_factory=list,
+        description="Specific dates when employee is unavailable. Format: ISO 8601 (YYYY-MM-DDTHH:MM:SS or YYYY-MM-DD). Examples: '2024-01-15T00:00:00', '2024-01-15'. Time component is optional and will be normalized to date-only for comparison.",
     )
 
 
