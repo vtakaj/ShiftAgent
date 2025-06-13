@@ -34,7 +34,9 @@ class ShiftSchedule:
     )
 
     # スコア（最適化の結果）
-    score: Annotated[HardMediumSoftScore, PlanningScore] = field(default=None)
+    score: Annotated[HardMediumSoftScore, PlanningScore] = field(
+        default=HardMediumSoftScore.ZERO
+    )
 
     def get_employee_count(self) -> int:
         """従業員数を取得"""
@@ -61,15 +63,10 @@ class ShiftSchedule:
         self.shifts.append(shift)
 
     def __str__(self):
-        score_str = (
-            str(self.score)
-            if hasattr(self, "score") and self.score is not None
-            else "None"
-        )
         return (
             f"ShiftSchedule("
             f"employees={len(self.employees)}, "
             f"shifts={len(self.shifts)}, "
             f"assigned={self.get_assigned_shift_count()}, "
-            f"score={score_str})"
+            f"score={self.score})"
         )

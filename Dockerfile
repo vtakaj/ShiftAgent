@@ -50,6 +50,7 @@ COPY src/ ./src/
 
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash --uid 1000 app \
+    && mkdir -p /app/job_storage \
     && chown -R app:app /app
 USER app
 
