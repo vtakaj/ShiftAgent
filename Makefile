@@ -52,8 +52,8 @@ test:
 # Format code
 format:
 	@echo "✨ Formatting code..."
-	uv run black .
-	uv run isort .
+	uv run ruff format .
+	uv run ruff check . --fix
 
 # Check code
 lint:

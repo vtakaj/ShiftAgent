@@ -3,7 +3,7 @@ Shift Schedule domain model
 """
 
 from dataclasses import dataclass, field
-from typing import Annotated, List
+from typing import Annotated
 
 from timefold.solver.domain import (
     PlanningEntityCollectionProperty,
@@ -25,11 +25,11 @@ class ShiftSchedule:
 
     # 問題のファクト（変更されない情報）
     employees: Annotated[
-        List[Employee], ProblemFactCollectionProperty, ValueRangeProvider
+        list[Employee], ProblemFactCollectionProperty, ValueRangeProvider
     ] = field(default_factory=list)
 
     # 最適化対象のエンティティ
-    shifts: Annotated[List[Shift], PlanningEntityCollectionProperty] = field(
+    shifts: Annotated[list[Shift], PlanningEntityCollectionProperty] = field(
         default_factory=list
     )
 
@@ -61,7 +61,11 @@ class ShiftSchedule:
         self.shifts.append(shift)
 
     def __str__(self):
-        score_str = str(self.score) if hasattr(self, 'score') and self.score is not None else "None"
+        score_str = (
+            str(self.score)
+            if hasattr(self, "score") and self.score is not None
+            else "None"
+        )
         return (
             f"ShiftSchedule("
             f"employees={len(self.employees)}, "

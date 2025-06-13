@@ -4,7 +4,7 @@ HTML template renderer for schedule reports
 
 import os
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -64,7 +64,7 @@ class ScheduleReportRenderer:
         self.env.filters["format_time"] = format_time
 
     def render_schedule_report(
-        self, schedule_data: Dict[str, Any], score: str = None
+        self, schedule_data: dict[str, Any], score: str = None
     ) -> str:
         """
         Render schedule data as HTML report
@@ -106,7 +106,7 @@ class ScheduleReportRenderer:
 renderer = ScheduleReportRenderer()
 
 
-def render_schedule_html(schedule_data: Dict[str, Any], score: str = None) -> str:
+def render_schedule_html(schedule_data: dict[str, Any], score: str = None) -> str:
     """
     Convenience function to render schedule data as HTML
 

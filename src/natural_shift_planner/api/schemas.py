@@ -3,7 +3,7 @@ API request/response schemas using Pydantic
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -11,16 +11,16 @@ from pydantic import BaseModel, Field
 class EmployeeRequest(BaseModel):
     id: str
     name: str
-    skills: List[str]
-    preferred_days_off: List[str] = Field(
+    skills: list[str]
+    preferred_days_off: list[str] = Field(
         default_factory=list,
         description="Days employee prefers not to work (e.g., ['friday', 'saturday'])",
     )
-    preferred_work_days: List[str] = Field(
+    preferred_work_days: list[str] = Field(
         default_factory=list,
         description="Days employee prefers to work (e.g., ['sunday', 'monday'])",
     )
-    unavailable_dates: List[datetime] = Field(
+    unavailable_dates: list[datetime] = Field(
         default_factory=list, description="Specific dates when employee is unavailable"
     )
 
@@ -29,14 +29,14 @@ class ShiftRequest(BaseModel):
     id: str
     start_time: datetime
     end_time: datetime
-    required_skills: List[str]
-    location: Optional[str] = None
+    required_skills: list[str]
+    location: str | None = None
     priority: int = 5
 
 
 class ShiftScheduleRequest(BaseModel):
-    employees: List[EmployeeRequest]
-    shifts: List[ShiftRequest]
+    employees: list[EmployeeRequest]
+    shifts: list[ShiftRequest]
 
 
 class SolveResponse(BaseModel):
@@ -47,11 +47,11 @@ class SolveResponse(BaseModel):
 class SolutionResponse(BaseModel):
     job_id: str
     status: str
-    solution: Optional[Dict[str, Any]] = None
-    score: Optional[str] = None
-    assigned_shifts: Optional[int] = None
-    unassigned_shifts: Optional[int] = None
-    message: Optional[str] = None
+    solution: dict[str, Any] | None = None
+    score: str | None = None
+    assigned_shifts: int | None = None
+    unassigned_shifts: int | None = None
+    message: str | None = None
 
 
 # Continuous Planning Schemas
@@ -69,7 +69,7 @@ class ShiftReplacementRequest(BaseModel):
     unavailable_employee_id: str = Field(
         ..., description="ID of the employee who cannot work"
     )
-    excluded_employee_ids: List[str] = Field(
+    excluded_employee_ids: list[str] = Field(
         default_factory=list, description="Additional employees to exclude"
     )
 
@@ -77,7 +77,7 @@ class ShiftReplacementRequest(BaseModel):
 class ShiftPinRequest(BaseModel):
     """Request to pin/unpin shifts for continuous planning"""
 
-    shift_ids: List[str] = Field(..., min_items=1, description="Shift IDs to pin/unpin")
+    shift_ids: list[str] = Field(..., min_items=1, description="Shift IDs to pin/unpin")
     action: Literal["pin", "unpin"] = Field(..., description="Pin or unpin action")
 
 
@@ -85,7 +85,7 @@ class ShiftReassignRequest(BaseModel):
     """Request to reassign a shift to a specific employee"""
 
     shift_id: str = Field(..., description="ID of the shift to reassign")
-    new_employee_id: Optional[str] = Field(
+    new_employee_id: str | None = Field(
         None, description="ID of new employee (None to unassign)"
     )
 
@@ -96,8 +96,8 @@ class ContinuousPlanningResponse(BaseModel):
     success: bool
     message: str
     operation: str
-    affected_shifts: List[Dict[str, Any]] = Field(default_factory=list)
-    warnings: List[str] = Field(default_factory=list)
+    affected_shifts: list[dict[str, Any]] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
 
 
 # Employee Management Schemas
@@ -106,14 +106,14 @@ class AddEmployeeRequest(BaseModel):
 
     id: str = Field(..., description="Unique employee ID")
     name: str = Field(..., description="Employee name")
-    skills: List[str] = Field(..., min_items=1, description="Employee skills")
-    preferred_days_off: List[str] = Field(
+    skills: list[str] = Field(..., min_items=1, description="Employee skills")
+    preferred_days_off: list[str] = Field(
         default_factory=list, description="Days employee prefers not to work"
     )
-    preferred_work_days: List[str] = Field(
+    preferred_work_days: list[str] = Field(
         default_factory=list, description="Days employee prefers to work"
     )
-    unavailable_dates: List[datetime] = Field(
+    unavailable_dates: list[datetime] = Field(
         default_factory=list, description="Specific dates when employee is unavailable"
     )
 
@@ -121,7 +121,7 @@ class AddEmployeeRequest(BaseModel):
 class AddEmployeesBatchRequest(BaseModel):
     """Request to add multiple employees"""
 
-    employees: List[AddEmployeeRequest] = Field(
+    employees: list[AddEmployeeRequest] = Field(
         ..., min_items=1, description="List of employees to add"
     )
 
@@ -139,6 +139,6 @@ class EmployeeManagementResponse(BaseModel):
     success: bool
     message: str
     operation: Literal["add", "add_batch", "remove", "add_and_assign"]
-    employee_ids: List[str] = Field(default_factory=list)
-    affected_shifts: List[str] = Field(default_factory=list)
-    warnings: List[str] = Field(default_factory=list)
+    employee_ids: list[str] = Field(default_factory=list)
+    affected_shifts: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)

@@ -2,15 +2,15 @@
 Azure resource naming conventions following Microsoft CAF (Cloud Adoption Framework)
 Reference: https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming
 """
-import pulumi
-from typing import Dict, Optional
 
+
+import pulumi
 
 # Azure resource type abbreviations according to Microsoft CAF
 RESOURCE_ABBREVIATIONS = {
     "resource_group": "rg",
     "storage_account": "st",
-    "container_registry": "cr", 
+    "container_registry": "cr",
     "container_apps_environment": "cae",
     "container_app": "ca",
     "log_analytics_workspace": "log",
@@ -23,17 +23,17 @@ RESOURCE_ABBREVIATIONS = {
     "public_ip": "pip",
     "load_balancer": "lb",
     "postgresql_server": "psql",
-    "postgresql_database": "psqldb"
+    "postgresql_database": "psqldb",
 }
 
 # Environment abbreviations
 ENVIRONMENT_ABBREVIATIONS = {
     "development": "dev",
-    "staging": "stg", 
+    "staging": "stg",
     "production": "prod",
     "test": "test",
     "dev": "dev",
-    "prod": "prod"
+    "prod": "prod",
 }
 
 # Azure regions abbreviations
@@ -74,51 +74,57 @@ REGION_ABBREVIATIONS = {
     "Korea South": "ks",
     "India Central": "ic",
     "India South": "is",
-    "India West": "iw"
+    "India West": "iw",
 }
 
 
 class AzureNamingConvention:
     """Azure resource naming convention helper"""
-    
-    def __init__(self, 
-                 organization: str = "vtakaj",
-                 project: str = "shift-scheduler", 
-                 environment: Optional[str] = None,
-                 location: Optional[str] = None,
-                 instance: str = "001"):
+
+    def __init__(
+        self,
+        organization: str = "vtakaj",
+        project: str = "shift-scheduler",
+        environment: str | None = None,
+        location: str | None = None,
+        instance: str = "001",
+    ):
         """
         Initialize naming convention
-        
+
         Args:
             organization: Organization/company name (3-4 chars recommended)
-            project: Project name 
+            project: Project name
             environment: Environment (dev, stg, prod)
             location: Azure region
             instance: Instance number (001, 002, etc.)
         """
         self.organization = organization.lower()
-        self.project = project.lower().replace("-", "").replace("_", "")[:8]  # Max 8 chars for project
+        self.project = (
+            project.lower().replace("-", "").replace("_", "")[:8]
+        )  # Max 8 chars for project
         self.environment = self._get_environment_abbr(environment)
         self.location = self._get_location_abbr(location)
         self.instance = instance
-    
-    def _get_environment_abbr(self, environment: Optional[str]) -> str:
+
+    def _get_environment_abbr(self, environment: str | None) -> str:
         """Get environment abbreviation"""
         if not environment:
             config = pulumi.Config()
             environment = config.get("environment") or pulumi.get_stack()
-        
-        return ENVIRONMENT_ABBREVIATIONS.get(environment.lower(), environment.lower()[:3])
-    
-    def _get_location_abbr(self, location: Optional[str]) -> str:
+
+        return ENVIRONMENT_ABBREVIATIONS.get(
+            environment.lower(), environment.lower()[:3]
+        )
+
+    def _get_location_abbr(self, location: str | None) -> str:
         """Get location abbreviation"""
         if not location:
             config = pulumi.Config()
             location = config.get("azure-native:location") or "East US"
-        
+
         return REGION_ABBREVIATIONS.get(location, location.lower().replace(" ", "")[:4])
-    
+
     def resource_group(self, workload: str = "core") -> str:
         """
         Generate resource group name
@@ -127,7 +133,7 @@ class AzureNamingConvention:
         """
         workload_abbr = workload.lower()[:8]
         return f"rg-{self.organization}-{self.project}-{workload_abbr}-{self.environment}-{self.location}-{self.instance}"
-    
+
     def storage_account(self, purpose: str = "data") -> str:
         """
         Generate storage account name
@@ -138,7 +144,7 @@ class AzureNamingConvention:
         purpose_abbr = purpose.lower()[:4]
         name = f"st{self.organization}{self.project}{purpose_abbr}{self.environment}{self.location}{self.instance}"
         return name[:24]  # Max 24 characters for storage account
-    
+
     def container_registry(self) -> str:
         """
         Generate container registry name
@@ -148,7 +154,7 @@ class AzureNamingConvention:
         """
         name = f"cr{self.organization}{self.project}{self.environment}{self.location}{self.instance}"
         return name[:50]  # Max 50 characters for container registry
-    
+
     def container_apps_environment(self) -> str:
         """
         Generate Container Apps Environment name
@@ -156,7 +162,7 @@ class AzureNamingConvention:
         Example: cae-vtakaj-shiftsch-dev-eus-001
         """
         return f"cae-{self.organization}-{self.project}-{self.environment}-{self.location}-{self.instance}"
-    
+
     def container_app(self, app_name: str) -> str:
         """
         Generate Container App name
@@ -165,7 +171,7 @@ class AzureNamingConvention:
         """
         app_abbr = app_name.lower().replace("-", "")[:8]
         return f"ca-{self.organization}-{self.project}-{app_abbr}-{self.environment}-{self.location}-{self.instance}"
-    
+
     def log_analytics_workspace(self) -> str:
         """
         Generate Log Analytics Workspace name
@@ -173,7 +179,7 @@ class AzureNamingConvention:
         Example: log-vtakaj-shiftsch-dev-eus-001
         """
         return f"log-{self.organization}-{self.project}-{self.environment}-{self.location}-{self.instance}"
-    
+
     def key_vault(self) -> str:
         """
         Generate Key Vault name
@@ -183,7 +189,7 @@ class AzureNamingConvention:
         """
         name = f"kv-{self.organization}-{self.project}-{self.environment}-{self.location}-{self.instance}"
         return name[:24]  # Max 24 characters for Key Vault
-    
+
     def application_insights(self) -> str:
         """
         Generate Application Insights name
@@ -191,7 +197,7 @@ class AzureNamingConvention:
         Example: appi-vtakaj-shiftsch-dev-eus-001
         """
         return f"appi-{self.organization}-{self.project}-{self.environment}-{self.location}-{self.instance}"
-    
+
     def postgresql_server(self) -> str:
         """
         Generate PostgreSQL server name
@@ -199,7 +205,7 @@ class AzureNamingConvention:
         Example: psql-vtakaj-shiftsch-dev-eus-001
         """
         return f"psql-{self.organization}-{self.project}-{self.environment}-{self.location}-{self.instance}"
-    
+
     def postgresql_database(self, db_name: str = "main") -> str:
         """
         Generate PostgreSQL database name
@@ -208,14 +214,16 @@ class AzureNamingConvention:
         """
         db_abbr = db_name.lower()[:8]
         return f"psqldb-{self.organization}-{self.project}-{db_abbr}-{self.environment}-{self.instance}"
-    
-    def get_resource_tags(self, additional_tags: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+
+    def get_resource_tags(
+        self, additional_tags: dict[str, str] | None = None
+    ) -> dict[str, str]:
         """
         Generate standard resource tags
-        
+
         Args:
             additional_tags: Additional tags to merge with standard tags
-            
+
         Returns:
             Dictionary of resource tags
         """
@@ -228,23 +236,23 @@ class AzureNamingConvention:
             "Owner": "shift-scheduler-team",
             "Application": "shift-scheduler",
             "CostCenter": f"shift-scheduler-{self.environment}",
-            "CreatedBy": "infrastructure-as-code"
+            "CreatedBy": "infrastructure-as-code",
         }
-        
+
         if additional_tags:
             tags.update(additional_tags)
-            
+
         return tags
 
 
 def get_naming_convention() -> AzureNamingConvention:
     """Get naming convention instance with current Pulumi configuration"""
     config = pulumi.Config()
-    
+
     return AzureNamingConvention(
         organization="vtakaj",
         project="shift-scheduler",
         environment=config.get("environment") or pulumi.get_stack(),
         location=config.get("azure-native:location"),
-        instance="001"
+        instance="001",
     )

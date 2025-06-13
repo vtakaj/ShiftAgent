@@ -46,7 +46,7 @@ make test-api
 
 ### Code Quality
 ```bash
-# Format code with Black and isort
+# Format code with ruff
 make format
 
 # Run linters (ruff, mypy)

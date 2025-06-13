@@ -494,7 +494,7 @@ make run
 ## 💡 Best Practices
 
 ### **Code Quality**
-- Auto-format on save (Black, isort)
+- Auto-format on save (ruff)
 - Linting (ruff, mypy)
 - Type hints recommended
 

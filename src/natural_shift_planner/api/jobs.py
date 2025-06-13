@@ -5,7 +5,7 @@ Job management for asynchronous optimization
 import logging
 import threading
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from ..core.models.schedule import ShiftSchedule
 from .job_store import job_store
@@ -15,7 +15,7 @@ from .solver import SOLVER_LOG_LEVEL, SOLVER_TIMEOUT_SECONDS, solver_factory
 logger = logging.getLogger(__name__)
 
 # Job management dictionary
-jobs: Dict[str, Dict[str, Any]] = {}
+jobs: dict[str, dict[str, Any]] = {}
 job_lock = threading.Lock()
 
 

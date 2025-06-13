@@ -3,7 +3,7 @@ Weekly working hours analysis functions
 """
 
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 
 from ..core.models import Employee, ShiftSchedule
 
@@ -29,7 +29,7 @@ def get_target_hours(employee: Employee) -> int:
         return 32  # Default: 32 hours/week
 
 
-def analyze_weekly_hours(schedule: ShiftSchedule) -> Dict[str, Any]:
+def analyze_weekly_hours(schedule: ShiftSchedule) -> dict[str, Any]:
     """Detailed analysis of weekly working hours"""
 
     # Aggregate weekly working hours
@@ -250,7 +250,7 @@ def analyze_weekly_hours(schedule: ShiftSchedule) -> Dict[str, Any]:
     return analysis
 
 
-def generate_recommendations(analysis: Dict[str, Any]) -> List[str]:
+def generate_recommendations(analysis: dict[str, Any]) -> list[str]:
     """Generate improvement recommendations based on analysis"""
     recommendations = []
 

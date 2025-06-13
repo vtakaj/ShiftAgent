@@ -2,6 +2,7 @@
 """
 MCP Server entry point for Shift Scheduler
 """
+
 import logging
 import os
 import sys

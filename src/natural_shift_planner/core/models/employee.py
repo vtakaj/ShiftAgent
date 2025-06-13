@@ -4,7 +4,6 @@ Employee domain model
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Set
 
 
 @dataclass
@@ -13,15 +12,15 @@ class Employee:
 
     id: str
     name: str
-    skills: Set[str] = field(default_factory=set)
+    skills: set[str] = field(default_factory=set)
     # Employee preference fields
-    preferred_days_off: Set[str] = field(
+    preferred_days_off: set[str] = field(
         default_factory=set
     )  # e.g., {"friday", "saturday"}
-    preferred_work_days: Set[str] = field(
+    preferred_work_days: set[str] = field(
         default_factory=set
     )  # e.g., {"sunday", "monday"}
-    unavailable_dates: Set[datetime] = field(
+    unavailable_dates: set[datetime] = field(
         default_factory=set
     )  # Specific dates (hard constraint)
 
@@ -29,7 +28,7 @@ class Employee:
         """指定されたスキルを持っているかチェック"""
         return skill in self.skills
 
-    def has_all_skills(self, required_skills: Set[str]) -> bool:
+    def has_all_skills(self, required_skills: set[str]) -> bool:
         """必要なスキルをすべて持っているかチェック"""
         return required_skills.issubset(self.skills)
 
