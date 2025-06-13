@@ -2,8 +2,8 @@
 Continuous planning service for partial schedule modifications
 """
 
-from typing import Optional
 from datetime import datetime
+
 from timefold.solver import Solver
 
 from ..core.models.employee import Employee
@@ -213,9 +213,9 @@ class ContinuousPlanningService:
         employee_id: str,
         name: str,
         skills: set[str],
-        preferred_days_off: Optional[set[str]] = None,
-        preferred_work_days: Optional[set[str]] = None,
-        unavailable_dates: Optional[set[datetime]] = None,
+        preferred_days_off: set[str] | None = None,
+        preferred_work_days: set[str] | None = None,
+        unavailable_dates: set[datetime] | None = None,
     ) -> None:
         """
         Add a new employee to the running solver
@@ -340,9 +340,9 @@ class ContinuousPlanningService:
         name: str,
         skills: set[str],
         shift_id: str,
-        preferred_days_off: Optional[set[str]] = None,
-        preferred_work_days: Optional[set[str]] = None,
-        unavailable_dates: Optional[set[datetime]] = None,
+        preferred_days_off: set[str] | None = None,
+        preferred_work_days: set[str] | None = None,
+        unavailable_dates: set[datetime] | None = None,
     ) -> None:
         """
         Add a new employee and immediately assign them to a specific shift

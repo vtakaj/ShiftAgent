@@ -107,7 +107,9 @@ class ScheduleReportRenderer:
 renderer = ScheduleReportRenderer()
 
 
-def render_schedule_html(schedule_data: dict[str, Any], score: str | None = None) -> str:
+def render_schedule_html(
+    schedule_data: dict[str, Any], score: str | None = None
+) -> str:
     """
     Convenience function to render schedule data as HTML
 

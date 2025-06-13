@@ -35,12 +35,14 @@ def analyze_weekly_hours(schedule: ShiftSchedule) -> dict[str, Any]:
 
     # Aggregate weekly working hours
     weekly_hours_by_employee: dict[str, dict[str, Any]] = defaultdict(dict)
-    week_summary: dict[str, dict[str, Any]] = defaultdict(lambda: {
-        "total_shifts": 0,
-        "assigned_shifts": 0,
-        "total_hours": 0.0,
-        "employees": set(),
-    })
+    week_summary: dict[str, dict[str, Any]] = defaultdict(
+        lambda: {
+            "total_shifts": 0,
+            "assigned_shifts": 0,
+            "total_hours": 0.0,
+            "employees": set(),
+        }
+    )
 
     for shift in schedule.shifts:
         if shift.employee is None:

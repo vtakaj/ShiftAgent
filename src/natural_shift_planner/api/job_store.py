@@ -141,15 +141,15 @@ class FileSystemJobStore:
         """Convert dict to Shift"""
         if not shift_data:
             return None
-        
+
         # Deserialize datetime fields with proper None checking
         start_time = self._deserialize_datetime(shift_data["start_time"])
         end_time = self._deserialize_datetime(shift_data["end_time"])
-        
+
         if start_time is None or end_time is None:
             # Skip shifts with invalid datetime data
             return None
-            
+
         shift = Shift(
             id=shift_data["id"],
             start_time=start_time,
@@ -171,11 +171,13 @@ class FileSystemJobStore:
         if not schedule_data:
             return None
         employees = [
-            emp for emp_data in schedule_data["employees"] 
+            emp
+            for emp_data in schedule_data["employees"]
             if (emp := self._deserialize_employee(emp_data)) is not None
         ]
         shifts = [
-            shift for shift_data in schedule_data["shifts"]
+            shift
+            for shift_data in schedule_data["shifts"]
             if (shift := self._deserialize_shift(shift_data)) is not None
         ]
         schedule = ShiftSchedule(employees=employees, shifts=shifts)
