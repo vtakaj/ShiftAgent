@@ -12,6 +12,9 @@ This is a Shift Scheduler API built with FastAPI and Timefold Solver (AI optimiz
 ```bash
 # Complete setup - installs all Python dependencies including FastMCP (run this first!)
 make setup
+
+# Initialize Pulumi for infrastructure (if working with infrastructure)
+make pulumi-setup
 ```
 
 ### Running the Application
