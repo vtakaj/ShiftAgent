@@ -89,7 +89,8 @@ async def call_api(
             raise ValueError(f"Unsupported HTTP method: {method}")
 
         response.raise_for_status()
-        return response.json()
+        result: dict[str, Any] = response.json()
+        return result
 
 
 async def call_continuous_planning_api(

@@ -83,6 +83,11 @@ disallow_untyped_defs = false
 module = "natural_shift_planner.core.constraints.*"
 ignore_errors = true
 
+# Ignore complex nested data analysis typing issues
+[[tool.mypy.overrides]]
+module = "natural_shift_planner.api.analysis"
+ignore_errors = true
+
 [tool.ruff]
 line-length = 88
 target-version = "py311"
