@@ -153,7 +153,7 @@ async def solve_shifts_sync(request: ShiftScheduleRequest):
         return convert_domain_to_response(solution)
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/shifts/weekly-analysis/{job_id}")
@@ -181,7 +181,7 @@ async def analyze_weekly_hours_sync(request: ShiftScheduleRequest):
         analysis = analyze_weekly_hours(schedule)
         return analysis
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/shifts/test-weekly")
@@ -273,13 +273,13 @@ async def swap_shifts(job_id: str, request: ShiftSwapRequest):
 
         except ValueError as e:
             # Handle validation errors with 400 status
-            raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e)) from e
         except Exception as e:
             # Handle unexpected errors with 500 status
             raise HTTPException(
                 status_code=500,
                 detail=f"Internal error during swap operation: {str(e)}",
-            )
+            ) from e
 
 
 @app.post("/api/shifts/{job_id}/replace", response_model=ContinuousPlanningResponse)
@@ -328,13 +328,13 @@ async def find_replacement(job_id: str, request: ShiftReplacementRequest):
 
         except ValueError as e:
             # Handle validation errors with 400 status
-            raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e)) from e
         except Exception as e:
             # Handle unexpected errors with 500 status
             raise HTTPException(
                 status_code=500,
                 detail=f"Internal error during replacement operation: {str(e)}",
-            )
+            ) from e
 
 
 @app.post("/api/shifts/{job_id}/pin", response_model=ContinuousPlanningResponse)
@@ -385,12 +385,12 @@ async def pin_shifts(job_id: str, request: ShiftPinRequest):
 
         except ValueError as e:
             # Handle validation errors with 400 status
-            raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e)) from e
         except Exception as e:
             # Handle unexpected errors with 500 status
             raise HTTPException(
                 status_code=500, detail=f"Internal error during pin operation: {str(e)}"
-            )
+            ) from e
 
 
 @app.post("/api/shifts/{job_id}/reassign", response_model=ContinuousPlanningResponse)
@@ -444,13 +444,13 @@ async def reassign_shift(job_id: str, request: ShiftReassignRequest):
 
         except ValueError as e:
             # Handle validation errors with 400 status
-            raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e)) from e
         except Exception as e:
             # Handle unexpected errors with 500 status
             raise HTTPException(
                 status_code=500,
                 detail=f"Internal error during reassign operation: {str(e)}",
-            )
+            ) from e
 
 
 @app.post("/api/shifts/{job_id}/restart", response_model=SolveResponse)
@@ -656,13 +656,13 @@ async def add_employee(job_id: str, request: AddEmployeeRequest):
 
         except ValueError as e:
             # Handle validation errors with 400 status
-            raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e)) from e
         except Exception as e:
             # Handle unexpected errors with 500 status
             raise HTTPException(
                 status_code=500,
                 detail=f"Internal error during add employee operation: {str(e)}",
-            )
+            ) from e
 
 
 @app.post(
@@ -728,13 +728,13 @@ async def add_employees_batch(job_id: str, request: AddEmployeesBatchRequest):
 
         except ValueError as e:
             # Handle validation errors with 400 status
-            raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e)) from e
         except Exception as e:
             # Handle unexpected errors with 500 status
             raise HTTPException(
                 status_code=500,
                 detail=f"Internal error during add employees operation: {str(e)}",
-            )
+            ) from e
 
 
 @app.delete(
@@ -786,13 +786,13 @@ async def remove_employee(job_id: str, employee_id: str):
 
         except ValueError as e:
             # Handle validation errors with 400 status
-            raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e)) from e
         except Exception as e:
             # Handle unexpected errors with 500 status
             raise HTTPException(
                 status_code=500,
                 detail=f"Internal error during remove employee operation: {str(e)}",
-            )
+            ) from e
 
 
 @app.post(
@@ -852,10 +852,10 @@ async def add_employee_and_assign(job_id: str, request: AddEmployeeAndAssignRequ
 
         except ValueError as e:
             # Handle validation errors with 400 status
-            raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e)) from e
         except Exception as e:
             # Handle unexpected errors with 500 status
             raise HTTPException(
                 status_code=500,
                 detail=f"Internal error during add and assign operation: {str(e)}",
-            )
+            ) from e

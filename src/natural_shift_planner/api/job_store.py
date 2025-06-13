@@ -52,9 +52,7 @@ class FileSystemJobStore:
         """Convert ISO string to datetime"""
         return datetime.fromisoformat(dt_str) if dt_str else None
 
-    def _serialize_employee(
-        self, employee: Employee | None
-    ) -> dict[str, Any] | None:
+    def _serialize_employee(self, employee: Employee | None) -> dict[str, Any] | None:
         """Convert Employee to dict"""
         if not employee:
             return None
@@ -122,9 +120,7 @@ class FileSystemJobStore:
         with open(job_path, "w", encoding="utf-8") as f:
             json.dump(serializable_data, f, indent=2, ensure_ascii=False)
 
-    def _deserialize_employee(
-        self, emp_data: dict[str, Any] | None
-    ) -> Employee | None:
+    def _deserialize_employee(self, emp_data: dict[str, Any] | None) -> Employee | None:
         """Convert dict to Employee"""
         if not emp_data:
             return None
@@ -134,16 +130,14 @@ class FileSystemJobStore:
             skills=set(emp_data["skills"]),
             preferred_days_off=set(emp_data.get("preferred_days_off", [])),
             preferred_work_days=set(emp_data.get("preferred_work_days", [])),
-            unavailable_dates=set(
+            unavailable_dates={
                 self._deserialize_datetime(d)
                 for d in emp_data.get("unavailable_dates", [])
                 if d is not None
-            ),
+            },
         )
 
-    def _deserialize_shift(
-        self, shift_data: dict[str, Any] | None
-    ) -> Shift | None:
+    def _deserialize_shift(self, shift_data: dict[str, Any] | None) -> Shift | None:
         """Convert dict to Shift"""
         if not shift_data:
             return None

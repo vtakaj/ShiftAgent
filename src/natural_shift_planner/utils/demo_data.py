@@ -83,15 +83,15 @@ def create_demo_schedule() -> ShiftSchedule:
             "saturday",
             "sunday",
         ][day]
-        day_name_jp = [
-            "月曜",
-            "火曜",
-            "水曜",
-            "木曜",
-            "金曜",
-            "土曜",
-            "日曜",
-        ][day]
+        # day_name_jp = [
+        #     "月曜",
+        #     "火曜",
+        #     "水曜",
+        #     "木曜",
+        #     "金曜",
+        #     "土曜",
+        #     "日曜",
+        # ][day]  # Unused variable, kept for reference
 
         # 早朝入庫作業 (6:00-14:00) - 8時間
         shifts.append(

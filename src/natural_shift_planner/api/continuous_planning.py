@@ -2,7 +2,6 @@
 Continuous planning service for partial schedule modifications
 """
 
-
 from timefold.solver import Solver
 
 from ..core.models.employee import Employee

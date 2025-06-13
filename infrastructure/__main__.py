@@ -3,7 +3,6 @@ Main Pulumi program for Shift Scheduler infrastructure
 """
 
 import pulumi
-from config.naming import get_naming_convention
 from modules.container_apps import ContainerAppsModule
 from modules.container_registry import ContainerRegistryModule
 from modules.resource_group import ResourceGroupModule
@@ -14,8 +13,8 @@ def main():
     """Main infrastructure deployment function"""
 
     # Get configuration and naming convention
-    config = pulumi.Config()
-    naming = get_naming_convention()
+    # config = pulumi.Config()  # Reserved for future use
+    # naming = get_naming_convention()  # Reserved for future use
 
     # Create resource group using Microsoft CAF naming convention
     rg_module = ResourceGroupModule(

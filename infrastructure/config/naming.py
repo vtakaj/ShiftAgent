@@ -3,7 +3,6 @@ Azure resource naming conventions following Microsoft CAF (Cloud Adoption Framew
 Reference: https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming
 """
 
-
 import pulumi
 
 # Azure resource type abbreviations according to Microsoft CAF
