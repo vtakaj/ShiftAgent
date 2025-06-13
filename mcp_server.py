@@ -2,6 +2,7 @@
 """
 MCP Server entry point for Shift Scheduler
 """
+
 import logging
 import os
 import sys
@@ -24,7 +25,7 @@ if solver_log_level == "DEBUG":
     logging.getLogger("timefold").setLevel(logging.DEBUG)
     logging.getLogger("natural_shift_planner.api.solver").setLevel(logging.DEBUG)
 
-from natural_shift_planner.mcp.server import mcp
+from natural_shift_planner.mcp.server import mcp  # noqa: E402
 
 
 def main():

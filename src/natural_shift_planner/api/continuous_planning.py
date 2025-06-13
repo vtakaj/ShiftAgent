@@ -2,10 +2,7 @@
 Continuous planning service for partial schedule modifications
 """
 
-from typing import Callable, List, Optional
-
 from timefold.solver import Solver
-from timefold.solver.score import HardMediumSoftScore
 
 from ..core.models.employee import Employee
 from ..core.models.schedule import ShiftSchedule
@@ -95,7 +92,7 @@ class ContinuousPlanningService:
         solver.add_problem_change(shift_replacement_problem_change)
 
     @staticmethod
-    def pin_shifts(solver: Solver, shift_ids: List[str]) -> None:
+    def pin_shifts(solver: Solver, shift_ids: list[str]) -> None:
         """
         Pin multiple shifts to prevent changes during solving
 
@@ -133,7 +130,7 @@ class ContinuousPlanningService:
         solver.add_problem_change(pin_shifts_problem_change)
 
     @staticmethod
-    def unpin_shifts(solver: Solver, shift_ids: List[str]) -> None:
+    def unpin_shifts(solver: Solver, shift_ids: list[str]) -> None:
         """
         Unpin multiple shifts to allow changes during solving
 
@@ -172,7 +169,7 @@ class ContinuousPlanningService:
 
     @staticmethod
     def reassign_shift(
-        solver: Solver, shift_id: str, new_employee_id: Optional[str]
+        solver: Solver, shift_id: str, new_employee_id: str | None
     ) -> None:
         """
         Reassign a shift to a specific employee or unassign it
@@ -260,7 +257,7 @@ class ContinuousPlanningService:
         solver.add_problem_change(add_employee_problem_change)
 
     @staticmethod
-    def add_employees_batch(solver: Solver, employees: List[dict]) -> None:
+    def add_employees_batch(solver: Solver, employees: list[dict]) -> None:
         """
         Add multiple employees to the running solver
 

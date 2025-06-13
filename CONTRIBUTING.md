@@ -167,8 +167,8 @@ def test_employee_skills_validation():
 ## 📝 Code Style Guidelines
 
 ### Python Standards
-- **Formatter**: Black (line length: 88)
-- **Import sorting**: isort
+- **Formatter**: ruff (line length: 88)
+- **Import sorting**: ruff (built-in)
 - **Type hints**: Required for new code
 - **Docstrings**: Google style for public functions
 
@@ -241,7 +241,7 @@ Any alternative approaches considered?
 | `make run` | Start FastAPI server |
 | `make run-mcp` | Start API + MCP servers |
 | `make test` | Run all tests |
-| `make format` | Format code with Black |
+| `make format` | Format code with ruff |
 | `make lint` | Run linters (ruff, mypy) |
 | `make clean` | Clean cache and artifacts |
 | `make debug` | Start server in debug mode |

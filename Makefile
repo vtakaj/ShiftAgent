@@ -18,6 +18,7 @@ help:
 	@echo "  dev          - Install development dependencies"
 	@echo "  debug        - Run API in debug mode"
 	@echo "  test-api     - Test API endpoints"
+	@echo "  pulumi-setup - Initialize Pulumi for infrastructure"
 
 # Development environment setup (with error handling)
 setup:
@@ -52,8 +53,8 @@ test:
 # Format code
 format:
 	@echo "✨ Formatting code..."
-	uv run black .
-	uv run isort .
+	uv run ruff format .
+	uv run ruff check . --fix
 
 # Check code
 lint:
@@ -121,3 +122,16 @@ mcp:
 test-mcp:
 	@echo "🧪 Testing MCP server..."
 	@echo '{"jsonrpc":"2.0","method":"list_tools","id":1}' | uv run python mcp_server.py
+
+# Initialize Pulumi for infrastructure
+pulumi-setup:
+	@echo "🏗️ Setting up Pulumi infrastructure..."
+	@command -v pulumi >/dev/null 2>&1 || { echo "❌ Pulumi not found. Please install Pulumi CLI first."; exit 1; }
+	@echo "✅ Pulumi CLI detected"
+	@cd infrastructure && pulumi version
+	@echo "📝 To get started with Pulumi:"
+	@echo "  1. cd infrastructure"
+	@echo "  2. pulumi login  (or pulumi login --local for offline)"
+	@echo "  3. pulumi stack init dev"
+	@echo "  4. pulumi config set azure-native:location 'East US'"
+	@echo "  5. pulumi up  (to deploy infrastructure)"

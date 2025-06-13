@@ -25,8 +25,6 @@ dependencies = [
 dev = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
-    "black>=23.0.0",
-    "isort>=5.12.0",
     "ruff>=0.1.0",
     "mypy>=1.5.0",
 ]
@@ -70,19 +68,9 @@ exclude = [
 dev-dependencies = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0", 
-    "black>=23.0.0",
-    "isort>=5.12.0",
     "ruff>=0.1.0",
     "mypy>=1.5.0",
 ]
-
-[tool.black]
-line-length = 88
-target-version = ['py311']
-
-[tool.isort]
-profile = "black"
-line_length = 88
 
 [tool.mypy]
 python_version = "3.11"
@@ -93,6 +81,14 @@ disallow_untyped_defs = false
 [tool.ruff]
 line-length = 88
 target-version = "py311"
+
+[tool.ruff.format]
+# Use double quotes for strings
+quote-style = "double"
+# Indent with spaces
+indent-style = "space"
+# Unix-style line endings
+line-ending = "auto"
 
 [tool.ruff.lint]
 select = [
@@ -105,3 +101,6 @@ select = [
     "UP",  # pyupgrade
 ]
 ignore = ["E501"]  # line too long (handled by formatter)
+
+[tool.ruff.lint.isort]
+known-first-party = ["natural_shift_planner"]

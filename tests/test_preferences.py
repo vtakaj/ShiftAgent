@@ -3,10 +3,8 @@ Tests for employee preference functionality
 """
 
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-
-import pytest
 
 # Add src directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -20,7 +18,7 @@ from natural_shift_planner.api.schemas import (
     ShiftRequest,
     ShiftScheduleRequest,
 )
-from natural_shift_planner.core.models import Employee, Shift, ShiftSchedule
+from natural_shift_planner.core.models import Employee
 
 
 def test_api_converter_with_preferences():
@@ -100,9 +98,7 @@ def test_demo_data_with_preferences():
     assert "monday" in tanaka.preferred_work_days
 
     # Check 佐藤花子 has unavailable dates
-    sato = next(
-        (emp for emp in schedule.employees if emp.name == "佐藤花子"), None
-    )
+    sato = next((emp for emp in schedule.employees if emp.name == "佐藤花子"), None)
     assert sato is not None
     assert len(sato.unavailable_dates) > 0
 

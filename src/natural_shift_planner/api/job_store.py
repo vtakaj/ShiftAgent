@@ -6,7 +6,7 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Protocol
+from typing import Any, Protocol
 
 from ..core.models.employee import Employee
 from ..core.models.schedule import ShiftSchedule
@@ -16,15 +16,15 @@ from ..core.models.shift import Shift
 class JobStore(Protocol):
     """Interface for job storage implementations"""
 
-    def save_job(self, job_id: str, job_data: Dict[str, Any]) -> None:
+    def save_job(self, job_id: str, job_data: dict[str, Any]) -> None:
         """Save job data to storage"""
         ...
 
-    def get_job(self, job_id: str) -> Optional[Dict[str, Any]]:
+    def get_job(self, job_id: str) -> dict[str, Any] | None:
         """Retrieve job data from storage"""
         ...
 
-    def list_jobs(self) -> List[str]:
+    def list_jobs(self) -> list[str]:
         """List all job IDs"""
         ...
 
@@ -44,17 +44,15 @@ class FileSystemJobStore:
         """Get file path for a job"""
         return self.storage_dir / f"{job_id}.json"
 
-    def _serialize_datetime(self, dt: Optional[datetime]) -> Optional[str]:
+    def _serialize_datetime(self, dt: datetime | None) -> str | None:
         """Convert datetime to ISO string"""
         return dt.isoformat() if dt else None
 
-    def _deserialize_datetime(self, dt_str: Optional[str]) -> Optional[datetime]:
+    def _deserialize_datetime(self, dt_str: str | None) -> datetime | None:
         """Convert ISO string to datetime"""
         return datetime.fromisoformat(dt_str) if dt_str else None
 
-    def _serialize_employee(
-        self, employee: Optional[Employee]
-    ) -> Optional[Dict[str, Any]]:
+    def _serialize_employee(self, employee: Employee | None) -> dict[str, Any] | None:
         """Convert Employee to dict"""
         if not employee:
             return None
@@ -69,7 +67,7 @@ class FileSystemJobStore:
             ],
         }
 
-    def _serialize_shift(self, shift: Optional[Shift]) -> Optional[Dict[str, Any]]:
+    def _serialize_shift(self, shift: Shift | None) -> dict[str, Any] | None:
         """Convert Shift to dict"""
         if not shift:
             return None
@@ -85,8 +83,8 @@ class FileSystemJobStore:
         }
 
     def _serialize_schedule(
-        self, schedule: Optional[ShiftSchedule]
-    ) -> Optional[Dict[str, Any]]:
+        self, schedule: ShiftSchedule | None
+    ) -> dict[str, Any] | None:
         """Convert ShiftSchedule to dict"""
         if not schedule:
             return None
@@ -96,7 +94,7 @@ class FileSystemJobStore:
             "score": str(schedule.score) if schedule.score else None,
         }
 
-    def save_job(self, job_id: str, job_data: Dict[str, Any]) -> None:
+    def save_job(self, job_id: str, job_data: dict[str, Any]) -> None:
         """Save job data to file"""
         # Create serializable version of job data
         serializable_data = {
@@ -122,9 +120,7 @@ class FileSystemJobStore:
         with open(job_path, "w", encoding="utf-8") as f:
             json.dump(serializable_data, f, indent=2, ensure_ascii=False)
 
-    def _deserialize_employee(
-        self, emp_data: Optional[Dict[str, Any]]
-    ) -> Optional[Employee]:
+    def _deserialize_employee(self, emp_data: dict[str, Any] | None) -> Employee | None:
         """Convert dict to Employee"""
         if not emp_data:
             return None
@@ -134,16 +130,14 @@ class FileSystemJobStore:
             skills=set(emp_data["skills"]),
             preferred_days_off=set(emp_data.get("preferred_days_off", [])),
             preferred_work_days=set(emp_data.get("preferred_work_days", [])),
-            unavailable_dates=set(
+            unavailable_dates={
                 self._deserialize_datetime(d)
                 for d in emp_data.get("unavailable_dates", [])
                 if d is not None
-            ),
+            },
         )
 
-    def _deserialize_shift(
-        self, shift_data: Optional[Dict[str, Any]]
-    ) -> Optional[Shift]:
+    def _deserialize_shift(self, shift_data: dict[str, Any] | None) -> Shift | None:
         """Convert dict to Shift"""
         if not shift_data:
             return None
@@ -162,8 +156,8 @@ class FileSystemJobStore:
         return shift
 
     def _deserialize_schedule(
-        self, schedule_data: Optional[Dict[str, Any]]
-    ) -> Optional[ShiftSchedule]:
+        self, schedule_data: dict[str, Any] | None
+    ) -> ShiftSchedule | None:
         """Convert dict to ShiftSchedule"""
         if not schedule_data:
             return None
@@ -177,14 +171,14 @@ class FileSystemJobStore:
             pass
         return schedule
 
-    def get_job(self, job_id: str) -> Optional[Dict[str, Any]]:
+    def get_job(self, job_id: str) -> dict[str, Any] | None:
         """Retrieve job data from file"""
         job_path = self._get_job_path(job_id)
         if not job_path.exists():
             return None
 
         try:
-            with open(job_path, "r", encoding="utf-8") as f:
+            with open(job_path, encoding="utf-8") as f:
                 data = json.load(f)
 
             # Convert datetime strings back to datetime objects
@@ -204,7 +198,7 @@ class FileSystemJobStore:
             print(f"Error loading job {job_id}: {e}")
             return None
 
-    def list_jobs(self) -> List[str]:
+    def list_jobs(self) -> list[str]:
         """List all job IDs"""
         job_files = self.storage_dir.glob("*.json")
         return [f.stem for f in job_files]
@@ -237,6 +231,6 @@ STORAGE_TYPE = os.getenv("JOB_STORAGE_TYPE", "filesystem")
 STORAGE_DIR = os.getenv("JOB_STORAGE_DIR", "./job_storage")
 
 if STORAGE_TYPE == "filesystem":
-    job_store: Optional[JobStore] = FileSystemJobStore(STORAGE_DIR)
+    job_store: JobStore | None = FileSystemJobStore(STORAGE_DIR)
 else:
     job_store = None  # Memory only

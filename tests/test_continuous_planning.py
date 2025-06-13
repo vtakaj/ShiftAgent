@@ -3,7 +3,6 @@ Tests for continuous planning features
 """
 
 from datetime import datetime, timedelta
-from typing import List
 
 import pytest
 from timefold.solver import SolverFactory
@@ -22,7 +21,7 @@ from src.natural_shift_planner.core.models import Employee, Shift, ShiftSchedule
 
 
 @pytest.fixture
-def sample_employees() -> List[Employee]:
+def sample_employees() -> list[Employee]:
     """Create sample employees for testing"""
     return [
         Employee(id="emp1", name="John Smith", skills={"Nurse", "CPR"}),
@@ -33,7 +32,7 @@ def sample_employees() -> List[Employee]:
 
 
 @pytest.fixture
-def sample_shifts() -> List[Shift]:
+def sample_shifts() -> list[Shift]:
     """Create sample shifts for testing"""
     base_date = datetime(2025, 6, 1)
     return [

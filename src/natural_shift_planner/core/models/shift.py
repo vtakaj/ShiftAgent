@@ -4,7 +4,7 @@ Shift domain model
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Annotated, Optional, Set
+from typing import Annotated
 
 from timefold.solver.domain import PlanningPin, PlanningVariable, planning_entity
 
@@ -19,12 +19,12 @@ class Shift:
     id: str
     start_time: datetime
     end_time: datetime
-    required_skills: Set[str] = field(default_factory=set)
-    location: Optional[str] = None
+    required_skills: set[str] = field(default_factory=set)
+    location: str | None = None
     priority: int = 5  # 1が最高優先度、10が最低優先度
 
     # Timefold Solverによって最適化される変数
-    employee: Annotated[Optional[Employee], PlanningVariable] = field(default=None)
+    employee: Annotated[Employee | None, PlanningVariable] = field(default=None)
 
     # Pinning field for continuous planning
     # When pinned is True, Timefold will not change the employee assignment

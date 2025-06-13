@@ -5,7 +5,7 @@ MCP tools for shift scheduler operations
 import json
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import httpx
 from fastmcp import Context
@@ -16,7 +16,7 @@ API_BASE_URL = os.getenv("SHIFT_SCHEDULER_API_URL", "http://localhost:8081")
 
 
 # Helper functions
-def parse_list_param(param: Union[None, str, List[str]]) -> List[str]:
+def parse_list_param(param: None | str | list[str]) -> list[str]:
     """Parse a parameter that could be a list or JSON string"""
     if param is None:
         return []
@@ -39,16 +39,16 @@ def parse_list_param(param: Union[None, str, List[str]]) -> List[str]:
 class EmployeeRequest(BaseModel):
     id: str
     name: str
-    skills: List[str]
-    preferred_days_off: List[str] = Field(
+    skills: list[str]
+    preferred_days_off: list[str] = Field(
         default_factory=list,
         description="Days employee prefers not to work (e.g., ['friday', 'saturday'])",
     )
-    preferred_work_days: List[str] = Field(
+    preferred_work_days: list[str] = Field(
         default_factory=list,
         description="Days employee prefers to work (e.g., ['sunday', 'monday'])",
     )
-    unavailable_dates: List[str] = Field(
+    unavailable_dates: list[str] = Field(
         default_factory=list,
         description="Specific dates when employee is unavailable (ISO format)",
     )
@@ -58,23 +58,23 @@ class ShiftRequest(BaseModel):
     id: str
     start_time: str
     end_time: str
-    required_skills: List[str]
-    location: Optional[str] = None
+    required_skills: list[str]
+    location: str | None = None
     priority: int = Field(default=5, ge=1, le=10)
 
 
 class ScheduleRequest(BaseModel):
-    employees: List[EmployeeRequest]
-    shifts: List[ShiftRequest]
+    employees: list[EmployeeRequest]
+    shifts: list[ShiftRequest]
 
 
 # Helper function to make API calls
 async def call_api(
     method: str,
     endpoint: str,
-    data: Optional[Dict[str, Any]] = None,
+    data: dict[str, Any] | None = None,
     timeout: float = 120.0,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Make an API call to the shift scheduler"""
     url = f"{API_BASE_URL}{endpoint}"
 
@@ -94,9 +94,9 @@ async def call_api(
 
 async def call_continuous_planning_api(
     endpoint: str,
-    data: Dict[str, Any],
+    data: dict[str, Any],
     timeout: float = 120.0,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Make a continuous planning API call with automatic job restart if needed
     """
@@ -126,19 +126,19 @@ async def call_continuous_planning_api(
 
 
 # Tool functions
-async def health_check(ctx: Context) -> Dict[str, Any]:
+async def health_check(ctx: Context) -> dict[str, Any]:
     """Check if the Shift Scheduler API is healthy"""
     return await call_api("GET", "/health")
 
 
-async def get_demo_schedule(ctx: Context) -> Dict[str, Any]:
+async def get_demo_schedule(ctx: Context) -> dict[str, Any]:
     """Get a demo shift schedule with sample data"""
     return await call_api("GET", "/api/shifts/demo")
 
 
 async def solve_schedule_sync(
-    ctx: Context, employees: List[EmployeeRequest], shifts: List[ShiftRequest]
-) -> Dict[str, Any]:
+    ctx: Context, employees: list[EmployeeRequest], shifts: list[ShiftRequest]
+) -> dict[str, Any]:
     """
     Solve shift scheduling synchronously (blocks until complete)
 
@@ -163,8 +163,8 @@ async def solve_schedule_sync(
 
 
 async def solve_schedule_async(
-    ctx: Context, employees: List[EmployeeRequest], shifts: List[ShiftRequest]
-) -> Dict[str, Any]:
+    ctx: Context, employees: list[EmployeeRequest], shifts: list[ShiftRequest]
+) -> dict[str, Any]:
     """
     Start async shift scheduling (returns job ID immediately)
 
@@ -188,7 +188,7 @@ async def solve_schedule_async(
     return await call_api("POST", "/api/shifts/solve", request_data)
 
 
-async def get_solve_status(ctx: Context, job_id: str) -> Dict[str, Any]:
+async def get_solve_status(ctx: Context, job_id: str) -> dict[str, Any]:
     """
     Get the status and result of an async solve job
 
@@ -202,8 +202,8 @@ async def get_solve_status(ctx: Context, job_id: str) -> Dict[str, Any]:
 
 
 async def analyze_weekly_hours(
-    ctx: Context, employees: List[EmployeeRequest], shifts: List[ShiftRequest]
-) -> Dict[str, Any]:
+    ctx: Context, employees: list[EmployeeRequest], shifts: list[ShiftRequest]
+) -> dict[str, Any]:
     """
     Analyze weekly working hours for constraint violations
 
@@ -227,12 +227,12 @@ async def analyze_weekly_hours(
     return await call_api("POST", "/api/shifts/analyze-weekly", request_data)
 
 
-async def test_weekly_constraints(ctx: Context) -> Dict[str, Any]:
+async def test_weekly_constraints(ctx: Context) -> dict[str, Any]:
     """Test weekly constraints with demo data"""
     return await call_api("GET", "/api/shifts/test-weekly")
 
 
-async def get_schedule_shifts(ctx: Context, job_id: str) -> Dict[str, Any]:
+async def get_schedule_shifts(ctx: Context, job_id: str) -> dict[str, Any]:
     """
     Get all shifts from a completed schedule for inspection
 
@@ -260,7 +260,7 @@ class ShiftReplacementRequest(BaseModel):
     unavailable_employee_id: str = Field(
         ..., description="ID of the employee who cannot work"
     )
-    excluded_employee_ids: List[str] = Field(
+    excluded_employee_ids: list[str] = Field(
         default_factory=list, description="Additional employees to exclude"
     )
 
@@ -268,7 +268,7 @@ class ShiftReplacementRequest(BaseModel):
 class ShiftPinRequest(BaseModel):
     """Request to pin/unpin shifts for continuous planning"""
 
-    shift_ids: List[str] = Field(..., min_items=1, description="Shift IDs to pin/unpin")
+    shift_ids: list[str] = Field(..., min_items=1, description="Shift IDs to pin/unpin")
     action: str = Field(..., description="Pin or unpin action", pattern="^(pin|unpin)$")
 
 
@@ -276,14 +276,14 @@ class ShiftReassignRequest(BaseModel):
     """Request to reassign a shift to a specific employee"""
 
     shift_id: str = Field(..., description="ID of the shift to reassign")
-    new_employee_id: Optional[str] = Field(
+    new_employee_id: str | None = Field(
         None, description="ID of new employee (None to unassign)"
     )
 
 
 async def swap_shifts(
     ctx: Context, job_id: str, shift1_id: str, shift2_id: str
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Swap employees between two shifts during continuous planning
 
@@ -306,8 +306,8 @@ async def find_shift_replacement(
     job_id: str,
     shift_id: str,
     unavailable_employee_id: str,
-    excluded_employee_ids: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    excluded_employee_ids: list[str] | None = None,
+) -> dict[str, Any]:
     """
     Find replacement for a shift when an employee becomes unavailable
 
@@ -331,8 +331,8 @@ async def find_shift_replacement(
 
 
 async def pin_shifts(
-    ctx: Context, job_id: str, shift_ids: List[str], action: str = "pin"
-) -> Dict[str, Any]:
+    ctx: Context, job_id: str, shift_ids: list[str], action: str = "pin"
+) -> dict[str, Any]:
     """
     Pin or unpin shifts to prevent changes during optimization
 
@@ -352,8 +352,8 @@ async def pin_shifts(
 
 
 async def reassign_shift(
-    ctx: Context, job_id: str, shift_id: str, new_employee_id: Optional[str] = None
-) -> Dict[str, Any]:
+    ctx: Context, job_id: str, shift_id: str, new_employee_id: str | None = None
+) -> dict[str, Any]:
     """
     Reassign a shift to a specific employee or unassign it
 
@@ -371,7 +371,7 @@ async def reassign_shift(
     )
 
 
-async def restart_job(ctx: Context, job_id: str) -> Dict[str, Any]:
+async def restart_job(ctx: Context, job_id: str) -> dict[str, Any]:
     """
     Restart a completed job to enable continuous planning modifications
 
@@ -390,14 +390,14 @@ class AddEmployeeRequest(BaseModel):
 
     id: str = Field(..., description="Unique employee ID")
     name: str = Field(..., description="Employee name")
-    skills: List[str] = Field(..., min_items=1, description="Employee skills")
-    preferred_days_off: List[str] = Field(
+    skills: list[str] = Field(..., min_items=1, description="Employee skills")
+    preferred_days_off: list[str] = Field(
         default_factory=list, description="Days employee prefers not to work"
     )
-    preferred_work_days: List[str] = Field(
+    preferred_work_days: list[str] = Field(
         default_factory=list, description="Days employee prefers to work"
     )
-    unavailable_dates: List[str] = Field(
+    unavailable_dates: list[str] = Field(
         default_factory=list,
         description="Specific dates when employee is unavailable (ISO format)",
     )
@@ -406,7 +406,7 @@ class AddEmployeeRequest(BaseModel):
 class AddEmployeesBatchRequest(BaseModel):
     """Request to add multiple employees"""
 
-    employees: List[AddEmployeeRequest] = Field(
+    employees: list[AddEmployeeRequest] = Field(
         ..., min_items=1, description="List of employees to add"
     )
 
@@ -423,11 +423,11 @@ async def add_employee_to_job(
     job_id: str,
     employee_id: str,
     name: str,
-    skills: List[str],
-    preferred_days_off: Optional[List[str]] = None,
-    preferred_work_days: Optional[List[str]] = None,
-    unavailable_dates: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    skills: list[str],
+    preferred_days_off: list[str] | None = None,
+    preferred_work_days: list[str] | None = None,
+    unavailable_dates: list[str] | None = None,
+) -> dict[str, Any]:
     """
     Add a new employee to an active solving job
 
@@ -457,8 +457,8 @@ async def add_employee_to_job(
 
 
 async def add_employees_batch_to_job(
-    ctx: Context, job_id: str, employees: List[AddEmployeeRequest]
-) -> Dict[str, Any]:
+    ctx: Context, job_id: str, employees: list[AddEmployeeRequest]
+) -> dict[str, Any]:
     """
     Add multiple employees to an active solving job
 
@@ -477,7 +477,7 @@ async def add_employees_batch_to_job(
 
 async def remove_employee_from_job(
     ctx: Context, job_id: str, employee_id: str
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Remove an employee from an active solving job
 
@@ -498,12 +498,12 @@ async def add_employee_and_assign_to_shift(
     job_id: str,
     employee_id: str,
     name: str,
-    skills: List[str],
+    skills: list[str],
     shift_id: str,
-    preferred_days_off: Optional[List[str]] = None,
-    preferred_work_days: Optional[List[str]] = None,
-    unavailable_dates: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    preferred_days_off: list[str] | None = None,
+    preferred_work_days: list[str] | None = None,
+    unavailable_dates: list[str] | None = None,
+) -> dict[str, Any]:
     """
     Add a new employee and immediately assign them to a specific shift
 

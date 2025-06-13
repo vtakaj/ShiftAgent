@@ -2,7 +2,7 @@
 Converters between API schemas and domain models
 """
 
-from typing import Any, Dict
+from typing import Any
 
 from ..core.models import Employee, Shift, ShiftSchedule
 from .schemas import ShiftScheduleRequest
@@ -39,7 +39,7 @@ def convert_request_to_domain(request: ShiftScheduleRequest) -> ShiftSchedule:
     return ShiftSchedule(employees=employees, shifts=shifts)
 
 
-def convert_domain_to_response(schedule: ShiftSchedule) -> Dict[str, Any]:
+def convert_domain_to_response(schedule: ShiftSchedule) -> dict[str, Any]:
     """Convert domain objects to API response"""
     return {
         "employees": [

@@ -44,6 +44,10 @@ USER $USERNAME
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/home/$USERNAME/.local/bin:$PATH"
 
+# Install Pulumi CLI (Apple Silicon support)
+RUN curl -fsSL https://get.pulumi.com | sh
+ENV PATH="/home/$USERNAME/.pulumi/bin:$PATH"
+
 # Git configuration for the container
 RUN git config --global init.defaultBranch main && \
     git config --global core.autocrlf input
@@ -65,8 +69,8 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
     echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >> /home/$USERNAME/.bashrc; \
     fi
 
-# uv path configuration
-RUN echo 'export PATH="/home/vscode/.local/bin:$PATH"' >> /home/$USERNAME/.bashrc
+# uv and Pulumi path configuration
+RUN echo 'export PATH="/home/vscode/.local/bin:/home/vscode/.pulumi/bin:$PATH"' >> /home/$USERNAME/.bashrc
 
 # Development aliases
 RUN echo 'alias ll="ls -la"' >> /home/$USERNAME/.bashrc && \

@@ -2,6 +2,7 @@
 """
 Main entry point for the Shift Scheduler API
 """
+
 import logging
 import os
 import sys
@@ -24,13 +25,13 @@ if solver_log_level == "DEBUG":
     logging.getLogger("timefold").setLevel(logging.DEBUG)
     logging.getLogger("natural_shift_planner.api.solver").setLevel(logging.DEBUG)
 
-from natural_shift_planner.api.server import app
+from natural_shift_planner.api.server import app  # noqa: E402
 
 
 def main():
     """Main entry point for uvx support"""
     import uvicorn
-    
+
     # Configure uvicorn logging
     uvicorn.run(app, host="0.0.0.0", port=8081, log_level=log_level.lower())
 

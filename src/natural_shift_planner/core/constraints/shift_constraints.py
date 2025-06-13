@@ -9,7 +9,7 @@ from timefold.solver.score import (
     constraint_provider,
 )
 
-from ..models import Employee, Shift, ShiftSchedule
+from ..models import Employee, Shift
 
 
 @constraint_provider
