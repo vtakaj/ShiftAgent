@@ -2,6 +2,7 @@
 Weekly working hours analysis functions
 """
 
+from collections import defaultdict
 from datetime import datetime
 from typing import Any
 
@@ -33,8 +34,15 @@ def analyze_weekly_hours(schedule: ShiftSchedule) -> dict[str, Any]:
     """Detailed analysis of weekly working hours"""
 
     # Aggregate weekly working hours
-    weekly_hours_by_employee = {}
-    week_summary = {}
+    weekly_hours_by_employee: dict[str, dict[str, Any]] = defaultdict(dict)
+    week_summary: dict[str, dict[str, Any]] = defaultdict(
+        lambda: {
+            "total_shifts": 0,
+            "assigned_shifts": 0,
+            "total_hours": 0.0,
+            "employees": set(),
+        }
+    )
 
     for shift in schedule.shifts:
         if shift.employee is None:
@@ -45,10 +53,8 @@ def analyze_weekly_hours(schedule: ShiftSchedule) -> dict[str, Any]:
         duration_minutes = shift.get_duration_minutes()
 
         # Aggregate by employee
-        if emp_id not in weekly_hours_by_employee:
-            weekly_hours_by_employee[emp_id] = {}
-
-        if week_key not in weekly_hours_by_employee[emp_id]:
+        # defaultdict will auto-create nested structure
+        if "total_minutes" not in weekly_hours_by_employee[emp_id][week_key]:
             weekly_hours_by_employee[emp_id][week_key] = {
                 "total_minutes": 0,
                 "shift_count": 0,
@@ -67,14 +73,7 @@ def analyze_weekly_hours(schedule: ShiftSchedule) -> dict[str, Any]:
             }
         )
 
-        # Weekly summary
-        if week_key not in week_summary:
-            week_summary[week_key] = {
-                "total_shifts": 0,
-                "assigned_shifts": 0,
-                "total_hours": 0,
-                "employees": set(),
-            }
+        # Weekly summary (defaultdict will auto-create)
 
         week_summary[week_key]["total_shifts"] += 1
         week_summary[week_key]["assigned_shifts"] += 1
@@ -115,7 +114,7 @@ def analyze_weekly_hours(schedule: ShiftSchedule) -> dict[str, Any]:
     # Detailed analysis by employee
     for employee in schedule.employees:
         emp_id = employee.id
-        employee_analysis = {
+        employee_analysis: dict[str, Any] = {
             "name": employee.name,
             "employment_type": (
                 "Full-time" if is_full_time_employee(employee) else "Part-time"

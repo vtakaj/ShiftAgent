@@ -24,7 +24,7 @@ from .tools import (
 )
 
 # Create FastMCP server
-mcp = FastMCP("shift-scheduler-mcp", dependencies=["httpx"])
+mcp: FastMCP = FastMCP("shift-scheduler-mcp", dependencies=["httpx"])
 
 # Register original tools
 mcp.tool()(health_check)

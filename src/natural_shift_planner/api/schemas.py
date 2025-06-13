@@ -78,7 +78,7 @@ class ShiftReplacementRequest(BaseModel):
 class ShiftPinRequest(BaseModel):
     """Request to pin/unpin shifts for continuous planning"""
 
-    shift_ids: list[str] = Field(..., min_items=1, description="Shift IDs to pin/unpin")
+    shift_ids: list[str] = Field(min_length=1, description="Shift IDs to pin/unpin")
     action: Literal["pin", "unpin"] = Field(..., description="Pin or unpin action")
 
 
@@ -107,7 +107,7 @@ class AddEmployeeRequest(BaseModel):
 
     id: str = Field(..., description="Unique employee ID")
     name: str = Field(..., description="Employee name")
-    skills: list[str] = Field(..., min_items=1, description="Employee skills")
+    skills: list[str] = Field(min_length=1, description="Employee skills")
     preferred_days_off: list[str] = Field(
         default_factory=list, description="Days employee prefers not to work"
     )
@@ -124,7 +124,7 @@ class AddEmployeesBatchRequest(BaseModel):
     """Request to add multiple employees"""
 
     employees: list[AddEmployeeRequest] = Field(
-        ..., min_items=1, description="List of employees to add"
+        min_length=1, description="List of employees to add"
     )
 
 

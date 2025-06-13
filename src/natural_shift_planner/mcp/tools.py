@@ -89,7 +89,8 @@ async def call_api(
             raise ValueError(f"Unsupported HTTP method: {method}")
 
         response.raise_for_status()
-        return response.json()
+        result: dict[str, Any] = response.json()
+        return result
 
 
 async def call_continuous_planning_api(
@@ -268,8 +269,8 @@ class ShiftReplacementRequest(BaseModel):
 class ShiftPinRequest(BaseModel):
     """Request to pin/unpin shifts for continuous planning"""
 
-    shift_ids: list[str] = Field(..., min_items=1, description="Shift IDs to pin/unpin")
-    action: str = Field(..., description="Pin or unpin action", pattern="^(pin|unpin)$")
+    shift_ids: list[str] = Field(min_length=1, description="Shift IDs to pin/unpin")
+    action: str = Field(description="Pin or unpin action", pattern="^(pin|unpin)$")
 
 
 class ShiftReassignRequest(BaseModel):
@@ -390,7 +391,7 @@ class AddEmployeeRequest(BaseModel):
 
     id: str = Field(..., description="Unique employee ID")
     name: str = Field(..., description="Employee name")
-    skills: list[str] = Field(..., min_items=1, description="Employee skills")
+    skills: list[str] = Field(min_length=1, description="Employee skills")
     preferred_days_off: list[str] = Field(
         default_factory=list, description="Days employee prefers not to work"
     )
@@ -407,7 +408,7 @@ class AddEmployeesBatchRequest(BaseModel):
     """Request to add multiple employees"""
 
     employees: list[AddEmployeeRequest] = Field(
-        ..., min_items=1, description="List of employees to add"
+        min_length=1, description="List of employees to add"
     )
 
 

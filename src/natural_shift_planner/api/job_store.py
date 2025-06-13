@@ -131,9 +131,9 @@ class FileSystemJobStore:
             preferred_days_off=set(emp_data.get("preferred_days_off", [])),
             preferred_work_days=set(emp_data.get("preferred_work_days", [])),
             unavailable_dates={
-                self._deserialize_datetime(d)
+                dt
                 for d in emp_data.get("unavailable_dates", [])
-                if d is not None
+                if d is not None and (dt := self._deserialize_datetime(d)) is not None
             },
         )
 
@@ -141,10 +141,19 @@ class FileSystemJobStore:
         """Convert dict to Shift"""
         if not shift_data:
             return None
+
+        # Deserialize datetime fields with proper None checking
+        start_time = self._deserialize_datetime(shift_data["start_time"])
+        end_time = self._deserialize_datetime(shift_data["end_time"])
+
+        if start_time is None or end_time is None:
+            # Skip shifts with invalid datetime data
+            return None
+
         shift = Shift(
             id=shift_data["id"],
-            start_time=self._deserialize_datetime(shift_data["start_time"]),
-            end_time=self._deserialize_datetime(shift_data["end_time"]),
+            start_time=start_time,
+            end_time=end_time,
             required_skills=set(shift_data["required_skills"]),
             location=shift_data["location"],
             priority=shift_data["priority"],
@@ -162,9 +171,15 @@ class FileSystemJobStore:
         if not schedule_data:
             return None
         employees = [
-            self._deserialize_employee(emp) for emp in schedule_data["employees"]
+            emp
+            for emp_data in schedule_data["employees"]
+            if (emp := self._deserialize_employee(emp_data)) is not None
         ]
-        shifts = [self._deserialize_shift(shift) for shift in schedule_data["shifts"]]
+        shifts = [
+            shift
+            for shift_data in schedule_data["shifts"]
+            if (shift := self._deserialize_shift(shift_data)) is not None
+        ]
         schedule = ShiftSchedule(employees=employees, shifts=shifts)
         if schedule_data.get("score"):
             # Note: Score reconstruction from string is complex, skip for now
@@ -179,7 +194,7 @@ class FileSystemJobStore:
 
         try:
             with open(job_path, encoding="utf-8") as f:
-                data = json.load(f)
+                data: dict[str, Any] = json.load(f)
 
             # Convert datetime strings back to datetime objects
             if data.get("created_at"):

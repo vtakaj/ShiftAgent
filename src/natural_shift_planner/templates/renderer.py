@@ -64,7 +64,7 @@ class ScheduleReportRenderer:
         self.env.filters["format_time"] = format_time
 
     def render_schedule_report(
-        self, schedule_data: dict[str, Any], score: str = None
+        self, schedule_data: dict[str, Any], score: str | None = None
     ) -> str:
         """
         Render schedule data as HTML report
@@ -99,14 +99,17 @@ class ScheduleReportRenderer:
         }
 
         # Render and return HTML
-        return template.render(**context)
+        result: str = template.render(**context)
+        return result
 
 
 # Create a singleton instance
 renderer = ScheduleReportRenderer()
 
 
-def render_schedule_html(schedule_data: dict[str, Any], score: str = None) -> str:
+def render_schedule_html(
+    schedule_data: dict[str, Any], score: str | None = None
+) -> str:
     """
     Convenience function to render schedule data as HTML
 

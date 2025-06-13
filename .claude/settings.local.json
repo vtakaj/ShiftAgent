@@ -43,7 +43,8 @@
       "Bash(touch:*)",
       "Bash(git merge:*)",
       "Bash(sed:*)",
-      "Bash(git cherry-pick:*)"
+      "Bash(git cherry-pick:*)",
+      "Bash(PYTHONPATH=src uv run mypy -p natural_shift_planner)"
     ],
     "deny": []
   }
