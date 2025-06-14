@@ -31,13 +31,14 @@ jobs:
     
     - name: Install dependencies
       run: |
-        uv sync --no-install-project
+        uv sync --frozen
     
     - name: Run tests
       run: |
         uv run pytest tests/ -v
-    
+
     - name: Run linters
       run: |
-        uv run flake8 . || true
-        uv run mypy . || true
+        uv run ruff check src/
+        PYTHONPATH=src uv run mypy -p natural_shift_planner
+        
