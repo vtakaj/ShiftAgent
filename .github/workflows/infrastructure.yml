@@ -58,6 +58,12 @@ jobs:
         run: |
           uv sync --frozen --no-install-project
 
+      - name: Activate virtual environment
+        run: |
+          echo "VIRTUAL_ENV=$PWD/.venv" >> $GITHUB_ENV
+          echo "$PWD/.venv/bin" >> $GITHUB_PATH
+        working-directory: ./infrastructure
+
       - name: Configure Pulumi
         run: |
           pulumi version
