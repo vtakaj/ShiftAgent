@@ -71,6 +71,13 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Initialize Pulumi Stack (PR)
+        if: github.event_name == 'pull_request'
+        run: |
+          pulumi stack select dev --create
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
       - name: Pulumi Preview (PR)
         if: github.event_name == 'pull_request'
         uses: pulumi/actions@v5
@@ -80,6 +87,13 @@ jobs:
           work-dir: ./infrastructure
           comment-on-pr: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+      - name: Initialize Pulumi Stack (Manual Preview)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'preview'
+        run: |
+          pulumi stack select ${{ github.event.inputs.stack }} --create
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
@@ -93,6 +107,13 @@ jobs:
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
+      - name: Initialize Pulumi Stack (Main Branch)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          pulumi stack select dev --create
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
       - name: Pulumi Up (Main Branch)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: pulumi/actions@v5
@@ -100,6 +121,13 @@ jobs:
           command: up
           stack-name: dev
           work-dir: ./infrastructure
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+      - name: Initialize Pulumi Stack (Manual Up)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'up'
+        run: |
+          pulumi stack select ${{ github.event.inputs.stack }} --create
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
