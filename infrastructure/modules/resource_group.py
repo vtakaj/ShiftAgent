@@ -7,7 +7,7 @@ from typing import Any
 import pulumi
 import pulumi_azure_native as azure_native
 
-from ..config.naming import get_naming_convention
+from config.naming import get_naming_convention
 
 
 class ResourceGroupModule:
