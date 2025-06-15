@@ -1,5 +1,5 @@
 config:
-  azure-native:location: East US
+  azure-native:location: Japan East
   shift-scheduler-infra:environment: development
   shift-scheduler-infra:instance_count: 1
   shift-scheduler-infra:sku_size: Basic

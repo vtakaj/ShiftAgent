@@ -120,90 +120,90 @@ class AzureNamingConvention:
         """Get location abbreviation"""
         if not location:
             config = pulumi.Config()
-            location = config.get("azure-native:location") or "East US"
+            location = config.get("azure-native:location") or "Japan East"
 
         return REGION_ABBREVIATIONS.get(location, location.lower().replace(" ", "")[:4])
 
     def resource_group(self, workload: str = "core") -> str:
         """
         Generate resource group name
-        Format: rg-{org}-{project}-{workload}-{env}-{location}-{instance}
-        Example: rg-vtakaj-shiftsch-core-dev-eus-001
+        Format: rg-{org}-{project}-{workload}-{env}-{instance}
+        Example: rg-vtakaj-shiftsch-core-dev-001
         """
         workload_abbr = workload.lower()[:8]
-        return f"rg-{self.organization}-{self.project}-{workload_abbr}-{self.environment}-{self.location}-{self.instance}"
+        return f"rg-{self.organization}-{self.project}-{workload_abbr}-{self.environment}-{self.instance}"
 
     def storage_account(self, purpose: str = "data") -> str:
         """
         Generate storage account name
-        Format: st{org}{project}{purpose}{env}{location}{instance}
-        Example: stvtakajshiftschdatadeveus001
+        Format: st{org}{project}{purpose}{env}{instance}
+        Example: stvtakajshiftschdatadev001
         Note: Storage account names must be 3-24 chars, lowercase alphanumeric only
         """
         purpose_abbr = purpose.lower()[:4]
-        name = f"st{self.organization}{self.project}{purpose_abbr}{self.environment}{self.location}{self.instance}"
+        name = f"st{self.organization}{self.project}{purpose_abbr}{self.environment}{self.instance}"
         return name[:24]  # Max 24 characters for storage account
 
     def container_registry(self) -> str:
         """
         Generate container registry name
-        Format: cr{org}{project}{env}{location}{instance}
-        Example: crvtakajshiftschdeveus001
+        Format: cr{org}{project}{env}{instance}
+        Example: crvtakajshiftschdev001
         Note: Registry names must be 5-50 chars, alphanumeric only
         """
-        name = f"cr{self.organization}{self.project}{self.environment}{self.location}{self.instance}"
+        name = f"cr{self.organization}{self.project}{self.environment}{self.instance}"
         return name[:50]  # Max 50 characters for container registry
 
     def container_apps_environment(self) -> str:
         """
         Generate Container Apps Environment name
-        Format: cae-{org}-{project}-{env}-{location}-{instance}
-        Example: cae-vtakaj-shiftsch-dev-eus-001
+        Format: cae-{org}-{project}-{env}-{instance}
+        Example: cae-vtakaj-shiftsch-dev-001
         """
-        return f"cae-{self.organization}-{self.project}-{self.environment}-{self.location}-{self.instance}"
+        return f"cae-{self.organization}-{self.project}-{self.environment}-{self.instance}"
 
     def container_app(self, app_name: str) -> str:
         """
         Generate Container App name
-        Format: ca-{org}-{project}-{app}-{env}-{location}-{instance}
-        Example: ca-vtakaj-shiftsch-api-dev-eus-001
+        Format: ca-{org}-{project}-{app}-{env}-{instance}
+        Example: ca-vtakaj-shiftsch-api-dev-001
         """
         app_abbr = app_name.lower().replace("-", "")[:8]
-        return f"ca-{self.organization}-{self.project}-{app_abbr}-{self.environment}-{self.location}-{self.instance}"
+        return f"ca-{self.organization}-{self.project}-{app_abbr}-{self.environment}-{self.instance}"
 
     def log_analytics_workspace(self) -> str:
         """
         Generate Log Analytics Workspace name
-        Format: log-{org}-{project}-{env}-{location}-{instance}
-        Example: log-vtakaj-shiftsch-dev-eus-001
+        Format: log-{org}-{project}-{env}-{instance}
+        Example: log-vtakaj-shiftsch-dev-001
         """
-        return f"log-{self.organization}-{self.project}-{self.environment}-{self.location}-{self.instance}"
+        return f"log-{self.organization}-{self.project}-{self.environment}-{self.instance}"
 
     def key_vault(self) -> str:
         """
         Generate Key Vault name
-        Format: kv-{org}-{project}-{env}-{location}-{instance}
-        Example: kv-vtakaj-shiftsch-dev-eus-001
+        Format: kv-{org}-{project}-{env}-{instance}
+        Example: kv-vtakaj-shiftsch-dev-001
         Note: Key Vault names must be 3-24 chars
         """
-        name = f"kv-{self.organization}-{self.project}-{self.environment}-{self.location}-{self.instance}"
+        name = f"kv-{self.organization}-{self.project}-{self.environment}-{self.instance}"
         return name[:24]  # Max 24 characters for Key Vault
 
     def application_insights(self) -> str:
         """
         Generate Application Insights name
-        Format: appi-{org}-{project}-{env}-{location}-{instance}
-        Example: appi-vtakaj-shiftsch-dev-eus-001
+        Format: appi-{org}-{project}-{env}-{instance}
+        Example: appi-vtakaj-shiftsch-dev-001
         """
-        return f"appi-{self.organization}-{self.project}-{self.environment}-{self.location}-{self.instance}"
+        return f"appi-{self.organization}-{self.project}-{self.environment}-{self.instance}"
 
     def postgresql_server(self) -> str:
         """
         Generate PostgreSQL server name
-        Format: psql-{org}-{project}-{env}-{location}-{instance}
-        Example: psql-vtakaj-shiftsch-dev-eus-001
+        Format: psql-{org}-{project}-{env}-{instance}
+        Example: psql-vtakaj-shiftsch-dev-001
         """
-        return f"psql-{self.organization}-{self.project}-{self.environment}-{self.location}-{self.instance}"
+        return f"psql-{self.organization}-{self.project}-{self.environment}-{self.instance}"
 
     def postgresql_database(self, db_name: str = "main") -> str:
         """
