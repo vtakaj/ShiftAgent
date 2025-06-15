@@ -58,14 +58,6 @@ jobs:
         run: |
           uv sync --frozen
 
-      - name: Configure Pulumi
-        uses: pulumi/actions@v5
-        with:
-          command: whoami
-          work-dir: ./infrastructure
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-
       - name: Azure CLI Login
         uses: azure/login@v2
         with:
@@ -127,7 +119,7 @@ jobs:
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'up')
         uses: pulumi/actions@v5
         with:
-          command: stack output --json
+          command: output
           stack-name: ${{ github.event.inputs.stack || 'dev' }}
           work-dir: ./infrastructure
         env:
