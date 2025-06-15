@@ -29,6 +29,11 @@ on:
           - up
           - destroy
 
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
 jobs:
   infrastructure:
     name: Deploy Infrastructure
