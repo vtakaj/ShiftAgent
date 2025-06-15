@@ -126,7 +126,7 @@ jobs:
 
       - name: Install Pulumi dependencies
         run: |
-          uv sync --frozen
+          uv sync --frozen --no-install-project
 
       - name: Configure Pulumi
         run: |
@@ -174,7 +174,7 @@ jobs:
 
       - name: Install Pulumi dependencies
         run: |
-          uv sync --frozen
+          uv sync --frozen --no-install-project
 
       - name: Configure Pulumi
         run: |
