@@ -66,7 +66,7 @@ jobs:
 
       - name: Pulumi Preview (PR)
         if: github.event_name == 'pull_request'
-        uses: pulumi/actions@v5
+        uses: pulumi/actions@v6
         with:
           command: preview
           stack-name: dev
@@ -82,7 +82,7 @@ jobs:
 
       - name: Pulumi Preview (Manual)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'preview'
-        uses: pulumi/actions@v5
+        uses: pulumi/actions@v6
         with:
           command: preview
           stack-name: ${{ github.event.inputs.stack }}
@@ -96,7 +96,7 @@ jobs:
 
       - name: Pulumi Up (Main Branch)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: pulumi/actions@v5
+        uses: pulumi/actions@v6
         with:
           command: up
           stack-name: dev
@@ -110,7 +110,7 @@ jobs:
 
       - name: Pulumi Up (Manual)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'up'
-        uses: pulumi/actions@v5
+        uses: pulumi/actions@v6
         with:
           command: up
           stack-name: ${{ github.event.inputs.stack }}
@@ -124,7 +124,7 @@ jobs:
 
       - name: Pulumi Destroy (Manual)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
-        uses: pulumi/actions@v5
+        uses: pulumi/actions@v6
         with:
           command: destroy
           stack-name: ${{ github.event.inputs.stack }}
@@ -138,7 +138,7 @@ jobs:
 
       - name: Export Stack Outputs
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'up')
-        uses: pulumi/actions@v5
+        uses: pulumi/actions@v6
         with:
           command: output
           stack-name: ${{ github.event.inputs.stack || 'dev' }}
