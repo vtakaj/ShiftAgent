@@ -120,7 +120,7 @@ class AzureNamingConvention:
         """Get location abbreviation"""
         if not location:
             config = pulumi.Config()
-            location = config.get("azure-native:location") or "East US"
+            location = config.get("azure-native:location") or "Japan East"
 
         return REGION_ABBREVIATIONS.get(location, location.lower().replace(" ", "")[:4])
 
