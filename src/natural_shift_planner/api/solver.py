@@ -44,7 +44,7 @@ def configure_timefold_logging():
 
     # First, set all loggers to INFO level
     for logger_name in timefold_loggers:
-        logging.getLogger(logger_name).setLevel(logging.INFO)
+        logging.getLogger(logger_name).setLevel(log_level)
 
     # Then, if DEBUG is enabled, set specific loggers to DEBUG
     if SOLVER_LOG_LEVEL == "DEBUG":
