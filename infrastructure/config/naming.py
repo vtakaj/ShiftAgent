@@ -35,48 +35,6 @@ ENVIRONMENT_ABBREVIATIONS = {
     "prod": "prod",
 }
 
-# Azure regions abbreviations
-REGION_ABBREVIATIONS = {
-    "East US": "eus",
-    "East US 2": "eus2",
-    "West US": "wus",
-    "West US 2": "wus2",
-    "West US 3": "wus3",
-    "Central US": "cus",
-    "North Central US": "ncus",
-    "South Central US": "scus",
-    "West Central US": "wcus",
-    "Canada Central": "cac",
-    "Canada East": "cae",
-    "Brazil South": "brs",
-    "North Europe": "ne",
-    "West Europe": "we",
-    "UK South": "uks",
-    "UK West": "ukw",
-    "France Central": "fc",
-    "France South": "fs",
-    "Germany West Central": "gwc",
-    "Germany North": "gn",
-    "Norway East": "noe",
-    "Norway West": "now",
-    "Switzerland North": "sn",
-    "Switzerland West": "sw",
-    "Southeast Asia": "sea",
-    "East Asia": "ea",
-    "Australia East": "ae",
-    "Australia Southeast": "ase",
-    "Australia Central": "ac",
-    "Australia Central 2": "ac2",
-    "Japan East": "je",
-    "Japan West": "jw",
-    "Korea Central": "kc",
-    "Korea South": "ks",
-    "India Central": "ic",
-    "India South": "is",
-    "India West": "iw",
-}
-
-
 class AzureNamingConvention:
     """Azure resource naming convention helper"""
 
@@ -103,7 +61,7 @@ class AzureNamingConvention:
             project.lower().replace("-", "").replace("_", "")[:8]
         )  # Max 8 chars for project
         self.environment = self._get_environment_abbr(environment)
-        self.location = self._get_location_abbr(location)
+        self.location = location
         self.instance = instance
 
     def _get_environment_abbr(self, environment: str | None) -> str:
@@ -115,14 +73,6 @@ class AzureNamingConvention:
         return ENVIRONMENT_ABBREVIATIONS.get(
             environment.lower(), environment.lower()[:3]
         )
-
-    def _get_location_abbr(self, location: str | None) -> str:
-        """Get location abbreviation"""
-        if not location:
-            config = pulumi.Config()
-            location = config.get("azure-native:location") or "Japan East"
-
-        return REGION_ABBREVIATIONS.get(location, location.lower().replace(" ", "")[:4])
 
     def resource_group(self, workload: str = "core") -> str:
         """
