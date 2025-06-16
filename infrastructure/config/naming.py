@@ -35,6 +35,7 @@ ENVIRONMENT_ABBREVIATIONS = {
     "prod": "prod",
 }
 
+
 class AzureNamingConvention:
     """Azure resource naming convention helper"""
 
@@ -110,7 +111,9 @@ class AzureNamingConvention:
         Format: cae-{org}-{project}-{env}-{instance}
         Example: cae-vtakaj-shiftsch-dev-001
         """
-        return f"cae-{self.organization}-{self.project}-{self.environment}-{self.instance}"
+        return (
+            f"cae-{self.organization}-{self.project}-{self.environment}-{self.instance}"
+        )
 
     def container_app(self, app_name: str) -> str:
         """
@@ -127,7 +130,9 @@ class AzureNamingConvention:
         Format: log-{org}-{project}-{env}-{instance}
         Example: log-vtakaj-shiftsch-dev-001
         """
-        return f"log-{self.organization}-{self.project}-{self.environment}-{self.instance}"
+        return (
+            f"log-{self.organization}-{self.project}-{self.environment}-{self.instance}"
+        )
 
     def key_vault(self) -> str:
         """
@@ -136,7 +141,9 @@ class AzureNamingConvention:
         Example: kv-vtakaj-shiftsch-dev-001
         Note: Key Vault names must be 3-24 chars
         """
-        name = f"kv-{self.organization}-{self.project}-{self.environment}-{self.instance}"
+        name = (
+            f"kv-{self.organization}-{self.project}-{self.environment}-{self.instance}"
+        )
         return name[:24]  # Max 24 characters for Key Vault
 
     def application_insights(self) -> str:

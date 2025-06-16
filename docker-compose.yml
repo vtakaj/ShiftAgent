@@ -75,6 +75,7 @@ services:
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - SOLVER_LOG_LEVEL=${SOLVER_LOG_LEVEL:-INFO}
+      - MCP_LOG_LEVEL=${MCP_LOG_LEVEL:-INFO}
       - SHIFT_SCHEDULER_API_URL=http://shift-scheduler:8081
     volumes:
       # Development: Hot reload for source code
