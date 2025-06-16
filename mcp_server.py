@@ -19,12 +19,6 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
-# Specifically configure Timefold logging if solver log level is set
-solver_log_level = os.getenv("SOLVER_LOG_LEVEL", "INFO")
-if solver_log_level == "DEBUG":
-    logging.getLogger("timefold").setLevel(logging.DEBUG)
-    logging.getLogger("natural_shift_planner.api.solver").setLevel(logging.DEBUG)
-
 from natural_shift_planner.mcp.server import mcp  # noqa: E402
 
 

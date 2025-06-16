@@ -28,9 +28,13 @@ SOLVER_LOG_LEVEL = os.getenv("SOLVER_LOG_LEVEL", "INFO")  # INFO or DEBUG
 
 # Configure Timefold logging based on environment
 if SOLVER_LOG_LEVEL == "DEBUG":
+    # Set both timefold and timefold.solver loggers to DEBUG
+    logging.getLogger("timefold").setLevel(logging.DEBUG)
     logging.getLogger("timefold.solver").setLevel(logging.DEBUG)
     logger.info("Timefold solver logging set to DEBUG level")
 else:
+    # Set both timefold and timefold.solver loggers to INFO
+    logging.getLogger("timefold").setLevel(logging.INFO)
     logging.getLogger("timefold.solver").setLevel(logging.INFO)
 
 logger.info(f"Solver timeout configured: {SOLVER_TIMEOUT_SECONDS} seconds")
