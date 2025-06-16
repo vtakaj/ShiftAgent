@@ -2,6 +2,9 @@
 FastMCP server for Shift Scheduler
 """
 
+import logging
+import os
+
 from fastmcp import FastMCP
 
 from .tools import (
@@ -23,8 +26,19 @@ from .tools import (
     test_weekly_constraints,
 )
 
-# Create FastMCP server
+# Create FastMCP server with logging
+logger = logging.getLogger("fastmcp.server")
 mcp: FastMCP = FastMCP("shift-scheduler-mcp", dependencies=["httpx"])
+
+# Configure logging
+log_level = os.getenv("LOG_LEVEL", "INFO")
+mcp_log_level = os.getenv("MCP_LOG_LEVEL", log_level)
+logging.getLogger("fastmcp").setLevel(
+    getattr(logging, mcp_log_level.upper(), logging.INFO)
+)
+logging.getLogger("fastmcp.server").setLevel(
+    getattr(logging, mcp_log_level.upper(), logging.INFO)
+)
 
 # Register original tools
 mcp.tool()(health_check)

@@ -90,6 +90,7 @@ services:
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=${LOG_LEVEL:-WARN}
       - SOLVER_LOG_LEVEL=${SOLVER_LOG_LEVEL:-WARN}
+      - MCP_LOG_LEVEL=${MCP_LOG_LEVEL:-WARN}
       - SHIFT_SCHEDULER_API_URL=http://shift-scheduler:8081
     depends_on:
       shift-scheduler:
