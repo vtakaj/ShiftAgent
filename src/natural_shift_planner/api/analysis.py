@@ -53,8 +53,14 @@ def analyze_weekly_hours(schedule: ShiftSchedule) -> dict[str, Any]:
         duration_minutes = shift.get_duration_minutes()
 
         # Aggregate by employee
-        # defaultdict will auto-create nested structure
-        if "total_minutes" not in weekly_hours_by_employee[emp_id][week_key]:
+        # Check if week_key exists first, then check for total_minutes
+        if week_key not in weekly_hours_by_employee[emp_id]:
+            weekly_hours_by_employee[emp_id][week_key] = {
+                "total_minutes": 0,
+                "shift_count": 0,
+                "shifts": [],
+            }
+        elif "total_minutes" not in weekly_hours_by_employee[emp_id][week_key]:
             weekly_hours_by_employee[emp_id][week_key] = {
                 "total_minutes": 0,
                 "shift_count": 0,
