@@ -264,6 +264,11 @@ async def update_employee_skills(
     # Parse skills parameter to ensure it's a list
     parsed_skills = parse_list_param(skills)
 
-    return await call_api(
-        "PATCH", f"/api/shifts/{job_id}/employee/{employee_id}/skills", parsed_skills
-    )
+    # Make direct PATCH request with list body
+    url = f"{API_BASE_URL}/api/shifts/{job_id}/employee/{employee_id}/skills"
+
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        response = await client.patch(url, json=parsed_skills)
+        response.raise_for_status()
+        result: dict[str, Any] = response.json()
+        return result
