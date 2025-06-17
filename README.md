@@ -220,7 +220,13 @@ shift-scheduler/
 - **Weekly Work Hours Constraints**: 40-hour limit, minimum work hours, target time adjustment
 - **Fairness Optimization**: Equal distribution of work hours
 
-### 🔧 **Continuous Planning** (NEW!)
+### 👥 **Employee Management** (NEW!)
+- **Add Employees to Completed Jobs**: Add new employees to already solved schedules
+- **Skill Updates**: Update employee skills and re-optimize affected assignments
+- **Minimal Re-optimization**: Uses intelligent pinning to preserve valid assignments
+- **Constraint Resolution**: Automatically resolves violations while minimizing changes
+
+### 🔧 **Continuous Planning** (Coming Soon)
 - **Real-time Modifications**: Modify schedules during optimization without full re-solving
 - **Shift Swapping**: Exchange employees between shifts using ProblemChangeDirector
 - **Emergency Replacements**: Find suitable replacements when employees become unavailable
@@ -258,7 +264,14 @@ GET  /api/shifts/weekly-analysis/{job_id} # Weekly work hours analysis (after so
 GET  /api/shifts/test-weekly          # Weekly work hours constraint test (demo)
 ```
 
-### Continuous Planning Endpoints (NEW!)
+### Employee Management Endpoints (NEW!)
+
+```http
+POST /api/shifts/{job_id}/add-employee        # Add employee to completed job
+PATCH /api/shifts/{job_id}/employee/{employee_id}/skills  # Update employee skills
+```
+
+### Continuous Planning Endpoints (Coming Soon)
 
 ```http
 POST /api/shifts/{job_id}/swap               # Swap employees between two shifts

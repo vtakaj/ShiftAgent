@@ -86,7 +86,9 @@ class RemoveEmployeeProblemFactChange:
         working_solution: ShiftSchedule = score_director.get_working_solution()
 
         # Find the employee
-        matching_employees = [e for e in working_solution.employees if e.id == self.employee_id]
+        matching_employees = [
+            e for e in working_solution.employees if e.id == self.employee_id
+        ]
         if not matching_employees:
             logger.warning(f"Employee {self.employee_id} not found")
             return

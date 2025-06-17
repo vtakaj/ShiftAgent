@@ -156,6 +156,10 @@ The solver optimizes using HardMediumSoftScore:
 - `POST /api/shifts/analyze-weekly`: Analyze weekly work hours
 - `GET /api/shifts/test-weekly`: Test weekly constraint calculations
 
+#### Employee Management (New Feature)
+- `POST /api/shifts/{job_id}/add-employee`: Add single employee to completed job
+- `PATCH /api/shifts/{job_id}/employee/{employee_id}/skills`: Update employee skills and re-optimize
+
 #### Job Management
 - `GET /api/jobs`: List all jobs with status
 - `DELETE /api/jobs/{job_id}`: Delete specific job
@@ -210,6 +214,13 @@ make mcp
 - `get_solve_status`: Check async job status
 - `analyze_weekly_hours`: Analyze weekly work hours
 - `test_weekly_constraints`: Test weekly constraints with demo data
+
+#### Employee Management (Available Now)
+- `add_employee_to_job`: Add single employee to completed job with minimal re-optimization
+- `update_employee_skills`: Update employee skills and re-optimize affected assignments
+
+#### Schedule Inspection
+- `get_schedule_shifts`: Get all shifts from a completed schedule for inspection
 
 #### Report Generation
 - `get_demo_schedule_html`: Get demo schedule as formatted HTML report

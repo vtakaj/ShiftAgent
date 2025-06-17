@@ -49,7 +49,7 @@ After updating the configuration, restart Claude Desktop for the changes to take
 
 ## 🛠 Available MCP Tools
 
-The MCP server exposes 15 tools organized into 4 categories:
+The MCP server exposes 10 tools organized into 4 categories:
 
 ### Basic Operations (7 tools)
 1. **`health_check`** - Check API health status
@@ -63,11 +63,16 @@ The MCP server exposes 15 tools organized into 4 categories:
 ### Schedule Management (1 tool)
 8. **`get_schedule_shifts`** - Inspect completed schedules in detail
 
-### Continuous Planning (4 tools)
-9. **`swap_shifts`** - Swap employees between two shifts during optimization
-10. **`find_shift_replacement`** - Find replacement when employee becomes unavailable
-11. **`pin_shifts`** - Pin/unpin shifts to prevent changes during optimization
-12. **`reassign_shift`** - Reassign shift to specific employee or unassign
+### Employee Management (2 tools - NEW!)
+9. **`add_employee_to_job`** - Add new employee to completed job with minimal re-optimization
+10. **`update_employee_skills`** - Update employee skills and re-optimize affected assignments
+
+### Continuous Planning (Coming Soon)
+The following tools are planned but not yet implemented:
+- **`swap_shifts`** - Swap employees between two shifts during optimization
+- **`find_shift_replacement`** - Find replacement when employee becomes unavailable
+- **`pin_shifts`** - Pin/unpin shifts to prevent changes during optimization
+- **`reassign_shift`** - Reassign shift to specific employee or unassign
 
 
 ## 📋 Usage Examples
@@ -89,15 +94,16 @@ And I need coverage for:
 - Reception (9AM-5PM): Admin skills required
 ```
 
-### Continuous Planning Workflow
+### Employee Management Workflow
 
 ```markdown
-@claude I have an active optimization job (ID: abc123) and need to make some changes:
+@claude I have a completed schedule (job ID: abc123) and need to make adjustments:
 
-1. Pin the morning shift on Monday to keep John assigned
-2. Swap the employees between Tuesday morning and evening shifts  
-3. Find a replacement for Sarah on Wednesday (she called in sick)
+1. Add a new employee "Mike Johnson" with skills ["Nurse", "CPR"] to handle unassigned shifts
+2. Update Sarah's skills to add "ICU" certification since she just completed training
 ```
+
+The system will preserve existing valid assignments and only re-optimize where necessary.
 
 ### Report Generation
 
@@ -114,7 +120,10 @@ And I need coverage for:
 {
   "id": "emp1",
   "name": "John Doe", 
-  "skills": ["Nurse", "CPR", "Full-time"]
+  "skills": ["Nurse", "CPR", "Full-time"],
+  "preferred_days_off": ["friday", "saturday"],
+  "preferred_work_days": ["monday", "tuesday"],
+  "unavailable_dates": ["2025-06-15", "2025-06-16T00:00:00"]
 }
 ```
 
@@ -130,12 +139,13 @@ And I need coverage for:
 }
 ```
 
-### Continuous Planning Requirements
+### Employee Management Requirements
 
-All continuous planning tools require:
-- **Active job ID**: From an async solve operation (`solve_schedule_async`)
-- **Job in solving state**: The job must be actively optimizing (status: `SOLVING_SCHEDULED`)
-- **Valid shift/employee IDs**: Must reference existing entities in the problem
+Employee management tools work on completed jobs:
+- **Completed job ID**: From a completed optimization (`solve_schedule_sync` or `solve_schedule_async`)
+- **Job status**: Must be `SOLVING_COMPLETED`
+- **Valid employee data**: Must include ID, name, and skills
+- **Intelligent re-optimization**: System preserves valid assignments and only changes what's necessary
 
 ### Report Generation Features
 
@@ -158,10 +168,10 @@ All continuous planning tools require:
 - **API Timeout**: Large datasets may require longer processing (default: 120 seconds)
 - **Invalid Job ID**: Ensure job IDs are from active async solve operations
 
-#### 3. Continuous Planning Failures
-- **Job State**: Job must be in active solving state (not completed)
-- **Invalid References**: Shift/employee IDs must exist in the original problem
-- **Constraint Violations**: Some operations may fail if they violate hard constraints
+#### 3. Employee Management Failures
+- **Job State**: Job must be completed (status: `SOLVING_COMPLETED`)
+- **Invalid Employee ID**: For skill updates, employee must exist in the job
+- **Constraint Violations**: System will attempt to resolve violations automatically
 
 ### Debug Mode
 

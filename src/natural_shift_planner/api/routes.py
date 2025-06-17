@@ -15,12 +15,12 @@ from .converters import convert_domain_to_response, convert_request_to_domain
 from .job_store import job_store
 from .jobs import (
     _sync_job_to_store,
-    create_emergency_job,
+    add_employee_to_completed_job,
     job_lock,
     jobs,
     solve_problem_async,
+    update_employee_skills,
 )
-from .problem_fact_changes import AddEmployeeProblemFactChange
 from .schemas import (
     EmployeeRequest,
     ShiftScheduleRequest,
@@ -306,130 +306,94 @@ async def cleanup_old_jobs(max_age_hours: int = 24):
     }
 
 
-# Emergency Management Endpoints
+# Employee Addition to Completed Jobs
 
 
-@app.post("/api/shifts/solve-emergency")
-async def solve_emergency_mode(request: ShiftScheduleRequest):
-    """Start solving in emergency mode (supports dynamic changes)"""
-    # Convert to domain model
-    problem = convert_request_to_domain(request)
-
-    # Create emergency job
-    job_id = create_emergency_job(problem)
-
-    return {
-        "job_id": job_id,
-        "status": "SOLVING_SCHEDULED",
-        "message": "Emergency solving started. Job will remain active for emergency changes.",
-        "employees": len(problem.employees),
-        "shifts": len(problem.shifts),
-    }
-
-
-@app.post("/api/shifts/{job_id}/add-employee-emergency")
-async def add_employee_emergency(
-    job_id: str,
-    employee: EmployeeRequest,
-    auto_assign_shift_ids: list[str] | None = None,
-):
-    """Add employee for emergency staffing using Problem Fact Change"""
-    with job_lock:
-        if job_id not in jobs:
-            raise HTTPException(status_code=404, detail="Job not found")
-
-        job = jobs[job_id]
-
-        # Check if job is in emergency mode and has active solver
-        if not job.get("emergency_mode"):
-            raise HTTPException(
-                status_code=400,
-                detail="Job is not in emergency mode. Use /api/shifts/solve-emergency to start.",
-            )
-
-        if "solver" not in job:
-            raise HTTPException(
-                status_code=400,
-                detail="No active solver found. Job may have completed or failed.",
-            )
-
-        solver = job["solver"]
-
+@app.post("/api/shifts/{job_id}/add-employee")
+async def add_employee_to_job(job_id: str, employee: EmployeeRequest):
+    """Add employee to completed job and re-optimize"""
     # Convert employee to domain model
     from .converters import convert_employee_request_to_domain
 
     new_employee = convert_employee_request_to_domain(employee)
 
-    # Mark as emergency addition
-    new_employee.mark_as_emergency_addition()
+    # Add the employee to the job
+    success = add_employee_to_completed_job(job_id, new_employee)
 
-    # Create and apply problem fact change
-    change = AddEmployeeProblemFactChange(new_employee, auto_assign_shift_ids)
-
-    try:
-        solver.add_problem_fact_change(change)
-
-        # Track the change
+    if success:
+        # Get updated job info
         with job_lock:
-            jobs[job_id]["emergency_changes"].append(
-                {
-                    "type": "add_employee",
-                    "employee_id": employee.id,
-                    "employee_name": employee.name,
-                    "timestamp": datetime.now(),
-                    "auto_assigned_shifts": auto_assign_shift_ids or [],
-                }
-            )
-            _sync_job_to_store(job_id)
+            job = jobs[job_id]
+            solution = job["solution"]
 
         return {
-            "message": f"Emergency employee {employee.name} added successfully",
+            "message": f"Employee {employee.name} added successfully",
             "job_id": job_id,
             "employee_id": employee.id,
             "status": "SUCCESS",
-        }
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to add emergency employee: {str(e)}",
-        ) from e
-
-
-@app.get("/api/shifts/{job_id}/emergency-status")
-async def get_emergency_job_status(job_id: str):
-    """Get status of emergency job including changes made"""
-    with job_lock:
-        if job_id not in jobs:
-            raise HTTPException(status_code=404, detail="Job not found")
-
-        job = jobs[job_id]
-
-        if not job.get("emergency_mode"):
-            raise HTTPException(
-                status_code=400,
-                detail="Not an emergency job",
-            )
-
-        response = {
-            "job_id": job_id,
-            "status": job["status"],
-            "emergency_mode": True,
-            "has_active_solver": "solver" in job,
-            "created_at": job.get("created_at"),
-            "completed_at": job.get("completed_at"),
-            "emergency_changes": job.get("emergency_changes", []),
-            "changes_count": len(job.get("emergency_changes", [])),
-        }
-
-        # Include solution if available
-        if "solution" in job and job["solution"]:
-            solution = job["solution"]
-            response["solution"] = convert_domain_to_response(solution)
-            response["score"] = str(solution.score)
-            response["assigned_shifts"] = sum(
+            "final_score": str(solution.score),
+            "assigned_shifts": sum(
                 1 for s in solution.shifts if s.employee is not None
-            )
-            response["total_shifts"] = len(solution.shifts)
+            ),
+            "total_shifts": len(solution.shifts),
+        }
+    else:
+        # Get error details from job
+        with job_lock:
+            if job_id in jobs:
+                error_msg = jobs[job_id].get("error", "Unknown error occurred")
+            else:
+                error_msg = "Job not found"
 
-        return response
+        raise HTTPException(status_code=400, detail=error_msg)
+
+
+@app.patch("/api/shifts/{job_id}/employee/{employee_id}/skills")
+async def update_employee_skills_api(job_id: str, employee_id: str, skills: list[str]):
+    """Update employee skills and re-optimize affected assignments"""
+    # Convert skills list to set
+    new_skills = set(skills)
+
+    # Update the employee skills
+    success = update_employee_skills(job_id, employee_id, new_skills)
+
+    if success:
+        # Get updated job info
+        with job_lock:
+            job = jobs[job_id]
+            solution = job["solution"]
+
+            # Find the updated employee
+            updated_employee = None
+            for emp in solution.employees:
+                if emp.id == employee_id:
+                    updated_employee = emp
+                    break
+
+        if updated_employee:
+            return {
+                "message": f"Skills updated successfully for {updated_employee.name}",
+                "job_id": job_id,
+                "employee_id": employee_id,
+                "employee_name": updated_employee.name,
+                "updated_skills": list(updated_employee.skills),
+                "status": "SUCCESS",
+                "final_score": str(solution.score),
+                "assigned_shifts": sum(
+                    1 for s in solution.shifts if s.employee is not None
+                ),
+                "total_shifts": len(solution.shifts),
+            }
+        else:
+            raise HTTPException(
+                status_code=404, detail="Employee not found after update"
+            )
+    else:
+        # Get error details from job
+        with job_lock:
+            if job_id in jobs:
+                error_msg = jobs[job_id].get("error", "Unknown error occurred")
+            else:
+                error_msg = "Job not found"
+
+        raise HTTPException(status_code=400, detail=error_msg)

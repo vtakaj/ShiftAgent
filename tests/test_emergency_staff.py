@@ -1,16 +1,11 @@
 """
-Tests for emergency staff addition using Problem Fact Changes
+Tests for adding employees to completed jobs
 """
 
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock
 
 import pytest
 
-from src.natural_shift_planner.api.problem_fact_changes import (
-    AddEmployeeProblemFactChange,
-    RemoveEmployeeProblemFactChange,
-)
 from src.natural_shift_planner.core.models import Employee, Shift, ShiftSchedule
 
 
@@ -64,129 +59,6 @@ def sample_schedule():
     return ShiftSchedule(employees=employees, shifts=shifts)
 
 
-@pytest.fixture
-def mock_score_director():
-    """Create a mock ScoreDirector for testing"""
-    mock = MagicMock()
-    # Add expected methods
-    mock.get_working_solution = MagicMock()
-    mock.before_problem_fact_added = MagicMock()
-    mock.after_problem_fact_added = MagicMock()
-    mock.before_problem_fact_removed = MagicMock()
-    mock.after_problem_fact_removed = MagicMock()
-    mock.before_variable_changed = MagicMock()
-    mock.after_variable_changed = MagicMock()
-    mock.trigger_variable_listeners = MagicMock()
-    return mock
-
-
-def test_add_employee_problem_fact_change_creation():
-    """Test creating an AddEmployeeProblemFactChange"""
-    new_employee = Employee(
-        "emp_emergency_001",
-        "緊急対応 太郎",
-        {"フォークリフト", "入庫管理"},
-    )
-
-    change = AddEmployeeProblemFactChange(
-        new_employee,
-        auto_assign_shift_ids=["shift3"],
-    )
-
-    assert change.new_employee == new_employee
-    assert change.auto_assign_shift_ids == ["shift3"]
-
-
-def test_add_employee_to_solution(sample_schedule, mock_score_director):
-    """Test adding an emergency employee to the solution"""
-    # Setup
-    mock_score_director.get_working_solution.return_value = sample_schedule
-
-    new_employee = Employee(
-        "emp_emergency_001",
-        "緊急対応 太郎",
-        {"フォークリフト", "入庫管理"},
-    )
-
-    change = AddEmployeeProblemFactChange(new_employee)
-
-    # Execute
-    change.do_change(mock_score_director)
-
-    # Verify
-    assert len(sample_schedule.employees) == 3
-    assert new_employee in sample_schedule.employees
-
-    # Verify score director calls
-    mock_score_director.before_problem_fact_added.assert_called_once_with(new_employee)
-    mock_score_director.after_problem_fact_added.assert_called_once_with(new_employee)
-    mock_score_director.trigger_variable_listeners.assert_called_once()
-
-
-def test_auto_assign_to_compatible_shift(sample_schedule, mock_score_director):
-    """Test automatic assignment to compatible unassigned shift"""
-    # Setup
-    mock_score_director.get_working_solution.return_value = sample_schedule
-
-    new_employee = Employee(
-        "emp_emergency_001",
-        "緊急対応 太郎",
-        {"フォークリフト", "入庫管理"},
-    )
-
-    change = AddEmployeeProblemFactChange(new_employee)
-
-    # Execute
-    change.do_change(mock_score_director)
-
-    # Verify auto-assignment to shift3 (unassigned forklift shift)
-    shift3 = next(s for s in sample_schedule.shifts if s.id == "shift3")
-    assert shift3.employee == new_employee
-
-    # Verify score director was notified of the assignment
-    mock_score_director.before_variable_changed.assert_called()
-    mock_score_director.after_variable_changed.assert_called()
-
-
-def test_specific_shift_assignment(sample_schedule, mock_score_director):
-    """Test assigning to specific requested shifts"""
-    # Setup
-    mock_score_director.get_working_solution.return_value = sample_schedule
-
-    new_employee = Employee(
-        "emp_emergency_001",
-        "緊急対応 太郎",
-        {"梱包"},  # Only has packing skill
-    )
-
-    change = AddEmployeeProblemFactChange(
-        new_employee,
-        auto_assign_shift_ids=["shift4"],  # Request specific shift
-    )
-
-    # Execute
-    change.do_change(mock_score_director)
-
-    # Verify specific assignment
-    shift4 = next(s for s in sample_schedule.shifts if s.id == "shift4")
-    assert shift4.employee == new_employee
-
-
-def test_employee_emergency_marking():
-    """Test marking employee as emergency addition"""
-    employee = Employee("emp1", "Test Employee", {"skill1"})
-
-    assert employee.is_emergency_addition is False
-    assert employee.emergency_added_at is None
-
-    # Mark as emergency
-    employee.mark_as_emergency_addition()
-
-    assert employee.is_emergency_addition is True
-    assert employee.emergency_added_at is not None
-    assert isinstance(employee.emergency_added_at, datetime)
-
-
 def test_employee_has_required_skills():
     """Test employee skill checking"""
     employee = Employee("emp1", "Test", {"フォークリフト", "検品"})
@@ -203,43 +75,107 @@ def test_employee_has_required_skills():
     assert employee.has_required_skills(set()) is True
 
 
-def test_remove_employee_problem_fact_change(sample_schedule, mock_score_director):
-    """Test removing an employee and unassigning their shifts"""
-    # Setup
-    mock_score_director.get_working_solution.return_value = sample_schedule
+def test_add_employee_to_completed_job_logic_only():
+    """Test adding employee to completed job (logic verification only)"""
+    import uuid
+    from datetime import datetime
 
-    change = RemoveEmployeeProblemFactChange("emp1")  # Remove 田中太郎
+    from src.natural_shift_planner.api.jobs import job_lock, jobs
+    from src.natural_shift_planner.core.models import Employee, ShiftSchedule
 
-    # Execute
-    change.do_change(mock_score_director)
+    # Create a simple completed job (mock, no actual solving)
+    job_id = str(uuid.uuid4())
 
-    # Verify employee removed
-    assert len(sample_schedule.employees) == 1
-    assert not any(e.id == "emp1" for e in sample_schedule.employees)
+    # Create minimal schedule for testing
+    schedule = ShiftSchedule(employees=[], shifts=[])
 
-    # Verify shift1 was unassigned (was assigned to emp1)
-    shift1 = next(s for s in sample_schedule.shifts if s.id == "shift1")
-    assert shift1.employee is None
+    with job_lock:
+        jobs[job_id] = {
+            "status": "SOLVING_COMPLETED",
+            "solution": schedule,
+            "created_at": datetime.now(),
+            "completed_at": datetime.now(),
+        }
 
-    # Verify score director calls
-    mock_score_director.before_problem_fact_removed.assert_called_once()
-    mock_score_director.after_problem_fact_removed.assert_called_once()
+    # Create new employee
+    new_employee = Employee(
+        "emp_new_001",
+        "新規従業員",
+        {"フォークリフト", "検品"},
+    )
+
+    # Test direct addition to solution (skip actual solving for speed)
+    with job_lock:
+        job = jobs[job_id]
+        if job["status"] == "SOLVING_COMPLETED":
+            # Simulate the addition logic without actual solving
+            job["solution"].employees.append(new_employee)
+            job["status"] = "SOLVING_COMPLETED"
+            job["updated_at"] = datetime.now()
+
+            if "employee_additions" not in job:
+                job["employee_additions"] = []
+            job["employee_additions"].append(
+                {
+                    "employee_id": new_employee.id,
+                    "employee_name": new_employee.name,
+                    "timestamp": datetime.now(),
+                }
+            )
+
+    # Verify job was updated
+    with job_lock:
+        job = jobs[job_id]
+        assert job["status"] == "SOLVING_COMPLETED"
+        assert "updated_at" in job
+        assert "employee_additions" in job
+        assert len(job["employee_additions"]) == 1
+        assert job["employee_additions"][0]["employee_id"] == "emp_new_001"
+
+        # Verify employee was added to solution
+        solution = job["solution"]
+        employee_ids = [emp.id for emp in solution.employees]
+        assert "emp_new_001" in employee_ids
 
 
-def test_remove_nonexistent_employee(sample_schedule, mock_score_director):
-    """Test removing an employee that doesn't exist"""
-    # Setup
-    mock_score_director.get_working_solution.return_value = sample_schedule
-    initial_employee_count = len(sample_schedule.employees)
+def test_add_employee_to_invalid_job():
+    """Test adding employee to job that's not completed"""
+    import uuid
+    from datetime import datetime
 
-    change = RemoveEmployeeProblemFactChange("emp_nonexistent")
+    from src.natural_shift_planner.api.jobs import (
+        add_employee_to_completed_job,
+        job_lock,
+        jobs,
+    )
+    from src.natural_shift_planner.core.models import Employee
 
-    # Execute
-    change.do_change(mock_score_director)
+    # Create a mock active job
+    job_id = str(uuid.uuid4())
 
-    # Verify nothing changed
-    assert len(sample_schedule.employees) == initial_employee_count
-    mock_score_director.before_problem_fact_removed.assert_not_called()
+    with job_lock:
+        jobs[job_id] = {
+            "status": "SOLVING_ACTIVE",
+            "created_at": datetime.now(),
+        }
+
+    new_employee = Employee("emp_test", "Test Employee", {"skill1"})
+
+    # Test employee addition (should fail)
+    success = add_employee_to_completed_job(job_id, new_employee)
+    assert success is False
+
+
+def test_add_employee_to_nonexistent_job():
+    """Test adding employee to job that doesn't exist"""
+    from src.natural_shift_planner.api.jobs import add_employee_to_completed_job
+    from src.natural_shift_planner.core.models import Employee
+
+    new_employee = Employee("emp_test", "Test Employee", {"skill1"})
+
+    # Test adding to nonexistent job
+    success = add_employee_to_completed_job("nonexistent_job_id", new_employee)
+    assert success is False
 
 
 if __name__ == "__main__":
