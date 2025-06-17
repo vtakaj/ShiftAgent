@@ -53,5 +53,3 @@ class SolutionResponse(BaseModel):
     assigned_shifts: int | None = None
     unassigned_shifts: int | None = None
     message: str | None = None
-
-

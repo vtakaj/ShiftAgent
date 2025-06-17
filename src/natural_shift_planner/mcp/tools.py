@@ -93,7 +93,6 @@ async def call_api(
         return result
 
 
-
 # Tool functions
 async def health_check(ctx: Context) -> dict[str, Any]:
     """Check if the Shift Scheduler API is healthy"""
@@ -214,3 +213,62 @@ async def get_schedule_shifts(ctx: Context, job_id: str) -> dict[str, Any]:
     return await call_api("GET", f"/api/shifts/solve/{job_id}")
 
 
+# Employee Management Tools
+async def add_employee_to_job(
+    ctx: Context, job_id: str, employee: EmployeeRequest
+) -> dict[str, Any]:
+    """
+    Add a new employee to a completed job and re-optimize with minimal changes
+
+    This feature adds an employee to an already solved schedule and re-optimizes
+    only the necessary parts, preserving existing valid assignments.
+
+    Args:
+        job_id: ID of the completed optimization job
+        employee: Employee details including skills and preferences
+
+    Returns:
+        Success message with updated job status and statistics
+    """
+    employee_data = employee.model_dump()
+
+    # Ensure dates are in ISO format
+    if employee_data.get("unavailable_dates"):
+        employee_data["unavailable_dates"] = [
+            datetime.fromisoformat(date).isoformat()
+            if isinstance(date, str)
+            else date.isoformat()
+            for date in employee_data["unavailable_dates"]
+        ]
+
+    return await call_api("POST", f"/api/shifts/{job_id}/add-employee", employee_data)
+
+
+async def update_employee_skills(
+    ctx: Context, job_id: str, employee_id: str, skills: None | str | list[str]
+) -> dict[str, Any]:
+    """
+    Update an employee's skills and re-optimize affected assignments
+
+    This feature updates the skills of an employee in a completed job and
+    re-optimizes only the shifts that might be affected by the skill change.
+
+    Args:
+        job_id: ID of the completed optimization job
+        employee_id: ID of the employee to update
+        skills: New skills for the employee (can be a list or JSON string)
+
+    Returns:
+        Success message with skill update details and statistics
+    """
+    # Parse skills parameter to ensure it's a list
+    parsed_skills = parse_list_param(skills)
+
+    # Make direct PATCH request with list body
+    url = f"{API_BASE_URL}/api/shifts/{job_id}/employee/{employee_id}/skills"
+
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        response = await client.patch(url, json=parsed_skills)
+        response.raise_for_status()
+        result: dict[str, Any] = response.json()
+        return result

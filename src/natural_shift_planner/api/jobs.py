@@ -4,14 +4,10 @@ Job management for asynchronous optimization
 
 import logging
 import threading
-import uuid
 from datetime import datetime
 from typing import Any
 
-from timefold.solver.config import Duration, TerminationConfig
-
 from ..core.models.schedule import ShiftSchedule
-from ..core.models.shift import Shift
 from .job_store import job_store
 from .solver import SOLVER_LOG_LEVEL, SOLVER_TIMEOUT_SECONDS, solver_factory
 
@@ -107,102 +103,304 @@ def solve_problem_async(job_id: str, problem: ShiftSchedule):
             _sync_job_to_store(job_id)
 
 
-def create_emergency_job(problem: ShiftSchedule) -> str:
-    """Create a long-running job for emergency modifications"""
-    job_id = str(uuid.uuid4())
-
-    with job_lock:
-        jobs[job_id] = {
-            "status": "SOLVING_SCHEDULED",
-            "problem": problem,
-            "solver": None,
-            "emergency_changes": [],
-            "created_at": datetime.now(),
-            "emergency_mode": True,
-        }
-        _sync_job_to_store(job_id)
-
-    # Start solving in background thread with emergency support
-    thread = threading.Thread(
-        target=solve_with_emergency_support,
-        args=(job_id, problem),
-    )
-    thread.daemon = True
-    thread.start()
-
-    return job_id
-
-
-def solve_with_emergency_support(job_id: str, problem: ShiftSchedule):
-    """Solve with support for emergency problem fact changes"""
+def add_employee_to_completed_job(job_id: str, new_employee) -> bool:
+    """Add employee to completed job using Problem Fact Changes"""
     try:
         with job_lock:
-            jobs[job_id]["status"] = "SOLVING_ACTIVE"
+            if job_id not in jobs:
+                logger.error(f"Job {job_id} not found")
+                return False
+
+            job = jobs[job_id]
+
+            # Only allow adding to completed jobs
+            if job["status"] != "SOLVING_COMPLETED":
+                logger.error(f"Job {job_id} status is {job['status']}, not completed")
+                return False
+
+            if "solution" not in job:
+                logger.error(f"Job {job_id} has no solution")
+                return False
+
+            # Get the current solution
+            current_solution = job["solution"]
+
+            # Mark job as being modified
+            jobs[job_id]["status"] = "ADDING_EMPLOYEE"
             _sync_job_to_store(job_id)
 
-        # Build solver with longer timeout for emergency mode
-        from timefold.solver.config import ScoreDirectorFactoryConfig, SolverConfig
-
-        from ..core.constraints.shift_constraints import shift_scheduling_constraints
-
-        # Create emergency config with longer timeout
-        emergency_config = SolverConfig(
-            solution_class=ShiftSchedule,
-            entity_class_list=[Shift],
-            score_director_factory_config=ScoreDirectorFactoryConfig(
-                constraint_provider_function=shift_scheduling_constraints
-            ),
-            termination_config=TerminationConfig(
-                spent_limit=Duration(minutes=30),  # Longer timeout for emergency mode
-                unimproved_spent_limit=Duration(minutes=5),  # Stop if no improvement
-            ),
+        # Pin all existing assignments to preserve them during re-optimization
+        logger.info(
+            f"[Job {job_id}] Adding {new_employee.name} using Solver with pinned assignments"
         )
 
-        # Create emergency solver factory with the new config
-        from timefold.solver import SolverFactory
-        emergency_solver_factory = SolverFactory.create(emergency_config)
-        solver = emergency_solver_factory.build_solver()
+        # Pin only valid assignments - allow constraint violations to be fixed
+        pinned_count = 0
+        unpinned_violations = 0
 
-        # Store solver reference for problem fact changes
-        with job_lock:
-            jobs[job_id]["solver"] = solver
-            jobs[job_id]["start_time"] = datetime.now()
-            _sync_job_to_store(job_id)
+        for shift in current_solution.shifts:
+            if shift.employee is not None and not shift.pinned:
+                # Check if current assignment has constraint violations
+                current_emp = shift.employee
+                has_violation = False
+
+                # Check for hard constraint violations that should be fixed
+                if not current_emp.has_required_skills(shift.required_skills):
+                    has_violation = True
+                    unpinned_violations += 1
+                    logger.info(
+                        f"[Job {job_id}] Not pinning shift {shift.id} due to skill mismatch. "
+                        f"Employee {current_emp.name} has skills {current_emp.skills}, "
+                        f"but shift requires {shift.required_skills}"
+                    )
+                elif current_emp.is_unavailable_on_date(shift.start_time):
+                    has_violation = True
+                    unpinned_violations += 1
+                    logger.info(
+                        f"[Job {job_id}] Not pinning shift {shift.id} due to unavailability"
+                    )
+
+                # Only pin assignments without violations
+                if not has_violation:
+                    shift.pin()
+                    pinned_count += 1
 
         logger.info(
-            f"[Emergency Job {job_id}] Starting optimization with "
-            f"{len(problem.shifts)} shifts and {len(problem.employees)} employees"
+            f"[Job {job_id}] Pinned {pinned_count} valid assignments, "
+            f"left {unpinned_violations} constraint violations unpinned for fixing"
         )
 
-        # Solve the problem
-        solution = solver.solve(problem)
+        # Add new employee to the solution
+        current_solution.employees.append(new_employee)
+        logger.info(
+            f"[Job {job_id}] Added new employee {new_employee.name} with skills: {new_employee.skills}"
+        )
 
-        elapsed = (datetime.now() - jobs[job_id]["start_time"]).total_seconds()
+        # Use existing solver factory with pinned assignments
+        solver = solver_factory.build_solver()
 
-        # Keep job active for emergency changes
-        with job_lock:
-            jobs[job_id]["status"] = "SOLVING_COMPLETED_EMERGENCY_READY"
-            jobs[job_id]["solution"] = solution
-            jobs[job_id]["completed_at"] = datetime.now()
-            jobs[job_id]["final_score"] = str(solution.score)
-            # Keep solver reference for emergency changes
-            _sync_job_to_store(job_id)
+        logger.info(f"[Job {job_id}] Running solver with pinned assignments...")
+        updated_solution = solver.solve(current_solution)
 
+        # Unpin shifts for future modifications
+        for shift in updated_solution.shifts:
+            if shift.pinned:
+                shift.pinned = False
+
+        # Count changes made
         assigned_count = sum(
-            1 for shift in solution.shifts if shift.employee is not None
+            1
+            for shift in updated_solution.shifts
+            if shift.employee and shift.employee.id == new_employee.id
         )
+
+        # Update the job with new solution
+        with job_lock:
+            jobs[job_id]["status"] = "SOLVING_COMPLETED"
+            jobs[job_id]["solution"] = updated_solution
+            jobs[job_id]["updated_at"] = datetime.now()
+            jobs[job_id]["final_score"] = str(updated_solution.score)
+
+            # Track the addition
+            if "employee_additions" not in jobs[job_id]:
+                jobs[job_id]["employee_additions"] = []
+            jobs[job_id]["employee_additions"].append(
+                {
+                    "employee_id": new_employee.id,
+                    "employee_name": new_employee.name,
+                    "timestamp": datetime.now(),
+                }
+            )
+            _sync_job_to_store(job_id)
+
+        total_assigned = sum(
+            1 for s in updated_solution.shifts if s.employee is not None
+        )
+
         logger.info(
-            f"[Emergency Job {job_id}] Initial optimization completed in {elapsed:.1f}s. "
-            f"Final score: {solution.score}, "
-            f"Assigned shifts: {assigned_count}/{len(solution.shifts)}. "
-            f"Job remains active for emergency changes."
+            f"[Job {job_id}] Employee addition completed using pinned optimization. "
+            f"Score: {updated_solution.score}, "
+            f"Total assigned shifts: {total_assigned}/{len(updated_solution.shifts)}, "
+            f"New employee assigned to: {assigned_count} shifts"
         )
+
+        return True
 
     except Exception as e:
-        logger.error(f"[Emergency Job {job_id}] Optimization failed: {str(e)}")
+        logger.error(f"[Job {job_id}] Failed to add employee: {str(e)}")
         with job_lock:
-            jobs[job_id]["status"] = "SOLVING_FAILED"
-            jobs[job_id]["error"] = str(e)
-            if "solver" in jobs[job_id]:
-                del jobs[job_id]["solver"]
+            if job_id in jobs:
+                jobs[job_id]["status"] = "SOLVING_FAILED"
+                jobs[job_id]["error"] = f"Employee addition failed: {str(e)}"
+                _sync_job_to_store(job_id)
+        return False
+
+
+def update_employee_skills(job_id: str, employee_id: str, new_skills: set[str]) -> bool:
+    """Update employee skills and re-optimize only necessary parts"""
+    try:
+        with job_lock:
+            if job_id not in jobs:
+                logger.error(f"Job {job_id} not found")
+                return False
+
+            job = jobs[job_id]
+
+            # Only allow updating completed jobs
+            if job["status"] != "SOLVING_COMPLETED":
+                logger.error(f"Job {job_id} status is {job['status']}, not completed")
+                return False
+
+            if "solution" not in job:
+                logger.error(f"Job {job_id} has no solution")
+                return False
+
+            # Get the current solution
+            current_solution = job["solution"]
+
+            # Find the employee to update
+            target_employee = None
+            for emp in current_solution.employees:
+                if emp.id == employee_id:
+                    target_employee = emp
+                    break
+
+            if not target_employee:
+                logger.error(f"Employee {employee_id} not found in job {job_id}")
+                return False
+
+            # Mark job as being modified
+            jobs[job_id]["status"] = "UPDATING_EMPLOYEE_SKILLS"
             _sync_job_to_store(job_id)
+
+        logger.info(
+            f"[Job {job_id}] Updating skills for {target_employee.name} "
+            f"from {target_employee.skills} to {new_skills}"
+        )
+
+        # Update employee skills
+        old_skills = target_employee.skills.copy()
+        target_employee.skills = new_skills
+        added_skills = new_skills - old_skills
+        removed_skills = old_skills - new_skills
+
+        logger.info(
+            f"[Job {job_id}] Skills changed for {target_employee.name}: "
+            f"added {added_skills}, removed {removed_skills}"
+        )
+
+        # Pin assignments that should be preserved - more nuanced approach
+        pinned_count = 0
+        unpinned_for_improvement = 0
+
+        for shift in current_solution.shifts:
+            if shift.employee is not None and not shift.pinned:
+                should_pin = True
+
+                # Don't pin if this employee's assignment could be improved with new skills
+                if shift.employee.id == employee_id:
+                    # Check if the employee now has better skill coverage
+                    if added_skills and shift.required_skills.intersection(
+                        added_skills
+                    ):
+                        should_pin = True  # Keep assignment, skills are now better
+                    elif removed_skills and shift.required_skills.intersection(
+                        removed_skills
+                    ):
+                        should_pin = False  # May need reassignment due to lost skills
+                        unpinned_for_improvement += 1
+                        logger.info(
+                            f"[Job {job_id}] Unpinning {shift.id} - employee lost required skills"
+                        )
+                else:
+                    # Check if current assignment has constraint violations
+                    current_emp = shift.employee
+                    if not current_emp.has_required_skills(shift.required_skills):
+                        # Check if updated employee could now handle this shift better
+                        if target_employee.has_required_skills(shift.required_skills):
+                            should_pin = False  # Allow reassignment to updated employee
+                            unpinned_for_improvement += 1
+                            logger.info(
+                                f"[Job {job_id}] Unpinning {shift.id} - updated employee can resolve violation"
+                            )
+
+                if should_pin:
+                    shift.pin()
+                    pinned_count += 1
+
+        logger.info(
+            f"[Job {job_id}] Pinned {pinned_count} assignments, "
+            f"left {unpinned_for_improvement} unpinned for potential improvement"
+        )
+
+        # Use solver with pinned assignments for targeted optimization
+        solver = solver_factory.build_solver()
+
+        logger.info(f"[Job {job_id}] Running solver with updated skills...")
+        updated_solution = solver.solve(current_solution)
+
+        # Unpin shifts for future modifications
+        for shift in updated_solution.shifts:
+            if shift.pinned:
+                shift.pinned = False
+
+        # Count changes made
+        changes_count = 0
+        for old_shift, new_shift in zip(
+            current_solution.shifts, updated_solution.shifts, strict=False
+        ):
+            if old_shift.employee != new_shift.employee:
+                changes_count += 1
+                if old_shift.employee and new_shift.employee:
+                    logger.info(
+                        f"[Job {job_id}] Shift {new_shift.id} reassigned from "
+                        f"{old_shift.employee.name} to {new_shift.employee.name}"
+                    )
+                elif new_shift.employee:
+                    logger.info(
+                        f"[Job {job_id}] Shift {new_shift.id} assigned to {new_shift.employee.name}"
+                    )
+
+        # Update the job with new solution
+        with job_lock:
+            jobs[job_id]["status"] = "SOLVING_COMPLETED"
+            jobs[job_id]["solution"] = updated_solution
+            jobs[job_id]["updated_at"] = datetime.now()
+            jobs[job_id]["final_score"] = str(updated_solution.score)
+
+            # Track the skill update
+            if "skill_updates" not in jobs[job_id]:
+                jobs[job_id]["skill_updates"] = []
+            jobs[job_id]["skill_updates"].append(
+                {
+                    "employee_id": employee_id,
+                    "employee_name": target_employee.name,
+                    "old_skills": list(old_skills),
+                    "new_skills": list(new_skills),
+                    "timestamp": datetime.now(),
+                    "changes_made": changes_count,
+                }
+            )
+            _sync_job_to_store(job_id)
+
+        total_assigned = sum(
+            1 for s in updated_solution.shifts if s.employee is not None
+        )
+
+        logger.info(
+            f"[Job {job_id}] Skill update completed. "
+            f"Score: {updated_solution.score}, "
+            f"Total assigned shifts: {total_assigned}/{len(updated_solution.shifts)}, "
+            f"Assignment changes made: {changes_count}"
+        )
+
+        return True
+
+    except Exception as e:
+        logger.error(f"[Job {job_id}] Failed to update employee skills: {str(e)}")
+        with job_lock:
+            if job_id in jobs:
+                jobs[job_id]["status"] = "SOLVING_FAILED"
+                jobs[job_id]["error"] = f"Skill update failed: {str(e)}"
+                _sync_job_to_store(job_id)
+        return False

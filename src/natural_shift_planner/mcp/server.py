@@ -8,6 +8,7 @@ import os
 from fastmcp import FastMCP
 
 from .tools import (
+    add_employee_to_job,
     analyze_weekly_hours,
     get_demo_schedule,
     get_schedule_shifts,
@@ -16,6 +17,7 @@ from .tools import (
     solve_schedule_async,
     solve_schedule_sync,
     test_weekly_constraints,
+    update_employee_skills,
 )
 
 # Create FastMCP server with logging
@@ -44,14 +46,17 @@ mcp.tool()(test_weekly_constraints)
 # Register remaining tools
 mcp.tool()(get_schedule_shifts)
 
+# Register employee management tools
+mcp.tool()(add_employee_to_job)
+mcp.tool()(update_employee_skills)
+
 # TODO: Register continuous planning tools when implemented
 # mcp.tool()(swap_shifts)
 # mcp.tool()(find_shift_replacement)
 # mcp.tool()(pin_shifts)
 # mcp.tool()(reassign_shift)
 
-# TODO: Register employee management tools when implemented
-# mcp.tool()(add_employee_to_job)
+# TODO: Register additional employee management tools when implemented
 # mcp.tool()(add_employees_batch_to_job)
 # mcp.tool()(remove_employee_from_job)
 # mcp.tool()(add_employee_and_assign_to_shift)
@@ -85,6 +90,10 @@ async def shift_scheduling_prompt() -> str:
 ### Schedule Inspection
 - get_schedule_shifts: Inspect completed schedules
 
+### Employee Management (Available Now)
+- add_employee_to_job: Add new employee to completed job with minimal re-optimization
+- update_employee_skills: Update employee skills and re-optimize affected assignments
+
 ### Continuous Planning (Coming Soon)
 The following real-time modification features are planned but not yet implemented:
 - swap_shifts: Swap employees between two shifts during optimization
@@ -92,9 +101,8 @@ The following real-time modification features are planned but not yet implemente
 - pin_shifts: Pin/unpin shifts to prevent changes during optimization
 - reassign_shift: Reassign shift to specific employee or unassign
 
-### Employee Management (Coming Soon)
-The following employee management features are planned but not yet implemented:
-- add_employee_to_job: Add new employee to active solving job
+### Additional Employee Management (Coming Soon)
+The following additional employee management features are planned but not yet implemented:
 - add_employees_batch_to_job: Add multiple employees at once
 - remove_employee_from_job: Remove employee (unassigns their shifts)
 - add_employee_and_assign_to_shift: Add employee and assign to specific shift
