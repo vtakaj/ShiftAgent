@@ -44,7 +44,9 @@
       "Bash(git merge:*)",
       "Bash(sed:*)",
       "Bash(git cherry-pick:*)",
-      "Bash(PYTHONPATH=src uv run mypy -p natural_shift_planner)"
+      "Bash(PYTHONPATH=src uv run mypy -p natural_shift_planner)",
+      "Bash(PYTHONPATH=src uv run pytest tests/test_continuous_planning.py -v)",
+      "Bash(PYTHONPATH=src uv run pytest tests/ -v --tb=short)"
     ],
     "deny": []
   }

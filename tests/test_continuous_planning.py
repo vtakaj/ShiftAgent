@@ -5,10 +5,6 @@ Tests for continuous planning features
 from datetime import datetime, timedelta
 
 import pytest
-
-# Skip this entire test module until continuous planning is implemented
-pytest.skip("Continuous planning module not yet implemented", allow_module_level=True)
-
 from timefold.solver import SolverFactory
 from timefold.solver.config import (
     Duration,
@@ -17,28 +13,32 @@ from timefold.solver.config import (
     TerminationConfig,
 )
 
-# TODO: Import ContinuousPlanningService when implemented
-# from src.natural_shift_planner.api.continuous_planning import ContinuousPlanningService
-
 from src.natural_shift_planner.core.constraints.shift_constraints import (
     shift_scheduling_constraints,
 )
 from src.natural_shift_planner.core.models import Employee, Shift, ShiftSchedule
+
+# Skip this entire test module until continuous planning is implemented
+pytest.skip("Continuous planning module not yet implemented", allow_module_level=True)
+
+# TODO: Import ContinuousPlanningService when implemented
+# from src.natural_shift_planner.api.continuous_planning import ContinuousPlanningService
+
 
 # Placeholder class until actual implementation
 class ContinuousPlanningService:
     @staticmethod
     def swap_shifts(solver, shift1_id, shift2_id):
         pass
-    
+
     @staticmethod
     def find_replacement_for_shift(solver, shift_id, employee_id):
         pass
-    
+
     @staticmethod
     def reassign_shift(solver, shift_id, employee_id):
         pass
-    
+
     @staticmethod
     def pin_shifts(solver, shift_ids):
         pass
