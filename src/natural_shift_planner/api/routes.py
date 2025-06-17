@@ -13,8 +13,16 @@ from .analysis import analyze_weekly_hours, generate_recommendations
 from .app import app
 from .converters import convert_domain_to_response, convert_request_to_domain
 from .job_store import job_store
-from .jobs import _sync_job_to_store, job_lock, jobs, solve_problem_async
+from .jobs import (
+    _sync_job_to_store,
+    create_emergency_job,
+    job_lock,
+    jobs,
+    solve_problem_async,
+)
+from .problem_fact_changes import AddEmployeeProblemFactChange
 from .schemas import (
+    EmployeeRequest,
     ShiftScheduleRequest,
     SolutionResponse,
     SolveResponse,
@@ -296,3 +304,132 @@ async def cleanup_old_jobs(max_age_hours: int = 24):
         "deleted_count": deleted_count,
         "message": f"Cleaned up {deleted_count} jobs older than {max_age_hours} hours",
     }
+
+
+# Emergency Management Endpoints
+
+
+@app.post("/api/shifts/solve-emergency")
+async def solve_emergency_mode(request: ShiftScheduleRequest):
+    """Start solving in emergency mode (supports dynamic changes)"""
+    # Convert to domain model
+    problem = convert_request_to_domain(request)
+
+    # Create emergency job
+    job_id = create_emergency_job(problem)
+
+    return {
+        "job_id": job_id,
+        "status": "SOLVING_SCHEDULED",
+        "message": "Emergency solving started. Job will remain active for emergency changes.",
+        "employees": len(problem.employees),
+        "shifts": len(problem.shifts),
+    }
+
+
+@app.post("/api/shifts/{job_id}/add-employee-emergency")
+async def add_employee_emergency(
+    job_id: str,
+    employee: EmployeeRequest,
+    auto_assign_shift_ids: list[str] | None = None,
+):
+    """Add employee for emergency staffing using Problem Fact Change"""
+    with job_lock:
+        if job_id not in jobs:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        job = jobs[job_id]
+
+        # Check if job is in emergency mode and has active solver
+        if not job.get("emergency_mode"):
+            raise HTTPException(
+                status_code=400,
+                detail="Job is not in emergency mode. Use /api/shifts/solve-emergency to start.",
+            )
+
+        if "solver" not in job:
+            raise HTTPException(
+                status_code=400,
+                detail="No active solver found. Job may have completed or failed.",
+            )
+
+        solver = job["solver"]
+
+    # Convert employee to domain model
+    from .converters import convert_employee_request_to_domain
+
+    new_employee = convert_employee_request_to_domain(employee)
+
+    # Mark as emergency addition
+    new_employee.mark_as_emergency_addition()
+
+    # Create and apply problem fact change
+    change = AddEmployeeProblemFactChange(new_employee, auto_assign_shift_ids)
+
+    try:
+        solver.add_problem_fact_change(change)
+
+        # Track the change
+        with job_lock:
+            jobs[job_id]["emergency_changes"].append(
+                {
+                    "type": "add_employee",
+                    "employee_id": employee.id,
+                    "employee_name": employee.name,
+                    "timestamp": datetime.now(),
+                    "auto_assigned_shifts": auto_assign_shift_ids or [],
+                }
+            )
+            _sync_job_to_store(job_id)
+
+        return {
+            "message": f"Emergency employee {employee.name} added successfully",
+            "job_id": job_id,
+            "employee_id": employee.id,
+            "status": "SUCCESS",
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to add emergency employee: {str(e)}",
+        ) from e
+
+
+@app.get("/api/shifts/{job_id}/emergency-status")
+async def get_emergency_job_status(job_id: str):
+    """Get status of emergency job including changes made"""
+    with job_lock:
+        if job_id not in jobs:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        job = jobs[job_id]
+
+        if not job.get("emergency_mode"):
+            raise HTTPException(
+                status_code=400,
+                detail="Not an emergency job",
+            )
+
+        response = {
+            "job_id": job_id,
+            "status": job["status"],
+            "emergency_mode": True,
+            "has_active_solver": "solver" in job,
+            "created_at": job.get("created_at"),
+            "completed_at": job.get("completed_at"),
+            "emergency_changes": job.get("emergency_changes", []),
+            "changes_count": len(job.get("emergency_changes", [])),
+        }
+
+        # Include solution if available
+        if "solution" in job and job["solution"]:
+            solution = job["solution"]
+            response["solution"] = convert_domain_to_response(solution)
+            response["score"] = str(solution.score)
+            response["assigned_shifts"] = sum(
+                1 for s in solution.shifts if s.employee is not None
+            )
+            response["total_shifts"] = len(solution.shifts)
+
+        return response
