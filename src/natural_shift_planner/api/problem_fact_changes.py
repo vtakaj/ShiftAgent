@@ -55,10 +55,9 @@ class AddEmployeeProblemFactChange:
 
         # Handle specific shift assignments if requested
         for shift_id in self.auto_assign_shift_ids:
-            shift = next(
-                (s for s in working_solution.shifts if s.id == shift_id), None
-            )
-            if shift:
+            matching_shifts = [s for s in working_solution.shifts if s.id == shift_id]
+            if matching_shifts:
+                shift = matching_shifts[0]
                 # Check if shift is unassigned or can be reassigned
                 if shift.employee is None:
                     score_director.before_variable_changed(shift, "employee")
@@ -87,12 +86,11 @@ class RemoveEmployeeProblemFactChange:
         working_solution: ShiftSchedule = score_director.get_working_solution()
 
         # Find the employee
-        employee = next(
-            (e for e in working_solution.employees if e.id == self.employee_id), None
-        )
-        if not employee:
+        matching_employees = [e for e in working_solution.employees if e.id == self.employee_id]
+        if not matching_employees:
             logger.warning(f"Employee {self.employee_id} not found")
             return
+        employee = matching_employees[0]
 
         # Unassign all shifts for this employee
         for shift in working_solution.shifts:

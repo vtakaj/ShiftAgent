@@ -144,7 +144,6 @@ def solve_with_emergency_support(job_id: str, problem: ShiftSchedule):
         from timefold.solver.config import ScoreDirectorFactoryConfig, SolverConfig
 
         from ..core.constraints.shift_constraints import shift_scheduling_constraints
-        from .solver import solver_factory
 
         # Create emergency config with longer timeout
         emergency_config = SolverConfig(
@@ -159,7 +158,10 @@ def solve_with_emergency_support(job_id: str, problem: ShiftSchedule):
             ),
         )
 
-        solver = solver_factory.build_solver(emergency_config)
+        # Create emergency solver factory with the new config
+        from timefold.solver import SolverFactory
+        emergency_solver_factory = SolverFactory.create(emergency_config)
+        solver = emergency_solver_factory.build_solver()
 
         # Store solver reference for problem fact changes
         with job_lock:
