@@ -11,6 +11,7 @@ from typing import Any
 from timefold.solver.config import Duration, TerminationConfig
 
 from ..core.models.schedule import ShiftSchedule
+from ..core.models.shift import Shift
 from .job_store import job_store
 from .solver import SOLVER_LOG_LEVEL, SOLVER_TIMEOUT_SECONDS, solver_factory
 
@@ -140,12 +141,22 @@ def solve_with_emergency_support(job_id: str, problem: ShiftSchedule):
             _sync_job_to_store(job_id)
 
         # Build solver with longer timeout for emergency mode
-        from .solver import solver_config
+        from timefold.solver.config import ScoreDirectorFactoryConfig, SolverConfig
 
-        emergency_config = solver_config.copy_config()
-        emergency_config.termination_config = TerminationConfig(
-            spent_limit=Duration(minutes=30),  # Longer timeout for emergency mode
-            unimproved_spent_limit=Duration(minutes=5),  # Stop if no improvement
+        from ..core.constraints.shift_constraints import shift_scheduling_constraints
+        from .solver import solver_factory
+
+        # Create emergency config with longer timeout
+        emergency_config = SolverConfig(
+            solution_class=ShiftSchedule,
+            entity_class_list=[Shift],
+            score_director_factory_config=ScoreDirectorFactoryConfig(
+                constraint_provider_function=shift_scheduling_constraints
+            ),
+            termination_config=TerminationConfig(
+                spent_limit=Duration(minutes=30),  # Longer timeout for emergency mode
+                unimproved_spent_limit=Duration(minutes=5),  # Stop if no improvement
+            ),
         )
 
         solver = solver_factory.build_solver(emergency_config)

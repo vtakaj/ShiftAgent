@@ -46,7 +46,9 @@
       "Bash(git cherry-pick:*)",
       "Bash(PYTHONPATH=src uv run mypy -p natural_shift_planner)",
       "Bash(PYTHONPATH=src uv run pytest tests/test_continuous_planning.py -v)",
-      "Bash(PYTHONPATH=src uv run pytest tests/ -v --tb=short)"
+      "Bash(PYTHONPATH=src uv run pytest tests/ -v --tb=short)",
+      "Bash(PYTHONPATH=src uv run pytest tests/test_emergency_staff.py -v)",
+      "Bash(PYTHONPATH=src uv run pytest tests/test_emergency_staff.py::test_add_employee_problem_fact_change_creation -v)"
     ],
     "deny": []
   }
