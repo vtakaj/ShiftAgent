@@ -8,11 +8,19 @@ from datetime import datetime, timedelta
 from ..core.models import Employee, Shift, ShiftSchedule
 
 
+def get_next_monday() -> datetime:
+    """Get the next Monday from today (or today if it's Monday)"""
+    today = datetime.now()
+    days_until_monday = (7 - today.weekday()) % 7
+    if days_until_monday == 0 and today.hour >= 18:  # If it's Monday after 6 PM, use next Monday
+        days_until_monday = 7
+    return today + timedelta(days=days_until_monday)
+
+
 def create_demo_schedule() -> ShiftSchedule:
     """物流倉庫のシフトスケジュールを作成"""
-    # Get specific dates for unavailable examples
-    base_date = datetime.now().replace(hour=9, minute=0, second=0, microsecond=0)
-    monday = base_date - timedelta(days=base_date.weekday())
+    # Get specific dates for unavailable examples - start from next Monday
+    monday = get_next_monday().replace(hour=0, minute=0, second=0, microsecond=0)
     friday_date = monday + timedelta(days=4)
 
     # 倉庫作業員の作成 (雇用形態と希望を含む)

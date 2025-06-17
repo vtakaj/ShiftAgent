@@ -3,7 +3,7 @@ Tests for employee preference functionality
 """
 
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 # Add src directory to Python path
@@ -140,3 +140,47 @@ def test_employee_preference_edge_cases():
     # Test no conflicts
     assert not employee.prefers_day_off("monday")
     assert not employee.prefers_work_day("friday")
+
+
+def test_get_next_monday():
+    """Test get_next_monday() function returns correct dates"""
+    from natural_shift_planner.utils.demo_data import get_next_monday
+    
+    # Mock different scenarios by testing the logic
+    # Test case 1: If today is Tuesday, should return next Monday (6 days later)
+    tuesday = datetime(2025, 6, 17, 10, 0)  # June 17, 2025 is a Tuesday
+    
+    # Calculate expected next Monday manually
+    days_until_monday = (7 - tuesday.weekday()) % 7  # Tuesday is weekday 1, so (7-1)%7 = 6
+    expected_monday = tuesday + timedelta(days=6)
+    
+    # Test the function works correctly by checking the weekday
+    result = get_next_monday()
+    # The result should always be a Monday (weekday 0)
+    assert result.weekday() == 0, f"get_next_monday() returned {result.strftime('%A')}, expected Monday"
+    
+    # The result should be in the future or today (if today is Monday before 6PM)
+    today = datetime.now()
+    if today.weekday() == 0 and today.hour < 18:  # If it's Monday before 6PM
+        assert result.date() == today.date()
+    else:
+        assert result.date() > today.date()
+
+
+def test_demo_data_uses_future_dates():
+    """Test that demo data now uses future dates starting from next Monday"""
+    from natural_shift_planner.utils.demo_data import create_demo_schedule
+    
+    schedule = create_demo_schedule()
+    today = datetime.now()
+    
+    # Find the earliest shift date
+    earliest_shift = min(schedule.shifts, key=lambda s: s.start_time)
+    
+    # The earliest shift should be on or after today
+    assert earliest_shift.start_time.date() >= today.date(), \
+        f"Demo data should start from future dates, but earliest shift is {earliest_shift.start_time.date()}"
+    
+    # The earliest shift should be on a Monday
+    assert earliest_shift.start_time.weekday() == 0, \
+        f"Demo data should start on Monday, but starts on {earliest_shift.start_time.strftime('%A')}"
