@@ -23,6 +23,9 @@ class Employee:
     unavailable_dates: set[datetime] = field(
         default_factory=set
     )  # Specific dates (hard constraint)
+    # Emergency addition tracking
+    is_emergency_addition: bool = field(default=False)
+    emergency_added_at: datetime | None = field(default=None)
 
     def has_skill(self, skill: str) -> bool:
         """指定されたスキルを持っているかチェック"""
@@ -72,6 +75,15 @@ class Employee:
                 return True
 
         return False
+
+    def mark_as_emergency_addition(self) -> None:
+        """Mark employee as emergency addition"""
+        self.is_emergency_addition = True
+        self.emergency_added_at = datetime.now()
+
+    def has_required_skills(self, required_skills: set[str]) -> bool:
+        """Check if employee has all required skills"""
+        return required_skills.issubset(self.skills)
 
     def __str__(self):
         return f"Employee(id='{self.id}', name='{self.name}', skills={self.skills})"
