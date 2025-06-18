@@ -14,7 +14,7 @@ API_BASE_URL = "http://localhost:8081"
 
 
 # API Helper Functions
-async def call_api(method: str, endpoint: str, data: dict = None) -> dict[str, Any]:
+async def call_api(method: str, endpoint: str, data: dict[str, Any] | None = None) -> dict[str, Any]:
     """Make an API call to the shift scheduler"""
     url = f"{API_BASE_URL}{endpoint}"
 
@@ -31,7 +31,8 @@ async def call_api(method: str, endpoint: str, data: dict = None) -> dict[str, A
             raise ValueError(f"Unsupported HTTP method: {method}")
 
         response.raise_for_status()
-        return response.json()
+        result: dict[str, Any] = response.json()
+        return result
 
 
 async def get_html_content(job_id: str) -> str:
