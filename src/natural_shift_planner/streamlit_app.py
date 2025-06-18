@@ -8,7 +8,6 @@ from typing import Any
 
 import httpx
 import streamlit as st
-import streamlit.components.v1 as components
 
 # Configuration
 API_BASE_URL = "http://localhost:8081"
@@ -141,22 +140,25 @@ def manage_jobs():
             if st.button(
                 "📅 シフト表を表示", key=f"show_{job['job_id']}", type="primary"
             ):
-                st.session_state.selected_job_id = job['job_id']
+                st.session_state.selected_job_id = job["job_id"]
 
         with col3:
             if st.button("🗑️", key=f"delete_{job['job_id']}", help="削除"):
                 try:
                     # Delete from API
                     run_async(call_api("DELETE", f"/api/jobs/{job['job_id']}"))
-                    
+
                     # Clear selected job if it's the one being deleted
-                    if hasattr(st.session_state, 'selected_job_id') and st.session_state.selected_job_id == job['job_id']:
+                    if (
+                        hasattr(st.session_state, "selected_job_id")
+                        and st.session_state.selected_job_id == job["job_id"]
+                    ):
                         st.session_state.selected_job_id = None
-                    
+
                     # Refresh jobs data from API instead of manual removal
                     jobs_data = run_async(call_api("GET", "/api/jobs"))
                     st.session_state.jobs_data = jobs_data
-                    
+
                     st.success("削除しました")
                     st.rerun()
                 except Exception as e:
@@ -165,10 +167,11 @@ def manage_jobs():
         st.markdown("---")
 
     # Display selected job's schedule on separate page
-    if hasattr(st.session_state, 'selected_job_id') and st.session_state.selected_job_id:
+    if (
+        hasattr(st.session_state, "selected_job_id")
+        and st.session_state.selected_job_id
+    ):
         st.switch_page("pages/schedule_view.py")
-
-
 
 
 if __name__ == "__main__":

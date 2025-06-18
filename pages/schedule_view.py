@@ -4,7 +4,6 @@ Schedule View Page - Display individual shift schedule
 
 import asyncio
 import sys
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -24,7 +23,7 @@ API_BASE_URL = "http://localhost:8081"
 async def call_api(method: str, endpoint: str, data: dict = None) -> dict[str, Any]:
     """Make an API call to the shift scheduler"""
     url = f"{API_BASE_URL}{endpoint}"
-    
+
     async with httpx.AsyncClient(timeout=120.0) as client:
         if method == "GET":
             response = await client.get(url)
@@ -36,7 +35,7 @@ async def call_api(method: str, endpoint: str, data: dict = None) -> dict[str, A
             response = await client.delete(url)
         else:
             raise ValueError(f"Unsupported HTTP method: {method}")
-        
+
         response.raise_for_status()
         return response.json()
 
@@ -44,7 +43,7 @@ async def call_api(method: str, endpoint: str, data: dict = None) -> dict[str, A
 async def get_html_content(job_id: str) -> str:
     """Get HTML content for a job"""
     url = f"{API_BASE_URL}/api/shifts/solve/{job_id}/html"
-    
+
     async with httpx.AsyncClient(timeout=120.0) as client:
         response = await client.get(url)
         response.raise_for_status()
@@ -58,7 +57,7 @@ def run_async(coro):
     except RuntimeError:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-    
+
     return loop.run_until_complete(coro)
 
 
@@ -68,11 +67,14 @@ def main():
         page_title="シフト表表示",
         page_icon="📅",
         layout="wide",
-        initial_sidebar_state="collapsed"
+        initial_sidebar_state="collapsed",
     )
 
     # Check if job ID is available
-    if not hasattr(st.session_state, 'selected_job_id') or not st.session_state.selected_job_id:
+    if (
+        not hasattr(st.session_state, "selected_job_id")
+        or not st.session_state.selected_job_id
+    ):
         st.error("❌ ジョブが選択されていません")
         if st.button("📋 ジョブ一覧に戻る", type="primary"):
             st.switch_page("streamlit_main.py")
@@ -96,7 +98,7 @@ def main():
         with st.spinner("シフト表を生成中..."):
             # Get job data
             job_data = run_async(call_api("GET", f"/api/shifts/solve/{job_id}"))
-            
+
             # Get HTML content
             html_content = run_async(get_html_content(job_id))
 
@@ -134,17 +136,17 @@ def main():
 
         # Display HTML schedule in full width
         st.subheader("🎯 シフト表")
-        
+
         components.html(html_content, height=800, scrolling=True)
 
         # Action buttons
         col1, col2, col3 = st.columns([1, 1, 3])
-        
+
         with col1:
             # Download button for HTML
             st.download_button(
                 label="💾 HTMLダウンロード",
-                data=html_content.encode('utf-8'),
+                data=html_content.encode("utf-8"),
                 file_name=f"shift_schedule_{job_id[:8]}.html",
                 mime="text/html",
             )
@@ -152,7 +154,9 @@ def main():
         with col2:
             # Open in new tab button (show URL)
             if st.button("🌐 新しいタブで開く"):
-                st.info(f"以下のURLをコピーして新しいタブで開いてください:\n`http://localhost:8081/api/shifts/solve/{job_id}/html`")
+                st.info(
+                    f"以下のURLをコピーして新しいタブで開いてください:\n`http://localhost:8081/api/shifts/solve/{job_id}/html`"
+                )
 
         # Raw data expander (optional)
         with st.expander("📋 生データ (JSON)"):
@@ -166,7 +170,7 @@ def main():
             st.info("ジョブがまだ完了していません。")
         else:
             st.info("APIサーバーが起動していることを確認してください。")
-        
+
         # Return button on error
         if st.button("📋 ジョブ一覧に戻る", type="primary"):
             st.session_state.selected_job_id = None

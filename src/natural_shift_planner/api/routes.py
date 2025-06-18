@@ -448,12 +448,15 @@ def generate_html_report_with_data(solution_data):
 
     # Read the template file from project directory
     import os
+
     current_dir = os.path.dirname(os.path.abspath(__file__))
     template_path = os.path.join(current_dir, "shift-schedule-template.html")
     try:
         with open(template_path, encoding="utf-8") as f:
             html_template = f.read()
-        logger.info(f"Successfully loaded template from {template_path}, size: {len(html_template)} chars")
+        logger.info(
+            f"Successfully loaded template from {template_path}, size: {len(html_template)} chars"
+        )
     except FileNotFoundError as e:
         logger.error(f"Template file not found at {template_path}: {e}")
         # Fallback to simple HTML if template not found
@@ -463,21 +466,30 @@ def generate_html_report_with_data(solution_data):
         return generate_simple_html_report(solution_data)
 
     # Prepare solution data with proper structure
-    solution_json = json.dumps({"solution": solution_data}, ensure_ascii=False, indent=2)
+    solution_json = json.dumps(
+        {"solution": solution_data}, ensure_ascii=False, indent=2
+    )
 
-    # Check if the replacement pattern exists  
-    search_pattern = 'placeholder=\'{"solution": {"employees": [...], "shifts": [...]}}\''
+    # Check if the replacement pattern exists
+    search_pattern = (
+        'placeholder=\'{"solution": {"employees": [...], "shifts": [...]}}\''
+    )
     if search_pattern not in html_template:
-        logger.error(f"Search pattern not found in template. Looking for: {search_pattern}")
+        logger.error(
+            f"Search pattern not found in template. Looking for: {search_pattern}"
+        )
         # Find actual pattern for debugging
         import re
-        patterns = re.findall(r'placeholder=\'[^\']*\'>', html_template)
+
+        patterns = re.findall(r"placeholder=\'[^\']*\'>", html_template)
         logger.error(f"Found patterns: {patterns}")
         return generate_simple_html_report(solution_data)
 
     # Replace the textarea content with actual data
     replacement = f'placeholder=\'{{"solution": {{"employees": [...], "shifts": [...]}}}}\' style="display:none;">{solution_json}</textarea>\n            <button onclick="generateSchedule()">シフト表を生成</button>'
-    html_content = html_template.replace(search_pattern + '>\n            </textarea>', replacement)
+    html_content = html_template.replace(
+        search_pattern + ">\n            </textarea>", replacement
+    )
 
     # Add auto-generation script that runs after page loads
     auto_script = """
@@ -488,7 +500,7 @@ def generate_html_report_with_data(solution_data):
         if (inputSection) {
             inputSection.style.display = 'none';
         }
-        
+
         // Small delay to ensure all elements are loaded
         setTimeout(function() {
             // Auto-generate the schedule
@@ -501,7 +513,7 @@ def generate_html_report_with_data(solution_data):
     """
 
     html_content = html_content.replace("</body>", auto_script + "</body>")
-    
+
     logger.info(f"Generated HTML with template, final size: {len(html_content)} chars")
     return html_content
 
