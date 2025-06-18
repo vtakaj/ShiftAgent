@@ -86,6 +86,8 @@
     "JOB_STORAGE_TYPE": "filesystem",
     "JOB_STORAGE_DIR": "/workspace/job_storage",
     "PULUMI_CONFIG_PASSPHRASE": "",
-    "PULUMI_SKIP_UPDATE_CHECK": "true"
+    "PULUMI_SKIP_UPDATE_CHECK": "true",
+    "SOLVER_TIMEOUT_SECONDS": "30",
+    "SOLVER_LOG_LEVEL": "INFO"
   }
 }
