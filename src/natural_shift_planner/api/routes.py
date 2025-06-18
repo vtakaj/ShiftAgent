@@ -92,7 +92,9 @@ async def get_solution(job_id: str):
 
         job = jobs[job_id]
 
-        response = SolutionResponse(job_id=job_id, status=job["status"], html_report_url=None)
+        response = SolutionResponse(
+            job_id=job_id, status=job["status"], html_report_url=None
+        )
 
         if job["status"] == "SOLVING_COMPLETED":
             solution = job["solution"]

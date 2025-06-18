@@ -13,6 +13,11 @@
     },
     "ghcr.io/devcontainers/features/git:1": {
       "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts",
+      "nodeGypDependencies": true,
+      "installYarnUsingApt": false
     }
   },
   // Configure tool-specific properties
@@ -72,7 +77,7 @@
     }
   },
   // Step-by-step setup with error handling
-  "postCreateCommand": "bash -c 'rm -f uv.lock && echo \"Installing dependencies...\" && uv sync --no-install-project && echo \"🎉 Dev Container is ready! Run: make run\"'",
+  "postCreateCommand": "bash -c 'rm -f uv.lock && echo \"Installing Python dependencies...\" && uv sync --no-install-project && echo \"Installing Node.js dependencies...\" && npm install && echo \"🎉 Dev Container is ready! Run: make run\"'",
   // Use 'postStartCommand' to run commands after the container starts
   "postStartCommand": "git config --global --add safe.directory /workspace",
   // Comment out to connect as root instead
