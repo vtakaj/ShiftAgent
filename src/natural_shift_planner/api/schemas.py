@@ -53,3 +53,6 @@ class SolutionResponse(BaseModel):
     assigned_shifts: int | None = None
     unassigned_shifts: int | None = None
     message: str | None = None
+    html_report_url: str | None = Field(
+        None, description="URL to view the schedule as a formatted HTML report"
+    )

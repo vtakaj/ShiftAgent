@@ -127,7 +127,16 @@ async def solve_schedule_sync(
         shift["start_time"] = datetime.fromisoformat(shift["start_time"]).isoformat()
         shift["end_time"] = datetime.fromisoformat(shift["end_time"]).isoformat()
 
-    return await call_api("POST", "/api/shifts/solve-sync", request_data)
+    result = await call_api("POST", "/api/shifts/solve-sync", request_data)
+
+    # Add user-friendly message about HTML report
+    if result.get("html_report_url"):
+        result["html_report_message"] = (
+            f"✨ Schedule optimized! View the formatted HTML report at: "
+            f"http://localhost:8081{result['html_report_url']}"
+        )
+
+    return result
 
 
 async def solve_schedule_async(
@@ -166,7 +175,16 @@ async def get_solve_status(ctx: Context, job_id: str) -> dict[str, Any]:
     Returns:
         Job status and solution (if completed)
     """
-    return await call_api("GET", f"/api/shifts/solve/{job_id}")
+    result = await call_api("GET", f"/api/shifts/solve/{job_id}")
+
+    # Add a user-friendly message about the HTML report if job is completed
+    if result.get("status") == "SOLVING_COMPLETED" and result.get("html_report_url"):
+        result["html_report_message"] = (
+            f"✨ Schedule completed! View the formatted HTML report at: "
+            f"http://localhost:8081{result['html_report_url']}"
+        )
+
+    return result
 
 
 async def analyze_weekly_hours(
@@ -272,3 +290,45 @@ async def update_employee_skills(
         response.raise_for_status()
         result: dict[str, Any] = response.json()
         return result
+
+
+async def get_schedule_html_report(ctx: Context, job_id: str) -> dict[str, Any]:
+    """
+    Get completed schedule as HTML report
+
+    This tool generates a beautiful HTML schedule report that can be viewed in a browser
+    or saved as a file. The report includes visual calendar layout, constraint violations,
+    and employee preferences.
+
+    Args:
+        job_id: ID of the completed optimization job
+
+    Returns:
+        HTML content and metadata for the schedule report
+    """
+    try:
+        # Get HTML content from API
+        url = f"{API_BASE_URL}/api/shifts/solve/{job_id}/html"
+
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            html_content = response.text
+
+            return {
+                "html_content": html_content,
+                "content_type": "text/html",
+                "job_id": job_id,
+                "generated_at": datetime.now().isoformat(),
+                "message": "HTML report generated successfully. You can save this to a file and open in a browser.",
+            }
+
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404:
+            return {"error": "Job not found", "job_id": job_id}
+        elif e.response.status_code == 400:
+            return {"error": "Job not completed yet", "job_id": job_id}
+        else:
+            return {"error": f"API error: {e.response.status_code}", "job_id": job_id}
+    except Exception as e:
+        return {"error": f"Failed to generate HTML report: {str(e)}", "job_id": job_id}

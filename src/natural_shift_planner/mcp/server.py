@@ -11,6 +11,7 @@ from .tools import (
     add_employee_to_job,
     analyze_weekly_hours,
     get_demo_schedule,
+    get_schedule_html_report,
     get_schedule_shifts,
     get_solve_status,
     health_check,
@@ -49,6 +50,9 @@ mcp.tool()(get_schedule_shifts)
 # Register employee management tools
 mcp.tool()(add_employee_to_job)
 mcp.tool()(update_employee_skills)
+
+# Register report generation tools
+mcp.tool()(get_schedule_html_report)
 
 # TODO: Register continuous planning tools when implemented
 # mcp.tool()(swap_shifts)
@@ -93,6 +97,9 @@ async def shift_scheduling_prompt() -> str:
 ### Employee Management (Available Now)
 - add_employee_to_job: Add new employee to completed job with minimal re-optimization
 - update_employee_skills: Update employee skills and re-optimize affected assignments
+
+### Report Generation (Available Now)
+- get_schedule_html_report: Generate beautiful HTML schedule report for viewing in browser
 
 ### Continuous Planning (Coming Soon)
 The following real-time modification features are planned but not yet implemented:

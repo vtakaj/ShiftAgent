@@ -18,6 +18,7 @@ help:
 	@echo "  dev          - Install development dependencies"
 	@echo "  debug        - Run API in debug mode"
 	@echo "  test-api     - Test API endpoints"
+	@echo "  streamlit    - Start Streamlit web UI"
 	@echo "  pulumi-setup - Initialize Pulumi for infrastructure"
 
 # Development environment setup (with error handling)
@@ -122,6 +123,13 @@ mcp:
 test-mcp:
 	@echo "🧪 Testing MCP server..."
 	@echo '{"jsonrpc":"2.0","method":"list_tools","id":1}' | uv run python mcp_server.py
+
+# Start Streamlit web UI
+streamlit:
+	@echo "🌐 Starting Streamlit web UI..."
+	@echo "Make sure the FastAPI server is running (make run)"
+	@echo "Web UI will be available at: http://localhost:8501"
+	uv run streamlit run streamlit_main.py --server.port 8501
 
 # Initialize Pulumi for infrastructure
 pulumi-setup:

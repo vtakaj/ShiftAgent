@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>週間シフト表</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .data-input {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .data-input textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .data-input button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .data-input button:hover {
+            background-color: #357abd;
+        }
+        
+        .legend {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .legend h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        
+        .legend-item {
+            display: inline-block;
+            margin-right: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .legend-color {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+            margin-right: 5px;
+            border: 1px solid #ccc;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        th {
+            background-color: #4a90e2;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .employee-info-cell {
+            background-color: #e8f0fe;
+            text-align: left;
+            padding: 8px;
+            vertical-align: top;
+            width: 200px;
+        }
+        
+        .employee-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .employee-type {
+            color: #666;
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+        
+        .employee-preferences {
+            font-size: 10px;
+            line-height: 1.4;
+            color: #555;
+        }
+        
+        .pref-label {
+            font-weight: bold;
+            color: #444;
+        }
+        
+        .pref-days {
+            color: #e74c3c;
+        }
+        
+        .work-days {
+            color: #27ae60;
+        }
+        
+        .unavailable-dates {
+            color: #c0392b;
+            font-weight: bold;
+        }
+        
+        .shift-cell {
+            position: relative;
+            padding: 4px;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+        
+        .shift-time {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .shift-location {
+            color: #666;
+            font-size: 10px;
+        }
+        
+        .violation-soft {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+        }
+        
+        .violation-hard {
+            background-color: #f8d7da;
+            border: 2px solid #dc3545;
+        }
+        
+        .preferred-off {
+            background-color: #fff3cd;
+        }
+        
+        .preferred-work {
+            background-color: #d4edda;
+        }
+        
+        .unavailable {
+            background-color: #f8d7da;
+        }
+        
+        .total-hours {
+            background-color: #f0f8ff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .violation-marker {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background-color: #dc3545;
+            border-radius: 50%;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        
+        .warning-marker {
+            background-color: #ffc107;
+        }
+        
+        .violation-summary {
+            margin-bottom: 30px;
+        }
+        
+        .summary-card {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .summary-card h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        
+        .info-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            font-size: 14px;
+        }
+        
+        .info-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="scheduleTitle">週間シフト表</h1>
+        
+        <div class="data-input">
+            <h3>シフトデータ入力</h3>
+            <p>solve結果のJSONデータを貼り付けて、「シフト表を生成」ボタンをクリックしてください。</p>
+            <textarea id="jsonInput" placeholder='{"solution": {"employees": [...], "shifts": [...]}}'>
+            </textarea>
+            <button onclick="generateSchedule()">シフト表を生成</button>
+        </div>
+        
+        <div id="scheduleContainer" style="display: none;">
+            <div class="legend">
+                <h3>凡例</h3>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: #d4edda;"></span>
+                    勤務希望日
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: #fff3cd;"></span>
+                    休み希望日（ソフト制約違反）
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: #f8d7da;"></span>
+                    出勤不可日（ハード制約違反）
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: #dc3545;"></span>
+                    重大な制約違反
+                </div>
+            </div>
+            
+            <table id="scheduleTable">
+                <thead>
+                    <tr id="tableHeader">
+                        <th style="width: 200px;">従業員</th>
+                        <th>月曜日</th>
+                        <th>火曜日</th>
+                        <th>水曜日</th>
+                        <th>木曜日</th>
+                        <th>金曜日</th>
+                        <th>土曜日</th>
+                        <th>日曜日</th>
+                        <th style="width: 80px;">週間合計<br>時間</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleBody">
+                </tbody>
+            </table>
+            
+            <div class="violation-summary" id="violationSummary">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dayMapping = {
+            'monday': 0,
+            'tuesday': 1,
+            'wednesday': 2,
+            'thursday': 3,
+            'friday': 4,
+            'saturday': 5,
+            'sunday': 6
+        };
+
+        const dayNames = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日', '日曜日'];
+
+        function getWeekDates(shifts) {
+            // Find the earliest shift date to determine the week
+            const dates = shifts.map(shift => new Date(shift.start_time));
+            const earliestDate = new Date(Math.min(...dates));
+            
+            // Find the Monday of that week
+            const monday = new Date(earliestDate);
+            const dayOfWeek = monday.getDay();
+            const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            monday.setDate(monday.getDate() - daysFromMonday);
+            
+            // Generate all 7 days of the week
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + i);
+                weekDates.push(date);
+            }
+            
+            return weekDates;
+        }
+
+        function formatDate(date) {
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            return `${month}/${day}`;
+        }
+
+        function formatWeekRange(weekDates) {
+            const startDate = weekDates[0];
+            const endDate = weekDates[6];
+            const startYear = startDate.getFullYear();
+            const endYear = endDate.getFullYear();
+            const startMonth = startDate.getMonth() + 1;
+            const startDay = startDate.getDate();
+            const endMonth = endDate.getMonth() + 1;
+            const endDay = endDate.getDate();
+            
+            if (startYear === endYear) {
+                if (startMonth === endMonth) {
+                    return `${startYear}年${startMonth}月${startDay}日〜${endDay}日`;
+                } else {
+                    return `${startYear}年${startMonth}月${startDay}日〜${endMonth}月${endDay}日`;
+                }
+            } else {
+                return `${startYear}年${startMonth}月${startDay}日〜${endYear}年${endMonth}月${endDay}日`;
+            }
+        }
+
+        function formatTime(dateString) {
+            const date = new Date(dateString);
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
+        function calculateHours(startTime, endTime) {
+            const start = new Date(startTime);
+            const end = new Date(endTime);
+            return (end - start) / (1000 * 60 * 60);
+        }
+
+        function getDayOfWeek(dateString) {
+            const date = new Date(dateString);
+            return date.getDay() === 0 ? 6 : date.getDay() - 1;
+        }
+
+        function formatDaysOff(days) {
+            const dayTranslation = {
+                'monday': '月',
+                'tuesday': '火',
+                'wednesday': '水',
+                'thursday': '木',
+                'friday': '金',
+                'saturday': '土',
+                'sunday': '日'
+            };
+            return days.map(day => dayTranslation[day] || day).join('・');
+        }
+
+        function formatUnavailableDates(dates) {
+            return dates.map(date => {
+                const d = new Date(date);
+                return `${d.getMonth() + 1}/${d.getDate()}`;
+            }).join(', ');
+        }
+
+        function checkViolations(employee, shift, dayOfWeek) {
+            const violations = [];
+            const dayName = Object.keys(dayMapping).find(key => dayMapping[key] === dayOfWeek);
+            
+            // Check preferred days off
+            if (employee.preferred_days_off && employee.preferred_days_off.includes(dayName)) {
+                violations.push('preferred_off');
+            }
+            
+            // Check unavailable dates
+            if (employee.unavailable_dates) {
+                const shiftDate = new Date(shift.start_time).toDateString();
+                for (const unavailDate of employee.unavailable_dates) {
+                    if (new Date(unavailDate).toDateString() === shiftDate) {
+                        violations.push('unavailable');
+                    }
+                }
+            }
+            
+            // Check skill requirements
+            const hasRequiredSkills = shift.required_skills.every(skill => 
+                employee.skills.includes(skill)
+            );
+            if (!hasRequiredSkills) {
+                violations.push('skill_violation');
+            }
+            
+            return violations;
+        }
+
+        function generateSchedule() {
+            try {
+                const jsonInput = document.getElementById('jsonInput').value;
+                const data = JSON.parse(jsonInput);
+                const solution = data.solution || data;
+                
+                if (!solution.employees || !solution.shifts) {
+                    alert('JSONデータが正しくありません。employeesとshiftsが必要です。');
+                    return;
+                }
+                
+                // Get the week dates from the shift data
+                const weekDates = getWeekDates(solution.shifts);
+                
+                // Update the title with the actual date range
+                const titleElement = document.getElementById('scheduleTitle');
+                titleElement.textContent = `週間シフト表（${formatWeekRange(weekDates)}）`;
+                
+                // Update the table header with actual dates
+                const headerRow = document.getElementById('tableHeader');
+                const dayHeaders = headerRow.querySelectorAll('th');
+                for (let i = 1; i <= 7; i++) {
+                    if (dayHeaders[i]) {
+                        const dayName = dayNames[i - 1];
+                        const dateStr = formatDate(weekDates[i - 1]);
+                        dayHeaders[i].innerHTML = `${dayName}<br>${dateStr}`;
+                    }
+                }
+                
+                // Create employee lookup
+                const employeeMap = {};
+                solution.employees.forEach(emp => {
+                    employeeMap[emp.id] = emp;
+                });
+                
+                // Organize shifts by employee and day
+                const scheduleMatrix = {};
+                solution.employees.forEach(emp => {
+                    scheduleMatrix[emp.id] = Array(7).fill(null).map(() => []);
+                });
+                
+                solution.shifts.forEach(shift => {
+                    if (shift.employee) {
+                        const dayOfWeek = getDayOfWeek(shift.start_time);
+                        scheduleMatrix[shift.employee.id][dayOfWeek].push(shift);
+                    }
+                });
+                
+                // Generate table rows
+                const tbody = document.getElementById('scheduleBody');
+                tbody.innerHTML = '';
+                
+                const violationDetails = {
+                    hard: [],
+                    soft: [],
+                    good: []
+                };
+                
+                solution.employees.forEach(employee => {
+                    const row = document.createElement('tr');
+                    
+                    // Employee info cell
+                    const infoCell = document.createElement('td');
+                    infoCell.className = 'employee-info-cell';
+                    infoCell.innerHTML = `
+                        <div class="employee-name">${employee.name}</div>
+                        <div class="employee-type">${employee.skills.includes('正社員') ? '正社員' : 'パート'}</div>
+                        <div class="employee-preferences">
+                            <span class="pref-label">休み希望:</span> 
+                            <span class="pref-days">${employee.preferred_days_off && employee.preferred_days_off.length > 0 ? formatDaysOff(employee.preferred_days_off) : 'なし'}</span><br>
+                            <span class="pref-label">勤務希望:</span> 
+                            <span class="work-days">${employee.preferred_work_days && employee.preferred_work_days.length > 0 ? formatDaysOff(employee.preferred_work_days) : 'なし'}</span><br>
+                            ${employee.unavailable_dates && employee.unavailable_dates.length > 0 ? 
+                                `<span class="pref-label">出勤不可:</span> <span class="unavailable-dates">${formatUnavailableDates(employee.unavailable_dates)}</span><br>` : ''}
+                            <span class="pref-label">スキル:</span> ${employee.skills.filter(s => s !== '正社員' && s !== 'パート').join('、')}
+                        </div>
+                    `;
+                    row.appendChild(infoCell);
+                    
+                    // Daily shift cells
+                    let totalHours = 0;
+                    for (let day = 0; day < 7; day++) {
+                        const cell = document.createElement('td');
+                        cell.className = 'shift-cell';
+                        
+                        const shifts = scheduleMatrix[employee.id][day];
+                        
+                        if (shifts.length > 0) {
+                            let cellContent = '';
+                            let cellClasses = ['shift-cell'];
+                            let hasViolation = false;
+                            let violationType = '';
+                            
+                            shifts.forEach(shift => {
+                                const violations = checkViolations(employee, shift, day);
+                                const hours = calculateHours(shift.start_time, shift.end_time);
+                                totalHours += hours;
+                                
+                                cellContent += `
+                                    <div class="shift-time">${formatTime(shift.start_time)}-${formatTime(shift.end_time)}</div>
+                                    <div class="shift-location">${shift.location}</div>
+                                `;
+                                
+                                if (violations.includes('skill_violation')) {
+                                    cellClasses.push('violation-hard');
+                                    hasViolation = true;
+                                    violationType = 'skill';
+                                    violationDetails.hard.push({
+                                        employee: employee.name,
+                                        day: dayNames[day],
+                                        type: 'スキル不足',
+                                        shift: shift.location
+                                    });
+                                } else if (violations.includes('unavailable')) {
+                                    cellClasses.push('unavailable');
+                                    hasViolation = true;
+                                    violationType = 'unavailable';
+                                } else if (violations.includes('preferred_off')) {
+                                    cellClasses.push('violation-soft');
+                                    hasViolation = true;
+                                    violationType = 'preferred_off';
+                                    violationDetails.soft.push({
+                                        employee: employee.name,
+                                        day: dayNames[day],
+                                        type: '休み希望日に勤務'
+                                    });
+                                }
+                            });
+                            
+                            // Check for preferred work days
+                            const dayName = Object.keys(dayMapping).find(key => dayMapping[key] === day);
+                            if (employee.preferred_work_days && employee.preferred_work_days.includes(dayName) && !hasViolation) {
+                                cellClasses.push('preferred-work');
+                            }
+                            
+                            if (hasViolation) {
+                                if (violationType === 'skill') {
+                                    cellContent += '<span class="violation-marker" title="スキル不足"></span>';
+                                } else if (violationType === 'preferred_off') {
+                                    cellContent += '<span class="violation-marker warning-marker" title="休み希望日"></span>';
+                                }
+                            }
+                            
+                            cell.className = cellClasses.join(' ');
+                            cell.innerHTML = cellContent;
+                        } else {
+                            // Rest day
+                            const dayName = Object.keys(dayMapping).find(key => dayMapping[key] === day);
+                            let restText = '休み';
+                            let cellClasses = ['shift-cell'];
+                            
+                            // Check if this is a preferred day off
+                            if (employee.preferred_days_off && employee.preferred_days_off.includes(dayName)) {
+                                cellClasses.push('preferred-off');
+                                restText += '<br><small>(休み希望)</small>';
+                                violationDetails.good.push({
+                                    employee: employee.name,
+                                    type: `${dayNames[day]}の休み希望が守られている`
+                                });
+                            }
+                            
+                            // Check if this is an unavailable date
+                            const currentDate = weekDates[day];
+                            const isUnavailable = employee.unavailable_dates && employee.unavailable_dates.some(date => {
+                                const unavailDate = new Date(date);
+                                return unavailDate.toDateString() === currentDate.toDateString();
+                            });
+                            
+                            if (isUnavailable) {
+                                cellClasses.push('unavailable');
+                                restText = '休み<br><small>(出勤不可)</small>';
+                                violationDetails.good.push({
+                                    employee: employee.name,
+                                    type: `${dayNames[day]}の出勤不可が守られている`
+                                });
+                            }
+                            
+                            cell.className = cellClasses.join(' ');
+                            cell.innerHTML = restText;
+                        }
+                        
+                        row.appendChild(cell);
+                    }
+                    
+                    // Total hours cell
+                    const totalCell = document.createElement('td');
+                    totalCell.className = 'total-hours';
+                    totalCell.textContent = `${totalHours}時間`;
+                    row.appendChild(totalCell);
+                    
+                    tbody.appendChild(row);
+                });
+                
+                // Generate violation summary
+                const summaryDiv = document.getElementById('violationSummary');
+                summaryDiv.innerHTML = '<h2>制約違反の詳細</h2>';
+                
+                if (violationDetails.hard.length > 0) {
+                    summaryDiv.innerHTML += `
+                        <div class="summary-card">
+                            <h4>ハード制約違反（重大）</h4>
+                            <div class="info-row">
+                                ${violationDetails.hard.map(v => `
+                                    <div class="info-item">
+                                        <span class="info-label">${v.employee}（${v.day}）:</span>
+                                        <span class="violation-marker"></span> ${v.type} - ${v.shift}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (violationDetails.soft.length > 0) {
+                    summaryDiv.innerHTML += `
+                        <div class="summary-card">
+                            <h4>ソフト制約違反（警告）</h4>
+                            <div class="info-row">
+                                ${violationDetails.soft.map(v => `
+                                    <div class="info-item">
+                                        <span class="info-label">${v.employee}:</span>
+                                        <span class="violation-marker warning-marker"></span> ${v.day}は${v.type}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (violationDetails.good.length > 0) {
+                    const uniqueGood = [...new Set(violationDetails.good.map(g => `${g.employee}: ${g.type}`))];
+                    summaryDiv.innerHTML += `
+                        <div class="summary-card">
+                            <h4>制約遵守状況（良好）</h4>
+                            <div class="info-row">
+                                ${uniqueGood.map(g => `
+                                    <div class="info-item">
+                                        <span class="info-label">${g.split(':')[0]}:</span>
+                                        ✓ ${g.split(':')[1]}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Show the schedule
+                document.getElementById('scheduleContainer').style.display = 'block';
+                
+            } catch (error) {
+                alert('エラーが発生しました: ' + error.message);
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>

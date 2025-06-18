@@ -53,7 +53,10 @@
       "Bash(PYTHONPATH=src uv run pytest tests/test_emergency_staff.py::test_convert_to_emergency_mode -v)",
       "Bash(PYTHONPATH=src uv run pytest tests/test_emergency_staff.py::test_add_employee_to_completed_job -v)",
       "Bash(PYTHONPATH=src uv run pytest tests/test_emergency_staff.py::test_add_employee_to_completed_job_logic_only -v)",
-      "Bash(PYTHONPATH=src uv run pytest tests/test_emergency_staff.py::test_add_employee_to_invalid_job -v)"
+      "Bash(PYTHONPATH=src uv run pytest tests/test_emergency_staff.py::test_add_employee_to_invalid_job -v)",
+      "Bash(git tag:*)",
+      "Bash(git config:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }
