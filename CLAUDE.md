@@ -36,6 +36,9 @@ make run-mcp
 
 # Start in debug mode with verbose logging
 make debug
+
+# Start Streamlit web UI (requires API to be running)
+make streamlit
 ```
 
 ### Testing

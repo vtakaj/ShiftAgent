@@ -100,6 +100,7 @@ async def get_solution(job_id: str):
             response.score = str(solution.score)
             response.assigned_shifts = solution.get_assigned_shift_count()
             response.unassigned_shifts = solution.get_unassigned_shift_count()
+            response.html_report_url = f"/api/shifts/solve/{job_id}/html"
         elif job["status"] == "SOLVING_FAILED":
             response.message = job.get("error", "Unknown error occurred")
 
@@ -148,7 +149,20 @@ async def solve_shifts_sync(request: ShiftScheduleRequest):
                 f"Soft: {solution.score.soft_score}"
             )
 
-        return convert_domain_to_response(solution)
+        # For sync solve, we'll need to create a temporary job ID for HTML report
+        temp_job_id = str(uuid.uuid4())
+        with job_lock:
+            jobs[temp_job_id] = {
+                "status": "SOLVING_COMPLETED",
+                "created_at": datetime.now(),
+                "solution": solution,
+                "temporary": True,  # Mark as temporary for cleanup
+            }
+            _sync_job_to_store(temp_job_id)
+
+        result = convert_domain_to_response(solution)
+        result["html_report_url"] = f"/api/shifts/solve/{temp_job_id}/html"
+        return result
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
@@ -336,6 +350,7 @@ async def add_employee_to_job(job_id: str, employee: EmployeeRequest):
                 1 for s in solution.shifts if s.employee is not None
             ),
             "total_shifts": len(solution.shifts),
+            "html_report_url": f"/api/shifts/solve/{job_id}/html",
         }
     else:
         # Get error details from job
@@ -383,6 +398,7 @@ async def update_employee_skills_api(job_id: str, employee_id: str, skills: list
                     1 for s in solution.shifts if s.employee is not None
                 ),
                 "total_shifts": len(solution.shifts),
+                "html_report_url": f"/api/shifts/solve/{job_id}/html",
             }
         else:
             raise HTTPException(
@@ -397,3 +413,126 @@ async def update_employee_skills_api(job_id: str, employee_id: str, skills: list
                 error_msg = "Job not found"
 
         raise HTTPException(status_code=400, detail=error_msg)
+
+
+# HTML Report Generation
+@app.get("/api/shifts/solve/{job_id}/html")
+async def get_solution_html(job_id: str):
+    """Get optimization result as HTML report"""
+    from fastapi.responses import HTMLResponse
+
+    with job_lock:
+        if job_id not in jobs:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        job = jobs[job_id]
+
+        if job["status"] != "SOLVING_COMPLETED":
+            raise HTTPException(status_code=400, detail="Job not completed")
+
+        solution = job["solution"]
+        solution_data = convert_domain_to_response(solution)
+
+        # Generate HTML report with embedded data
+        html_content = generate_html_report_with_data(solution_data)
+
+        return HTMLResponse(content=html_content)
+
+
+def generate_html_report_with_data(solution_data):
+    """Generate HTML report with embedded solution data"""
+    import json
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    # Read the template file from project directory
+    import os
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    template_path = os.path.join(current_dir, "shift-schedule-template.html")
+    try:
+        with open(template_path, encoding="utf-8") as f:
+            html_template = f.read()
+        logger.info(f"Successfully loaded template from {template_path}, size: {len(html_template)} chars")
+    except FileNotFoundError as e:
+        logger.error(f"Template file not found at {template_path}: {e}")
+        # Fallback to simple HTML if template not found
+        return generate_simple_html_report(solution_data)
+    except Exception as e:
+        logger.error(f"Error reading template file: {e}")
+        return generate_simple_html_report(solution_data)
+
+    # Prepare solution data with proper structure
+    solution_json = json.dumps({"solution": solution_data}, ensure_ascii=False, indent=2)
+
+    # Check if the replacement pattern exists  
+    search_pattern = 'placeholder=\'{"solution": {"employees": [...], "shifts": [...]}}\''
+    if search_pattern not in html_template:
+        logger.error(f"Search pattern not found in template. Looking for: {search_pattern}")
+        # Find actual pattern for debugging
+        import re
+        patterns = re.findall(r'placeholder=\'[^\']*\'>', html_template)
+        logger.error(f"Found patterns: {patterns}")
+        return generate_simple_html_report(solution_data)
+
+    # Replace the textarea content with actual data
+    replacement = f'placeholder=\'{{"solution": {{"employees": [...], "shifts": [...]}}}}\' style="display:none;">{solution_json}</textarea>\n            <button onclick="generateSchedule()">シフト表を生成</button>'
+    html_content = html_template.replace(search_pattern + '>\n            </textarea>', replacement)
+
+    # Add auto-generation script that runs after page loads
+    auto_script = """
+    <script>
+    window.addEventListener('load', function() {
+        // Hide the input section since we're auto-generating
+        const inputSection = document.querySelector('.data-input');
+        if (inputSection) {
+            inputSection.style.display = 'none';
+        }
+        
+        // Small delay to ensure all elements are loaded
+        setTimeout(function() {
+            // Auto-generate the schedule
+            if (typeof generateSchedule === 'function') {
+                generateSchedule();
+            }
+        }, 100);
+    });
+    </script>
+    """
+
+    html_content = html_content.replace("</body>", auto_script + "</body>")
+    
+    logger.info(f"Generated HTML with template, final size: {len(html_content)} chars")
+    return html_content
+
+
+def generate_simple_html_report(solution_data):
+    """Generate a simple HTML report if template is not available"""
+    import json
+
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>シフト表</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }}
+            .container {{ max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }}
+            h1 {{ color: #333; text-align: center; }}
+            .data {{ background: #f8f9fa; padding: 15px; border-radius: 6px; overflow-x: auto; }}
+            pre {{ font-size: 12px; line-height: 1.4; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>シフト表レポート</h1>
+            <div class="data">
+                <pre>{json.dumps(solution_data, ensure_ascii=False, indent=2)}</pre>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html
