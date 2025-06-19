@@ -28,6 +28,11 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/shift-scheduler
 
+permissions:
+  contents: read
+  packages: write
+  pull-requests: read
+
 jobs:
   test:
     name: Run Tests
@@ -55,7 +60,7 @@ jobs:
       - name: Run linting
         run: |
           uv run ruff check src/
-          uv run mypy src/
+          PYTHONPATH=src uv run mypy -p natural_shift_planner
 
   build:
     name: Build and Push Docker Image

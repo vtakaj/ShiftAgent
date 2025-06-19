@@ -43,7 +43,21 @@
       "Bash(touch:*)",
       "Bash(git merge:*)",
       "Bash(sed:*)",
-      "Bash(git cherry-pick:*)"
+      "Bash(git cherry-pick:*)",
+      "Bash(PYTHONPATH=src uv run mypy -p natural_shift_planner)",
+      "Bash(PYTHONPATH=src uv run pytest tests/test_continuous_planning.py -v)",
+      "Bash(PYTHONPATH=src uv run pytest tests/ -v --tb=short)",
+      "Bash(PYTHONPATH=src uv run pytest tests/test_emergency_staff.py -v)",
+      "Bash(PYTHONPATH=src uv run pytest tests/test_emergency_staff.py::test_add_employee_problem_fact_change_creation -v)",
+      "Bash(PYTHONPATH=src uv run mypy -p natural_shift_planner --show-error-codes)",
+      "Bash(PYTHONPATH=src uv run pytest tests/test_emergency_staff.py::test_convert_to_emergency_mode -v)",
+      "Bash(PYTHONPATH=src uv run pytest tests/test_emergency_staff.py::test_add_employee_to_completed_job -v)",
+      "Bash(PYTHONPATH=src uv run pytest tests/test_emergency_staff.py::test_add_employee_to_completed_job_logic_only -v)",
+      "Bash(PYTHONPATH=src uv run pytest tests/test_emergency_staff.py::test_add_employee_to_invalid_job -v)",
+      "Bash(git tag:*)",
+      "Bash(git config:*)",
+      "Bash(cat:*)",
+      "Bash(npm install)"
     ],
     "deny": []
   }

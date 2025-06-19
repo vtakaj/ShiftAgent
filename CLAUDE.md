@@ -10,7 +10,7 @@ This is a Shift Scheduler API built with FastAPI and Timefold Solver (AI optimiz
 
 ### Development Setup
 ```bash
-# Complete setup - installs all Python dependencies including FastMCP (run this first!)
+# Complete setup - installs all Python dependencies including FastMCP and Bun dependencies (run this first!)
 make setup
 
 # Initialize Pulumi for infrastructure (if working with infrastructure)
@@ -39,6 +39,9 @@ make run-mcp
 
 # Start in debug mode with verbose logging
 make debug
+
+# Start Streamlit web UI (requires API to be running)
+make streamlit
 ```
 
 ### Testing
@@ -135,6 +138,23 @@ The solver optimizes using HardMediumSoftScore:
 - Medium constraints are important but can be violated (8-hour rest periods)
 - Soft constraints are optimization goals (fairness, target hours)
 
+### Date Format Specification
+
+**Employee Unavailable Dates**:
+- **Format**: ISO 8601 (`YYYY-MM-DDTHH:MM:SS` or `YYYY-MM-DD`)
+- **Examples**: 
+  - `"2024-01-15T00:00:00"` (with time)
+  - `"2024-01-15"` (date only)
+  - `"2024-12-25T09:30:00"` (specific time)
+- **Behavior**: Time component is optional and normalized to date-only for comparison
+- **Use Cases**: Employee vacation days, sick leave, personal unavailability
+
+**Shift Times**:
+- **Format**: ISO 8601 with time (`YYYY-MM-DDTHH:MM:SS`)
+- **Examples**: 
+  - `"2024-01-15T09:00:00"` (9:00 AM start)
+  - `"2024-01-15T17:30:00"` (5:30 PM end)
+
 ### API Endpoints
 
 #### Basic Operations
@@ -146,18 +166,9 @@ The solver optimizes using HardMediumSoftScore:
 - `POST /api/shifts/analyze-weekly`: Analyze weekly work hours
 - `GET /api/shifts/test-weekly`: Test weekly constraint calculations
 
-#### Continuous Planning Operations
-- `POST /api/shifts/{job_id}/swap`: Swap employees between two shifts
-- `POST /api/shifts/{job_id}/replace`: Find replacement for unavailable employee
-- `POST /api/shifts/{job_id}/pin`: Pin/unpin shifts to prevent changes
-- `POST /api/shifts/{job_id}/reassign`: Reassign shift to specific employee
-- `POST /api/shifts/{job_id}/restart`: Restart completed job for modifications
-
 #### Employee Management (New Feature)
-- `POST /api/shifts/{job_id}/add-employee`: Add single employee to active job
-- `POST /api/shifts/{job_id}/add-employees`: Add multiple employees in batch
-- `DELETE /api/shifts/{job_id}/remove-employee/{employee_id}`: Remove employee from job
-- `POST /api/shifts/{job_id}/add-employee-assign`: Add employee and assign to shift
+- `POST /api/shifts/{job_id}/add-employee`: Add single employee to completed job
+- `PATCH /api/shifts/{job_id}/employee/{employee_id}/skills`: Update employee skills and re-optimize
 
 #### Job Management
 - `GET /api/jobs`: List all jobs with status
@@ -168,9 +179,10 @@ The solver optimizes using HardMediumSoftScore:
 ## Development Notes
 
 ### Dependencies
-- Python 3.11+ required
+- Python 3.11+ required (3.13+ not supported by Timefold)
 - Java 17 required (for Timefold Solver)
-- Uses `uv` for dependency management
+- Uses `uv` for Python dependency management
+- Uses `bun` for Node.js dependency management (Husky, commitlint)
 - FastAPI for web framework
 - Timefold Solver for constraint optimization
 
@@ -184,6 +196,7 @@ uv run pytest test_models.py::test_name -v
 1. If `uv sync` fails, delete `uv.lock` and run `make setup`
 2. Java environment must be properly configured (JAVA_HOME)
 3. Port 8081 must be available for the server
+4. If `bun install` fails, ensure bun is installed: `curl -fsSL https://bun.sh/install | bash`
 
 ### API Testing
 The `api-test.http` file contains REST Client requests for testing endpoints. Use with VS Code REST Client extension or similar tools.
@@ -248,20 +261,12 @@ make mcp
 - `analyze_weekly_hours`: Analyze weekly work hours
 - `test_weekly_constraints`: Test weekly constraints with demo data
 
-#### Continuous Planning (Real-time Modifications)
-- `swap_shifts`: Swap employees between two shifts during optimization
-- `find_shift_replacement`: Find replacement when employee becomes unavailable
-- `pin_shifts`: Pin/unpin shifts to prevent changes during optimization
-- `reassign_shift`: Reassign shift to specific employee or unassign
-- `restart_job`: Restart a completed job to enable further modifications
+#### Employee Management (Available Now)
+- `add_employee_to_job`: Add single employee to completed job with minimal re-optimization
+- `update_employee_skills`: Update employee skills and re-optimize affected assignments
 
-#### Employee Management (New Feature)
-- `add_employee_to_job`: Add single employee to active solving job
-- `add_employees_batch_to_job`: Add multiple employees at once
-- `remove_employee_from_job`: Remove employee from job (unassigns their shifts)
-- `add_employee_and_assign_to_shift`: Add employee and assign to specific shift
-
-**Note**: Continuous planning and employee management operations require an active optimization job. If a job has completed, use `restart_job` first to re-enable modifications. The MCP tools automatically handle job restart when needed.
+#### Schedule Inspection
+- `get_schedule_shifts`: Get all shifts from a completed schedule for inspection
 
 #### Report Generation
 - `get_demo_schedule_html`: Get demo schedule as formatted HTML report

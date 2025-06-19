@@ -50,7 +50,7 @@ class EmployeeRequest(BaseModel):
     )
     unavailable_dates: list[str] = Field(
         default_factory=list,
-        description="Specific dates when employee is unavailable (ISO format)",
+        description="Specific dates when employee is unavailable. Format: ISO 8601 (YYYY-MM-DDTHH:MM:SS or YYYY-MM-DD). Examples: '2024-01-15T00:00:00', '2024-01-15'. Time component is optional and will be normalized to date-only for comparison.",
     )
 
 
@@ -89,40 +89,8 @@ async def call_api(
             raise ValueError(f"Unsupported HTTP method: {method}")
 
         response.raise_for_status()
-        return response.json()
-
-
-async def call_continuous_planning_api(
-    endpoint: str,
-    data: dict[str, Any],
-    timeout: float = 120.0,
-) -> dict[str, Any]:
-    """
-    Make a continuous planning API call with automatic job restart if needed
-    """
-    try:
-        return await call_api("POST", endpoint, data, timeout)
-    except httpx.HTTPStatusError as e:
-        if e.response.status_code == 400 and "has already completed" in e.response.text:
-            # Extract job_id from endpoint
-            job_id = endpoint.split("/")[3]  # /api/shifts/{job_id}/operation
-
-            # Try to restart the job
-            try:
-                await call_api("POST", f"/api/shifts/{job_id}/restart")
-                # Wait a moment for the job to restart
-                import asyncio
-
-                await asyncio.sleep(1)
-
-                # Retry the original operation
-                return await call_api("POST", endpoint, data, timeout)
-            except Exception as restart_error:
-                raise Exception(
-                    f"Failed to restart job {job_id}: {restart_error}"
-                ) from e
-        else:
-            raise
+        result: dict[str, Any] = response.json()
+        return result
 
 
 # Tool functions
@@ -159,7 +127,16 @@ async def solve_schedule_sync(
         shift["start_time"] = datetime.fromisoformat(shift["start_time"]).isoformat()
         shift["end_time"] = datetime.fromisoformat(shift["end_time"]).isoformat()
 
-    return await call_api("POST", "/api/shifts/solve-sync", request_data)
+    result = await call_api("POST", "/api/shifts/solve-sync", request_data)
+
+    # Add user-friendly message about HTML report
+    if result.get("html_report_url"):
+        result["html_report_message"] = (
+            f"✨ Schedule optimized! View the formatted HTML report at: "
+            f"http://localhost:8081{result['html_report_url']}"
+        )
+
+    return result
 
 
 async def solve_schedule_async(
@@ -198,7 +175,16 @@ async def get_solve_status(ctx: Context, job_id: str) -> dict[str, Any]:
     Returns:
         Job status and solution (if completed)
     """
-    return await call_api("GET", f"/api/shifts/solve/{job_id}")
+    result = await call_api("GET", f"/api/shifts/solve/{job_id}")
+
+    # Add a user-friendly message about the HTML report if job is completed
+    if result.get("status") == "SOLVING_COMPLETED" and result.get("html_report_url"):
+        result["html_report_message"] = (
+            f"✨ Schedule completed! View the formatted HTML report at: "
+            f"http://localhost:8081{result['html_report_url']}"
+        )
+
+    return result
 
 
 async def analyze_weekly_hours(
@@ -245,290 +231,104 @@ async def get_schedule_shifts(ctx: Context, job_id: str) -> dict[str, Any]:
     return await call_api("GET", f"/api/shifts/solve/{job_id}")
 
 
-# Continuous Planning tools
-class ShiftSwapRequest(BaseModel):
-    """Request to swap employees between two shifts"""
-
-    shift1_id: str = Field(..., description="ID of the first shift")
-    shift2_id: str = Field(..., description="ID of the second shift")
-
-
-class ShiftReplacementRequest(BaseModel):
-    """Request to find replacement for a shift"""
-
-    shift_id: str = Field(..., description="ID of the shift needing replacement")
-    unavailable_employee_id: str = Field(
-        ..., description="ID of the employee who cannot work"
-    )
-    excluded_employee_ids: list[str] = Field(
-        default_factory=list, description="Additional employees to exclude"
-    )
-
-
-class ShiftPinRequest(BaseModel):
-    """Request to pin/unpin shifts for continuous planning"""
-
-    shift_ids: list[str] = Field(..., min_items=1, description="Shift IDs to pin/unpin")
-    action: str = Field(..., description="Pin or unpin action", pattern="^(pin|unpin)$")
-
-
-class ShiftReassignRequest(BaseModel):
-    """Request to reassign a shift to a specific employee"""
-
-    shift_id: str = Field(..., description="ID of the shift to reassign")
-    new_employee_id: str | None = Field(
-        None, description="ID of new employee (None to unassign)"
-    )
-
-
-async def swap_shifts(
-    ctx: Context, job_id: str, shift1_id: str, shift2_id: str
+# Employee Management Tools
+async def add_employee_to_job(
+    ctx: Context, job_id: str, employee: EmployeeRequest
 ) -> dict[str, Any]:
     """
-    Swap employees between two shifts during continuous planning
+    Add a new employee to a completed job and re-optimize with minimal changes
+
+    This feature adds an employee to an already solved schedule and re-optimizes
+    only the necessary parts, preserving existing valid assignments.
 
     Args:
-        job_id: ID of the active optimization job
-        shift1_id: ID of the first shift
-        shift2_id: ID of the second shift
+        job_id: ID of the completed optimization job
+        employee: Employee details including skills and preferences
 
     Returns:
-        Success status and details of the swap operation
+        Success message with updated job status and statistics
     """
-    request_data = {"shift1_id": shift1_id, "shift2_id": shift2_id}
-    return await call_continuous_planning_api(
-        f"/api/shifts/{job_id}/swap", request_data
-    )
+    employee_data = employee.model_dump()
+
+    # Ensure dates are in ISO format
+    if employee_data.get("unavailable_dates"):
+        employee_data["unavailable_dates"] = [
+            datetime.fromisoformat(date).isoformat()
+            if isinstance(date, str)
+            else date.isoformat()
+            for date in employee_data["unavailable_dates"]
+        ]
+
+    return await call_api("POST", f"/api/shifts/{job_id}/add-employee", employee_data)
 
 
-async def find_shift_replacement(
-    ctx: Context,
-    job_id: str,
-    shift_id: str,
-    unavailable_employee_id: str,
-    excluded_employee_ids: list[str] | None = None,
+async def update_employee_skills(
+    ctx: Context, job_id: str, employee_id: str, skills: None | str | list[str]
 ) -> dict[str, Any]:
     """
-    Find replacement for a shift when an employee becomes unavailable
+    Update an employee's skills and re-optimize affected assignments
+
+    This feature updates the skills of an employee in a completed job and
+    re-optimizes only the shifts that might be affected by the skill change.
 
     Args:
-        job_id: ID of the active optimization job
-        shift_id: ID of the shift needing replacement
-        unavailable_employee_id: ID of the employee who cannot work
-        excluded_employee_ids: Additional employees to exclude from consideration
+        job_id: ID of the completed optimization job
+        employee_id: ID of the employee to update
+        skills: New skills for the employee (can be a list or JSON string)
 
     Returns:
-        Success status and replacement details
+        Success message with skill update details and statistics
     """
-    request_data = {
-        "shift_id": shift_id,
-        "unavailable_employee_id": unavailable_employee_id,
-        "excluded_employee_ids": excluded_employee_ids or [],
-    }
-    return await call_continuous_planning_api(
-        f"/api/shifts/{job_id}/replace", request_data
-    )
+    # Parse skills parameter to ensure it's a list
+    parsed_skills = parse_list_param(skills)
+
+    # Make direct PATCH request with list body
+    url = f"{API_BASE_URL}/api/shifts/{job_id}/employee/{employee_id}/skills"
+
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        response = await client.patch(url, json=parsed_skills)
+        response.raise_for_status()
+        result: dict[str, Any] = response.json()
+        return result
 
 
-async def pin_shifts(
-    ctx: Context, job_id: str, shift_ids: list[str], action: str = "pin"
-) -> dict[str, Any]:
+async def get_schedule_html_report(ctx: Context, job_id: str) -> dict[str, Any]:
     """
-    Pin or unpin shifts to prevent changes during optimization
+    Get completed schedule as HTML report
 
-    Args:
-        job_id: ID of the active optimization job
-        shift_ids: List of shift IDs to pin/unpin
-        action: Either "pin" or "unpin"
-
-    Returns:
-        Success status and details of the pin operation
-    """
-    if action not in ["pin", "unpin"]:
-        raise ValueError("Action must be 'pin' or 'unpin'")
-
-    request_data = {"shift_ids": shift_ids, "action": action}
-    return await call_continuous_planning_api(f"/api/shifts/{job_id}/pin", request_data)
-
-
-async def reassign_shift(
-    ctx: Context, job_id: str, shift_id: str, new_employee_id: str | None = None
-) -> dict[str, Any]:
-    """
-    Reassign a shift to a specific employee or unassign it
-
-    Args:
-        job_id: ID of the active optimization job
-        shift_id: ID of the shift to reassign
-        new_employee_id: ID of new employee (None to unassign)
-
-    Returns:
-        Success status and reassignment details
-    """
-    request_data = {"shift_id": shift_id, "new_employee_id": new_employee_id}
-    return await call_continuous_planning_api(
-        f"/api/shifts/{job_id}/reassign", request_data
-    )
-
-
-async def restart_job(ctx: Context, job_id: str) -> dict[str, Any]:
-    """
-    Restart a completed job to enable continuous planning modifications
+    This tool generates a beautiful HTML schedule report that can be viewed in a browser
+    or saved as a file. The report includes visual calendar layout, constraint violations,
+    and employee preferences.
 
     Args:
         job_id: ID of the completed optimization job
 
     Returns:
-        Success status and new job status
+        HTML content and metadata for the schedule report
     """
-    return await call_api("POST", f"/api/shifts/{job_id}/restart")
+    try:
+        # Get HTML content from API
+        url = f"{API_BASE_URL}/api/shifts/solve/{job_id}/html"
 
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            html_content = response.text
 
-# Employee Management tools
-class AddEmployeeRequest(BaseModel):
-    """Request to add a single employee"""
+            return {
+                "html_content": html_content,
+                "content_type": "text/html",
+                "job_id": job_id,
+                "generated_at": datetime.now().isoformat(),
+                "message": "HTML report generated successfully. You can save this to a file and open in a browser.",
+            }
 
-    id: str = Field(..., description="Unique employee ID")
-    name: str = Field(..., description="Employee name")
-    skills: list[str] = Field(..., min_items=1, description="Employee skills")
-    preferred_days_off: list[str] = Field(
-        default_factory=list, description="Days employee prefers not to work"
-    )
-    preferred_work_days: list[str] = Field(
-        default_factory=list, description="Days employee prefers to work"
-    )
-    unavailable_dates: list[str] = Field(
-        default_factory=list,
-        description="Specific dates when employee is unavailable (ISO format)",
-    )
-
-
-class AddEmployeesBatchRequest(BaseModel):
-    """Request to add multiple employees"""
-
-    employees: list[AddEmployeeRequest] = Field(
-        ..., min_items=1, description="List of employees to add"
-    )
-
-
-class AddEmployeeAndAssignRequest(BaseModel):
-    """Request to add employee and assign to shift"""
-
-    employee: AddEmployeeRequest = Field(..., description="Employee to add")
-    shift_id: str = Field(..., description="ID of shift to assign employee to")
-
-
-async def add_employee_to_job(
-    ctx: Context,
-    job_id: str,
-    employee_id: str,
-    name: str,
-    skills: list[str],
-    preferred_days_off: list[str] | None = None,
-    preferred_work_days: list[str] | None = None,
-    unavailable_dates: list[str] | None = None,
-) -> dict[str, Any]:
-    """
-    Add a new employee to an active solving job
-
-    Args:
-        job_id: ID of the active optimization job
-        employee_id: Unique employee ID
-        name: Employee name
-        skills: List of employee skills
-        preferred_days_off: Days employee prefers not to work
-        preferred_work_days: Days employee prefers to work
-        unavailable_dates: Specific dates when employee is unavailable (ISO format)
-
-    Returns:
-        Success status and employee addition details
-    """
-    request_data = {
-        "id": employee_id,
-        "name": name,
-        "skills": skills,
-        "preferred_days_off": parse_list_param(preferred_days_off),
-        "preferred_work_days": parse_list_param(preferred_work_days),
-        "unavailable_dates": parse_list_param(unavailable_dates),
-    }
-    return await call_continuous_planning_api(
-        f"/api/shifts/{job_id}/add-employee", request_data
-    )
-
-
-async def add_employees_batch_to_job(
-    ctx: Context, job_id: str, employees: list[AddEmployeeRequest]
-) -> dict[str, Any]:
-    """
-    Add multiple employees to an active solving job
-
-    Args:
-        job_id: ID of the active optimization job
-        employees: List of employees to add
-
-    Returns:
-        Success status and batch addition details
-    """
-    request_data = {"employees": [emp.model_dump() for emp in employees]}
-    return await call_continuous_planning_api(
-        f"/api/shifts/{job_id}/add-employees", request_data
-    )
-
-
-async def remove_employee_from_job(
-    ctx: Context, job_id: str, employee_id: str
-) -> dict[str, Any]:
-    """
-    Remove an employee from an active solving job
-
-    Args:
-        job_id: ID of the active optimization job
-        employee_id: ID of the employee to remove
-
-    Returns:
-        Success status and removal details (any assigned shifts will be unassigned)
-    """
-    return await call_api(
-        "DELETE", f"/api/shifts/{job_id}/remove-employee/{employee_id}"
-    )
-
-
-async def add_employee_and_assign_to_shift(
-    ctx: Context,
-    job_id: str,
-    employee_id: str,
-    name: str,
-    skills: list[str],
-    shift_id: str,
-    preferred_days_off: list[str] | None = None,
-    preferred_work_days: list[str] | None = None,
-    unavailable_dates: list[str] | None = None,
-) -> dict[str, Any]:
-    """
-    Add a new employee and immediately assign them to a specific shift
-
-    Args:
-        job_id: ID of the active optimization job
-        employee_id: Unique employee ID
-        name: Employee name
-        skills: List of employee skills
-        shift_id: ID of shift to assign the new employee to
-        preferred_days_off: Days employee prefers not to work
-        preferred_work_days: Days employee prefers to work
-        unavailable_dates: Specific dates when employee is unavailable (ISO format)
-
-    Returns:
-        Success status and assignment details
-    """
-    employee_data = {
-        "id": employee_id,
-        "name": name,
-        "skills": skills,
-        "preferred_days_off": parse_list_param(preferred_days_off),
-        "preferred_work_days": parse_list_param(preferred_work_days),
-        "unavailable_dates": parse_list_param(unavailable_dates),
-    }
-    request_data = {"employee": employee_data, "shift_id": shift_id}
-    return await call_continuous_planning_api(
-        f"/api/shifts/{job_id}/add-employee-assign", request_data
-    )
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404:
+            return {"error": "Job not found", "job_id": job_id}
+        elif e.response.status_code == 400:
+            return {"error": "Job not completed yet", "job_id": job_id}
+        else:
+            return {"error": f"API error: {e.response.status_code}", "job_id": job_id}
+    except Exception as e:
+        return {"error": f"Failed to generate HTML report: {str(e)}", "job_id": job_id}

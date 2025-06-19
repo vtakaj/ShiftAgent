@@ -44,6 +44,9 @@ Inside Dev Container:
 # Install dependencies
 make setup
 
+# Install Node.js dependencies with Bun (for Husky)
+bun install
+
 # Start application
 make run  # → http://localhost:8081
 
@@ -220,7 +223,13 @@ shift-scheduler/
 - **Weekly Work Hours Constraints**: 40-hour limit, minimum work hours, target time adjustment
 - **Fairness Optimization**: Equal distribution of work hours
 
-### 🔧 **Continuous Planning** (NEW!)
+### 👥 **Employee Management** (NEW!)
+- **Add Employees to Completed Jobs**: Add new employees to already solved schedules
+- **Skill Updates**: Update employee skills and re-optimize affected assignments
+- **Minimal Re-optimization**: Uses intelligent pinning to preserve valid assignments
+- **Constraint Resolution**: Automatically resolves violations while minimizing changes
+
+### 🔧 **Continuous Planning** (Coming Soon)
 - **Real-time Modifications**: Modify schedules during optimization without full re-solving
 - **Shift Swapping**: Exchange employees between shifts using ProblemChangeDirector
 - **Emergency Replacements**: Find suitable replacements when employees become unavailable
@@ -258,7 +267,14 @@ GET  /api/shifts/weekly-analysis/{job_id} # Weekly work hours analysis (after so
 GET  /api/shifts/test-weekly          # Weekly work hours constraint test (demo)
 ```
 
-### Continuous Planning Endpoints (NEW!)
+### Employee Management Endpoints (NEW!)
+
+```http
+POST /api/shifts/{job_id}/add-employee        # Add employee to completed job
+PATCH /api/shifts/{job_id}/employee/{employee_id}/skills  # Update employee skills
+```
+
+### Continuous Planning Endpoints (Coming Soon)
 
 ```http
 POST /api/shifts/{job_id}/swap               # Swap employees between two shifts
@@ -493,10 +509,62 @@ make run
 
 ## 💡 Best Practices
 
-### **Code Quality**
+### **Code Quality & Git Hooks**
 - Auto-format on save (ruff)
 - Linting (ruff, mypy)
 - Type hints recommended
+- **Husky pre-commit hooks** automatically ensure code quality
+
+#### Git Hooks (Husky)
+This project uses Husky to automatically run quality checks before commits:
+
+```bash
+# Pre-commit hooks run automatically:
+# ✅ Code formatting (ruff format)
+# ✅ Linting (ruff check --fix)  
+# ✅ Type checking (mypy - warnings only)
+# ✅ Auto-stage formatted files
+
+# Pre-push hooks run automatically:
+# ✅ Full test suite execution
+
+# Commit message validation:
+# ✅ Conventional commit format required
+```
+
+#### Available bun Scripts
+```bash
+# Manual code quality checks
+bun run lint          # Run ruff linting
+bun run lint:fix      # Run ruff linting with auto-fix
+bun run format        # Run ruff formatting
+bun run type-check    # Run mypy type checking
+bun run test          # Run pytest test suite
+```
+
+#### Bypassing Hooks (Emergency Use)
+```bash
+# Skip pre-commit hooks
+git commit --no-verify -m "emergency fix"
+
+# Skip pre-push hooks  
+git push --no-verify
+
+# Skip tests during push
+SKIP_TESTS=true git push
+```
+
+#### Conventional Commit Format
+```bash
+# Required format: type: description
+feat: add new feature
+fix: fix a bug  
+docs: update documentation
+style: code style changes
+refactor: code refactoring
+test: add or update tests
+chore: maintenance tasks
+```
 
 ### **Testing**
 ```bash
@@ -646,3 +714,38 @@ sequenceDiagram
 8. **Result Presentation (Human)**
    - Review shift table in tabular format
    - Review optimization results explanation
+
+## 🏗️ Infrastructure
+
+This project includes Infrastructure as Code (IaC) using Pulumi for Azure deployment.
+
+### Infrastructure Documentation
+
+- **包括的なインフラドキュメント**: [infrastructure/README.md](infrastructure/README.md)
+
+### Quick Infrastructure Setup
+
+```bash
+# Navigate to infrastructure directory
+cd infrastructure
+
+# Install dependencies
+uv sync
+
+# Deploy development environment
+uv run pulumi up --stack dev
+
+# Deploy production environment
+uv run pulumi up --stack prod
+```
+
+### Infrastructure Features
+
+- **Azure Container Apps**: Application hosting
+- **Azure Container Registry**: Docker image storage
+- **Azure Storage**: Job data persistence
+- **Azure Key Vault**: Secrets management (production)
+- **Azure Monitor**: Application monitoring
+- **CI/CD Integration**: GitHub Actions workflows
+
+For detailed infrastructure documentation, see [infrastructure/README.md](infrastructure/README.md).

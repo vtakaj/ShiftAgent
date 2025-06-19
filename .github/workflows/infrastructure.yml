@@ -29,6 +29,11 @@ on:
           - up
           - destroy
 
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
 jobs:
   infrastructure:
     name: Deploy Infrastructure
@@ -46,30 +51,28 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-
       - name: Install Pulumi dependencies
         run: |
-          uv sync --frozen
-
-      - name: Configure Pulumi
-        uses: pulumi/actions@v5
-        with:
-          command: version
-          stack-name: ${{ github.event.inputs.stack || 'dev' }}
-          work-dir: ./infrastructure
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -r requirements.txt
+          echo "VIRTUAL_ENV=$(pwd)/.venv" >> $GITHUB_ENV
+          echo "$(pwd)/.venv/bin" >> $GITHUB_PATH
 
       - name: Azure CLI Login
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: |
+            {
+              "clientId": "${{ secrets.ARM_CLIENT_ID }}",
+              "clientSecret": "${{ secrets.ARM_CLIENT_SECRET }}",
+              "tenantId": "${{ secrets.ARM_TENANT_ID }}",
+              "subscriptionId": "${{ secrets.ARM_SUBSCRIPTION_ID }}"
+            }
 
       - name: Pulumi Preview (PR)
         if: github.event_name == 'pull_request'
-        uses: pulumi/actions@v5
+        uses: pulumi/actions@v6
         with:
           command: preview
           stack-name: dev
@@ -78,53 +81,77 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Pulumi Preview (Manual)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'preview'
-        uses: pulumi/actions@v5
+        uses: pulumi/actions@v6
         with:
           command: preview
           stack-name: ${{ github.event.inputs.stack }}
           work-dir: ./infrastructure
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Pulumi Up (Main Branch)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: pulumi/actions@v5
+        uses: pulumi/actions@v6
         with:
           command: up
           stack-name: dev
           work-dir: ./infrastructure
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Pulumi Up (Manual)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'up'
-        uses: pulumi/actions@v5
+        uses: pulumi/actions@v6
         with:
           command: up
           stack-name: ${{ github.event.inputs.stack }}
           work-dir: ./infrastructure
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Pulumi Destroy (Manual)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
-        uses: pulumi/actions@v5
+        uses: pulumi/actions@v6
         with:
           command: destroy
           stack-name: ${{ github.event.inputs.stack }}
           work-dir: ./infrastructure
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Export Stack Outputs
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'up')
-        uses: pulumi/actions@v5
+        uses: pulumi/actions@v6
         with:
-          command: stack output --json
+          command: output
           stack-name: ${{ github.event.inputs.stack || 'dev' }}
           work-dir: ./infrastructure
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}

@@ -1,5 +1,5 @@
 # ==== Build Stage ====
-FROM --platform=$BUILDPLATFORM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 # Build arguments
 ARG TARGETPLATFORM
@@ -7,6 +7,7 @@ ARG BUILDPLATFORM
 
 # Install uv for fast dependency management
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+RUN chmod +x /bin/uv
 
 # Set working directory
 WORKDIR /app
@@ -15,10 +16,10 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 
 # Install dependencies (production only, no dev dependencies)
-RUN uv sync --frozen --no-dev --no-install-project
+RUN /bin/uv sync --frozen --no-dev --no-install-project
 
 # ==== Runtime Stage ====
-FROM --platform=$TARGETPLATFORM python:3.11-slim as runtime
+FROM python:3.11-slim AS runtime
 
 # Build arguments
 ARG TARGETPLATFORM

@@ -1,0 +1,249 @@
+# Cursor Rules for Natural Shift Planner
+
+You are an expert Python developer working on a **Natural Shift Planner** - a shift scheduling optimization system built with FastAPI and Timefold Solver.
+
+## Project Overview
+
+This is a production-grade shift scheduler that uses:
+- **FastAPI** for the REST API
+- **Timefold Solver** (Java-based AI constraint solver) for optimization
+- **Python 3.11+** with modern type hints
+- **MCP (Model Context Protocol)** server for AI assistant integration
+- **Docker** for containerization
+
+## Key Technologies & Libraries
+
+- **Backend**: FastAPI, Pydantic, uvicorn
+- **Optimization**: Timefold Solver (Java integration)
+- **Database**: PostgreSQL (future), in-memory job storage (current)
+- **AI Integration**: FastMCP for Claude Desktop integration
+- **Development**: uv package manager, ruff formatter/linter, mypy
+- **Testing**: pytest
+- **Infrastructure**: Docker, Docker Compose, Pulumi
+
+## Architecture Patterns
+
+### 1. Domain-Driven Design
+- **Domain Models** (`core/models/`): Employee, Shift, ShiftSchedule
+- **Constraints** (`core/constraints/`): Timefold optimization rules
+- **API Layer** (`api/`): FastAPI routes, schemas, converters
+
+### 2. Timefold Solver Integration
+- Use `@PlanningEntity`, `@PlanningVariable`, `@PlanningPin` annotations
+- Implement `HardMediumSoftScore` constraint system
+- Problem Fact Changes for dynamic updates
+
+### 3. Async Job Management
+- Background optimization with threading
+- Job status tracking (SCHEDULED, ACTIVE, COMPLETED, FAILED)
+- Persistent job storage with sync capabilities
+
+## Code Style & Conventions
+
+### Python Style
+```python
+# Use modern Python features
+from __future__ import annotations
+from typing import Any
+from dataclasses import dataclass, field
+
+# Type hints are mandatory
+def solve_schedule(request: ShiftScheduleRequest) -> SolutionResponse:
+    pass
+
+# Use descriptive variable names
+employee_skill_violations = check_skill_constraints()
+
+# Prefer explicit over implicit
+if job["status"] == "SOLVING_COMPLETED":
+    process_completed_job(job)
+```
+
+### API Design
+```python
+# REST endpoint patterns
+@app.post("/api/shifts/{job_id}/add-employee")
+async def add_employee_to_job(job_id: str, employee: EmployeeRequest):
+    # Validate inputs
+    # Process business logic
+    # Return structured response
+    pass
+
+# Use Pydantic models for validation
+class EmployeeRequest(BaseModel):
+    id: str
+    name: str
+    skills: list[str]
+    unavailable_dates: list[str] = Field(default_factory=list)
+```
+
+### Error Handling
+```python
+# Use structured logging
+import logging
+logger = logging.getLogger(__name__)
+
+# Handle exceptions gracefully
+try:
+    result = solver.solve(problem)
+except Exception as e:
+    logger.error(f"[Job {job_id}] Optimization failed: {str(e)}")
+    raise HTTPException(status_code=500, detail=str(e))
+```
+
+## Development Guidelines
+
+### 1. When Working with Timefold Solver
+- Always check Java environment setup (JAVA_HOME, Java 17+)
+- Use `@PlanningPin` for preserving assignments during re-optimization
+- Implement constraint functions that return `HardMediumSoftScore`
+- Test solver configurations with demo data first
+
+### 2. API Development
+- Use async/await for all route handlers
+- Validate inputs with Pydantic schemas
+- Convert between domain models and API schemas using converters
+- Return meaningful error messages with proper HTTP status codes
+
+### 3. MCP Integration
+- Keep MCP tools focused and single-purpose
+- Use clear docstrings for MCP tool descriptions
+- Handle parameter parsing (JSON strings, lists) robustly
+- Test MCP tools with various input formats
+
+### 4. Testing Strategy
+- Write unit tests for domain models
+- Integration tests for API endpoints
+- Use demo data for consistent testing
+- Test constraint violations and edge cases
+
+## File Organization
+
+```
+src/natural_shift_planner/
+├── api/              # FastAPI application layer
+│   ├── routes.py     # API endpoints - RESTful design
+│   ├── schemas.py    # Pydantic models for validation
+│   ├── jobs.py       # Async job management
+│   └── converters.py # Domain ↔ API model conversion
+├── core/             # Domain logic (pure business logic)
+│   ├── models/       # Domain entities with Timefold annotations
+│   └── constraints/  # Optimization constraint functions
+├── mcp/              # MCP server for AI integration
+│   ├── server.py     # FastMCP server setup
+│   └── tools.py      # MCP tool implementations
+└── utils/            # Shared utilities
+```
+
+## Key Concepts
+
+### Employee Management
+- **Add employees to completed jobs**: Use intelligent pinning to preserve valid assignments
+- **Update skills**: Re-optimize only affected shifts
+- **Minimal changes**: Pin valid assignments, unpin only constraint violations
+
+### Constraint System
+- **Hard**: Must be satisfied (skills, no double-booking, max hours)
+- **Medium**: Important but can be violated (rest periods, min hours)
+- **Soft**: Optimization goals (fairness, unassigned shifts)
+
+### Job Lifecycle
+1. **SCHEDULED**: Job created, ready to start
+2. **ACTIVE**: Solver is running
+3. **COMPLETED**: Optimization finished successfully
+4. **FAILED**: Error occurred during solving
+
+## Command Reference
+
+```bash
+# Development setup
+make setup          # Install all dependencies
+make run           # Start API server
+make run-mcp       # Start API + MCP servers
+make test          # Run tests
+make lint          # Check code quality
+make format        # Auto-format code
+
+# Solver configuration
+SOLVER_TIMEOUT_SECONDS=300 make run        # Extended timeout
+SOLVER_LOG_LEVEL=DEBUG make run            # Verbose logging
+```
+
+## Common Patterns
+
+### Adding New API Endpoints
+1. Define Pydantic schema in `schemas.py`
+2. Implement route handler in `routes.py`
+3. Add business logic to appropriate domain module
+4. Create converter functions if needed
+5. Add corresponding MCP tool in `mcp/tools.py`
+6. Update documentation
+
+### Working with Solver
+```python
+# Create solver with current config
+solver = solver_factory.build_solver()
+
+# For re-optimization with pinning
+for shift in solution.shifts:
+    if should_preserve(shift):
+        shift.pin()
+
+updated_solution = solver.solve(solution)
+
+# Always unpin after solving
+for shift in updated_solution.shifts:
+    shift.pinned = False
+```
+
+### MCP Tool Pattern
+```python
+async def tool_name(ctx: Context, param: str) -> dict[str, Any]:
+    """
+    Clear description of what this tool does
+    
+    Args:
+        param: Description of parameter
+        
+    Returns:
+        Description of return value
+    """
+    # Parse/validate inputs
+    # Make API call
+    # Return structured response
+    return await call_api("POST", "/endpoint", data)
+```
+
+## Best Practices
+
+1. **Always read CLAUDE.md** before making changes
+2. **Use type hints** everywhere
+3. **Log important operations** with job IDs
+4. **Test with demo data** before real data
+5. **Handle Java/Timefold errors** gracefully
+6. **Keep domain logic separate** from API layer
+7. **Use async patterns** for I/O operations
+8. **Follow REST conventions** for endpoints
+9. **Document MCP tools** thoroughly
+10. **Run linters** before committing
+
+## Debugging Tips
+
+- Check Java setup: `java -version` (should be 17+)
+- API health: `curl http://localhost:8081/health`
+- Solver logs: Set `SOLVER_LOG_LEVEL=DEBUG`
+- MCP connection: Check Claude Desktop logs
+- Job status: Use `/api/jobs` endpoint
+- Demo data: Always test with `/api/shifts/demo` first
+
+## Important Notes
+
+- **Java dependency**: Timefold Solver requires Java 17+
+- **Memory usage**: Solver can be memory-intensive for large problems
+- **Threading**: Async jobs use Python threading
+- **Pinning**: Use `@PlanningPin` to preserve assignments during re-optimization
+- **MCP**: Tools should handle both string and list parameters
+- **Dates**: Use ISO 8601 format for all timestamps
+- **Skills**: Always use sets for skill matching logic
+
+When in doubt, check the existing code patterns and follow the established conventions. The codebase prioritizes clarity, type safety, and robust error handling.

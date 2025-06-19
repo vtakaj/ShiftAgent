@@ -2,29 +2,38 @@
 FastMCP server for Shift Scheduler
 """
 
+import logging
+import os
+
 from fastmcp import FastMCP
 
 from .tools import (
-    add_employee_and_assign_to_shift,
     add_employee_to_job,
-    add_employees_batch_to_job,
     analyze_weekly_hours,
-    find_shift_replacement,
     get_demo_schedule,
+    get_schedule_html_report,
     get_schedule_shifts,
     get_solve_status,
     health_check,
-    pin_shifts,
-    reassign_shift,
-    remove_employee_from_job,
     solve_schedule_async,
     solve_schedule_sync,
-    swap_shifts,
     test_weekly_constraints,
+    update_employee_skills,
 )
 
-# Create FastMCP server
-mcp = FastMCP("shift-scheduler-mcp", dependencies=["httpx"])
+# Create FastMCP server with logging
+logger = logging.getLogger("fastmcp.server")
+mcp: FastMCP = FastMCP("shift-scheduler-mcp", dependencies=["httpx"])
+
+# Configure logging
+log_level = os.getenv("LOG_LEVEL", "INFO")
+mcp_log_level = os.getenv("MCP_LOG_LEVEL", log_level)
+logging.getLogger("fastmcp").setLevel(
+    getattr(logging, mcp_log_level.upper(), logging.INFO)
+)
+logging.getLogger("fastmcp.server").setLevel(
+    getattr(logging, mcp_log_level.upper(), logging.INFO)
+)
 
 # Register original tools
 mcp.tool()(health_check)
@@ -38,17 +47,23 @@ mcp.tool()(test_weekly_constraints)
 # Register remaining tools
 mcp.tool()(get_schedule_shifts)
 
-# Register continuous planning tools
-mcp.tool()(swap_shifts)
-mcp.tool()(find_shift_replacement)
-mcp.tool()(pin_shifts)
-mcp.tool()(reassign_shift)
-
 # Register employee management tools
 mcp.tool()(add_employee_to_job)
-mcp.tool()(add_employees_batch_to_job)
-mcp.tool()(remove_employee_from_job)
-mcp.tool()(add_employee_and_assign_to_shift)
+mcp.tool()(update_employee_skills)
+
+# Register report generation tools
+mcp.tool()(get_schedule_html_report)
+
+# TODO: Register continuous planning tools when implemented
+# mcp.tool()(swap_shifts)
+# mcp.tool()(find_shift_replacement)
+# mcp.tool()(pin_shifts)
+# mcp.tool()(reassign_shift)
+
+# TODO: Register additional employee management tools when implemented
+# mcp.tool()(add_employees_batch_to_job)
+# mcp.tool()(remove_employee_from_job)
+# mcp.tool()(add_employee_and_assign_to_shift)
 
 
 # Add prompts
@@ -79,14 +94,22 @@ async def shift_scheduling_prompt() -> str:
 ### Schedule Inspection
 - get_schedule_shifts: Inspect completed schedules
 
-### Continuous Planning (Real-time Modifications)
+### Employee Management (Available Now)
+- add_employee_to_job: Add new employee to completed job with minimal re-optimization
+- update_employee_skills: Update employee skills and re-optimize affected assignments
+
+### Report Generation (Available Now)
+- get_schedule_html_report: Generate beautiful HTML schedule report for viewing in browser
+
+### Continuous Planning (Coming Soon)
+The following real-time modification features are planned but not yet implemented:
 - swap_shifts: Swap employees between two shifts during optimization
 - find_shift_replacement: Find replacement when employee becomes unavailable
 - pin_shifts: Pin/unpin shifts to prevent changes during optimization
 - reassign_shift: Reassign shift to specific employee or unassign
 
-### Employee Management (During Active Optimization)
-- add_employee_to_job: Add new employee to active solving job
+### Additional Employee Management (Coming Soon)
+The following additional employee management features are planned but not yet implemented:
 - add_employees_batch_to_job: Add multiple employees at once
 - remove_employee_from_job: Remove employee (unassigns their shifts)
 - add_employee_and_assign_to_shift: Add employee and assign to specific shift
@@ -100,19 +123,11 @@ async def shift_scheduling_prompt() -> str:
 - Minimum 8 hours rest between shifts
 - Fair distribution of shifts
 
-## Continuous Planning Usage
-- Continuous planning tools require an active solving session
-- Start with solve_schedule_async, then use continuous planning tools
-- Pin shifts to lock them before making changes
-- Use find_shift_replacement for emergency coverage
-- Swap shifts for quick employee exchanges
-
-## Employee Management Usage
-- Employee management tools work during active optimization
-- Add employees to expand available workforce during solving
-- Remove employees when they become unavailable
-- Employee preferences (preferred_days_off, etc.) are supported
-- All changes are applied immediately to the running solver
+## Future Features
+- Continuous planning for real-time schedule modifications
+- Dynamic employee management during optimization
+- Emergency shift coverage and swapping
+- Shift pinning to lock specific assignments
 """
 
 

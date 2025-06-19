@@ -5,7 +5,7 @@ Converters between API schemas and domain models
 from typing import Any
 
 from ..core.models import Employee, Shift, ShiftSchedule
-from .schemas import ShiftScheduleRequest
+from .schemas import EmployeeRequest, ShiftScheduleRequest
 
 
 def convert_request_to_domain(request: ShiftScheduleRequest) -> ShiftSchedule:
@@ -79,3 +79,15 @@ def convert_domain_to_response(schedule: ShiftSchedule) -> dict[str, Any]:
             "unassigned_shifts": schedule.get_unassigned_shift_count(),
         },
     }
+
+
+def convert_employee_request_to_domain(request: EmployeeRequest) -> Employee:
+    """Convert employee API request to domain object"""
+    return Employee(
+        id=request.id,
+        name=request.name,
+        skills=set(request.skills),
+        preferred_days_off=set(request.preferred_days_off),
+        preferred_work_days=set(request.preferred_work_days),
+        unavailable_dates=set(request.unavailable_dates),
+    )

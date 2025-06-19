@@ -57,7 +57,11 @@ class Shift:
         return self.pinned
 
     def __str__(self):
-        employee_name = self.employee.name if self.employee else "未割り当て"
+        employee_name = (
+            self.employee.name
+            if self.employee is not None and hasattr(self.employee, "name")
+            else "未割り当て"
+        )
         return (
             f"Shift(id='{self.id}', "
             f"start={self.start_time.strftime('%Y-%m-%d %H:%M')}, "
