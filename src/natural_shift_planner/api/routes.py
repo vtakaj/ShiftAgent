@@ -18,6 +18,7 @@ from .jobs import (
     job_lock,
     jobs,
     solve_problem_async,
+    swap_shifts_in_job,
     update_employee_skills,
 )
 from .schemas import (
@@ -25,6 +26,8 @@ from .schemas import (
     ShiftScheduleRequest,
     SolutionResponse,
     SolveResponse,
+    SwapShiftsRequest,
+    SwapShiftsResponse,
 )
 from .solver import solver_factory
 
@@ -408,6 +411,47 @@ async def update_employee_skills_api(job_id: str, employee_id: str, skills: list
             raise HTTPException(
                 status_code=404, detail="Employee not found after update"
             )
+    else:
+        # Get error details from job
+        with job_lock:
+            if job_id in jobs:
+                error_msg = jobs[job_id].get("error", "Unknown error occurred")
+            else:
+                error_msg = "Job not found"
+
+        raise HTTPException(status_code=400, detail=error_msg)
+
+
+@router.post("/api/shifts/{job_id}/swap", response_model=SwapShiftsResponse)
+async def swap_shifts(job_id: str, request: SwapShiftsRequest):
+    """Swap employee assignments between two shifts"""
+    # Perform the swap
+    success = swap_shifts_in_job(job_id, request.shift1_id, request.shift2_id)
+
+    if success:
+        # Get updated job info
+        with job_lock:
+            job = jobs[job_id]
+            solution = job["solution"]
+
+        # Find the swapped shifts to show current assignments
+        shift1_employee = None
+        shift2_employee = None
+        for shift in solution.shifts:
+            if shift.id == request.shift1_id:
+                shift1_employee = shift.employee.name if shift.employee else "unassigned"
+            elif shift.id == request.shift2_id:
+                shift2_employee = shift.employee.name if shift.employee else "unassigned"
+
+        return SwapShiftsResponse(
+            job_id=job_id,
+            shift1_id=request.shift1_id,
+            shift2_id=request.shift2_id,
+            status="SUCCESS",
+            message=f"Successfully swapped shifts. {request.shift1_id} -> {shift1_employee}, {request.shift2_id} -> {shift2_employee}",
+            final_score=str(solution.score),
+            html_report_url=f"/api/shifts/solve/{job_id}/html",
+        )
     else:
         # Get error details from job
         with job_lock:

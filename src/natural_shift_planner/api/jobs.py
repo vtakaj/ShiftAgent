@@ -404,3 +404,184 @@ def update_employee_skills(job_id: str, employee_id: str, new_skills: set[str]) 
                 jobs[job_id]["error"] = f"Skill update failed: {str(e)}"
                 _sync_job_to_store(job_id)
         return False
+
+
+def swap_shifts_in_job(job_id: str, shift1_id: str, shift2_id: str) -> bool:
+    """Swap employee assignments between two shifts in a completed job"""
+    try:
+        with job_lock:
+            if job_id not in jobs:
+                logger.error(f"Job {job_id} not found")
+                return False
+
+            job = jobs[job_id]
+
+            # Only allow swapping in completed jobs
+            if job["status"] != "SOLVING_COMPLETED":
+                logger.error(f"Job {job_id} status is {job['status']}, not completed")
+                return False
+
+            if "solution" not in job:
+                logger.error(f"Job {job_id} has no solution")
+                return False
+
+            # Get the current solution
+            current_solution = job["solution"]
+
+            # Find the shifts to swap
+            shift1 = None
+            shift2 = None
+            for shift in current_solution.shifts:
+                if shift.id == shift1_id:
+                    shift1 = shift
+                elif shift.id == shift2_id:
+                    shift2 = shift
+
+            if shift1 is None:
+                logger.error(f"Shift {shift1_id} not found in solution")
+                jobs[job_id]["error"] = f"Shift {shift1_id} not found"
+                return False
+
+            if shift2 is None:
+                logger.error(f"Shift {shift2_id} not found in solution")
+                jobs[job_id]["error"] = f"Shift {shift2_id} not found"
+                return False
+
+            # Mark job as being modified
+            jobs[job_id]["status"] = "SWAPPING_SHIFTS"
+            _sync_job_to_store(job_id)
+
+        # Validate the swap before executing
+        employee1 = shift1.employee
+        employee2 = shift2.employee
+
+        logger.info(
+            f"[Job {job_id}] Validating swap between shifts {shift1_id} and {shift2_id}"
+        )
+
+        # Validate skill compatibility
+        swap_valid = True
+        validation_errors = []
+
+        # Check if employee1 (going to shift2) has required skills for shift2
+        if employee1 is not None and not employee1.has_required_skills(
+            shift2.required_skills
+        ):
+            swap_valid = False
+            validation_errors.append(
+                f"Employee {employee1.name} lacks skills {shift2.required_skills - employee1.skills} "
+                f"required for shift {shift2_id}"
+            )
+
+        # Check if employee2 (going to shift1) has required skills for shift1
+        if employee2 is not None and not employee2.has_required_skills(
+            shift1.required_skills
+        ):
+            swap_valid = False
+            validation_errors.append(
+                f"Employee {employee2.name} lacks skills {shift1.required_skills - employee2.skills} "
+                f"required for shift {shift1_id}"
+            )
+
+        # Check availability constraints
+        if employee1 is not None and employee1.is_unavailable_on_date(shift2.start_time):
+            swap_valid = False
+            validation_errors.append(
+                f"Employee {employee1.name} is unavailable on {shift2.start_time.date()}"
+            )
+
+        if employee2 is not None and employee2.is_unavailable_on_date(shift1.start_time):
+            swap_valid = False
+            validation_errors.append(
+                f"Employee {employee2.name} is unavailable on {shift1.start_time.date()}"
+            )
+
+        # Check for shift overlap (if both employees are assigned)
+        if employee1 is not None and employee2 is not None:
+            # Get all shifts for each employee to check for conflicts
+            employee1_shifts = [s for s in current_solution.shifts if s.employee == employee1 and s.id != shift1_id]
+            employee2_shifts = [s for s in current_solution.shifts if s.employee == employee2 and s.id != shift2_id]
+
+            # Check if employee1 (moving to shift2) has conflicts
+            for other_shift in employee1_shifts:
+                if shift2.overlaps_with(other_shift):
+                    swap_valid = False
+                    validation_errors.append(
+                        f"Employee {employee1.name} already has overlapping shift {other_shift.id} "
+                        f"({other_shift.start_time} - {other_shift.end_time})"
+                    )
+
+            # Check if employee2 (moving to shift1) has conflicts
+            for other_shift in employee2_shifts:
+                if shift1.overlaps_with(other_shift):
+                    swap_valid = False
+                    validation_errors.append(
+                        f"Employee {employee2.name} already has overlapping shift {other_shift.id} "
+                        f"({other_shift.start_time} - {other_shift.end_time})"
+                    )
+
+        if not swap_valid:
+            error_msg = f"Swap validation failed: {'; '.join(validation_errors)}"
+            logger.error(f"[Job {job_id}] {error_msg}")
+            with job_lock:
+                jobs[job_id]["status"] = "SOLVING_FAILED"
+                jobs[job_id]["error"] = error_msg
+                _sync_job_to_store(job_id)
+            return False
+
+        logger.info(f"[Job {job_id}] Swap validation passed, executing swap...")
+
+        # Execute the swap by directly modifying the solution
+        # This is simpler than using problem fact changes for a straightforward swap
+        shift1.employee = employee2
+        shift2.employee = employee1
+
+        # Use solver to validate and potentially improve the solution after swap
+        solver = solver_factory.build_solver()
+
+        logger.info(f"[Job {job_id}] Running solver to validate swap...")
+        updated_solution = solver.solve(current_solution)
+
+        # Update the job with new solution
+        with job_lock:
+            jobs[job_id]["status"] = "SOLVING_COMPLETED"
+            jobs[job_id]["solution"] = updated_solution
+            jobs[job_id]["updated_at"] = datetime.now()
+            jobs[job_id]["final_score"] = str(updated_solution.score)
+
+            # Track the swap
+            if "shift_swaps" not in jobs[job_id]:
+                jobs[job_id]["shift_swaps"] = []
+            jobs[job_id]["shift_swaps"].append(
+                {
+                    "shift1_id": shift1_id,
+                    "shift2_id": shift2_id,
+                    "employee1_id": employee1.id if employee1 else None,
+                    "employee1_name": employee1.name if employee1 else None,
+                    "employee2_id": employee2.id if employee2 else None,
+                    "employee2_name": employee2.name if employee2 else None,
+                    "timestamp": datetime.now(),
+                }
+            )
+            _sync_job_to_store(job_id)
+
+        total_assigned = sum(
+            1 for s in updated_solution.shifts if s.employee is not None
+        )
+
+        logger.info(
+            f"[Job {job_id}] Shift swap completed successfully. "
+            f"Score: {updated_solution.score}, "
+            f"Total assigned shifts: {total_assigned}/{len(updated_solution.shifts)}"
+        )
+
+        return True
+
+    except Exception as e:
+        logger.error(f"[Job {job_id}] Failed to swap shifts: {str(e)}")
+        with job_lock:
+            if job_id in jobs:
+                jobs[job_id]["status"] = "SOLVING_FAILED"
+                jobs[job_id]["error"] = f"Shift swap failed: {str(e)}"
+                _sync_job_to_store(job_id)
+        return False
