@@ -56,7 +56,8 @@
       "Bash(PYTHONPATH=src uv run pytest tests/test_emergency_staff.py::test_add_employee_to_invalid_job -v)",
       "Bash(git tag:*)",
       "Bash(git config:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(npm install)"
     ],
     "deny": []
   }

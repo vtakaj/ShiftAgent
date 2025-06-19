@@ -14,7 +14,9 @@ API_BASE_URL = "http://localhost:8081"
 
 
 # API Helper Functions
-async def call_api(method: str, endpoint: str, data: dict[str, Any] | None = None) -> dict[str, Any]:
+async def call_api(
+    method: str, endpoint: str, data: dict[str, Any] | None = None
+) -> dict[str, Any]:
     """Make an API call to the shift scheduler"""
     url = f"{API_BASE_URL}{endpoint}"
 

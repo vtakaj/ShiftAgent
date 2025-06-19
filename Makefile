@@ -13,6 +13,10 @@ help:
 	@echo "  lint         - Check code"
 	@echo "  clean        - Clear cache"
 	@echo ""
+	@echo "  Git Hooks (Husky):"
+	@echo "  hooks-install - Install Husky git hooks"
+	@echo "  hooks-test    - Test git hooks manually"
+	@echo ""
 	@echo "  Additional Commands:"
 	@echo "  install      - Install Python dependencies only"
 	@echo "  dev          - Install development dependencies"
@@ -27,6 +31,8 @@ setup:
 	@rm -f uv.lock
 	@echo "📦 Installing Python dependencies (including FastMCP)..."
 	uv sync --no-install-project
+	@echo "📦 Installing Node.js dependencies with Bun (including Husky)..."
+	bun install
 	@echo "✅ Setup complete!"
 
 # Install dependencies
@@ -143,3 +149,18 @@ pulumi-setup:
 	@echo "  3. pulumi stack init dev"
 	@echo "  4. pulumi config set azure-native:location 'East US'"
 	@echo "  5. pulumi up  (to deploy infrastructure)"
+
+# Husky Git Hooks
+hooks-install:
+	@echo "🪝 Installing Husky git hooks with Bun..."
+	@bun install
+	@bunx husky install
+	@echo "✅ Git hooks installed successfully!"
+
+hooks-test:
+	@echo "🧪 Testing git hooks..."
+	@echo "📝 Testing pre-commit hook..."
+	@bash .husky/pre-commit || echo "Pre-commit hook test completed"
+	@echo "🔍 Testing commit-msg hook..."
+	@echo "feat: test commit message" | bunx commitlint || echo "Commit message validation test completed"
+	@echo "✅ Hook tests completed!"
