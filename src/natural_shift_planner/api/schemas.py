@@ -45,6 +45,21 @@ class SolveResponse(BaseModel):
     status: str
 
 
+class SwapShiftsRequest(BaseModel):
+    shift1_id: str = Field(description="ID of the first shift to swap")
+    shift2_id: str = Field(description="ID of the second shift to swap")
+
+
+class SwapShiftsResponse(BaseModel):
+    job_id: str
+    shift1_id: str
+    shift2_id: str
+    status: str
+    message: str
+    final_score: str | None = None
+    html_report_url: str | None = None
+
+
 class SolutionResponse(BaseModel):
     job_id: str
     status: str

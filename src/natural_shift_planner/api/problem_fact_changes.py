@@ -108,3 +108,58 @@ class RemoveEmployeeProblemFactChange:
         score_director.after_problem_fact_removed(employee)
 
         logger.info(f"Removed employee: {employee.name}")
+
+
+class SwapShiftsProblemFactChange:
+    """Swap employee assignments between two shifts"""
+
+    def __init__(self, shift1_id: str, shift2_id: str):
+        self.shift1_id = shift1_id
+        self.shift2_id = shift2_id
+
+    def do_change(self, score_director) -> None:
+        """Swap the employee assignments between two shifts"""
+        working_solution: ShiftSchedule = score_director.get_working_solution()
+
+        # Find the shifts to swap
+        shift1 = None
+        shift2 = None
+        for shift in working_solution.shifts:
+            if shift.id == self.shift1_id:
+                shift1 = shift
+            elif shift.id == self.shift2_id:
+                shift2 = shift
+
+        if shift1 is None:
+            logger.error(f"Shift {self.shift1_id} not found")
+            return
+
+        if shift2 is None:
+            logger.error(f"Shift {self.shift2_id} not found")
+            return
+
+        # Get the current employees
+        employee1 = shift1.employee
+        employee2 = shift2.employee
+
+        logger.info(
+            f"Swapping shifts: {shift1.id} ({employee1.name if employee1 else 'unassigned'}) "
+            f"<-> {shift2.id} ({employee2.name if employee2 else 'unassigned'})"
+        )
+
+        # Perform the swap
+        score_director.before_variable_changed(shift1, "employee")
+        shift1.employee = employee2
+        score_director.after_variable_changed(shift1, "employee")
+
+        score_director.before_variable_changed(shift2, "employee")
+        shift2.employee = employee1
+        score_director.after_variable_changed(shift2, "employee")
+
+        logger.info(
+            f"Completed swap: {shift1.id} -> {employee2.name if employee2 else 'unassigned'}, "
+            f"{shift2.id} -> {employee1.name if employee1 else 'unassigned'}"
+        )
+
+        # Trigger score recalculation
+        score_director.trigger_variable_listeners()
