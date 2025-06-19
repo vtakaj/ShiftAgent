@@ -31,8 +31,8 @@ setup:
 	@rm -f uv.lock
 	@echo "📦 Installing Python dependencies (including FastMCP)..."
 	uv sync --no-install-project
-	@echo "📦 Installing Node.js dependencies (including Husky)..."
-	npm install
+	@echo "📦 Installing Node.js dependencies with Bun (including Husky)..."
+	bun install
 	@echo "✅ Setup complete!"
 
 # Install dependencies
@@ -152,9 +152,9 @@ pulumi-setup:
 
 # Husky Git Hooks
 hooks-install:
-	@echo "🪝 Installing Husky git hooks..."
-	@npm install
-	@npx husky install
+	@echo "🪝 Installing Husky git hooks with Bun..."
+	@bun install
+	@bunx husky install
 	@echo "✅ Git hooks installed successfully!"
 
 hooks-test:
@@ -162,5 +162,5 @@ hooks-test:
 	@echo "📝 Testing pre-commit hook..."
 	@bash .husky/pre-commit || echo "Pre-commit hook test completed"
 	@echo "🔍 Testing commit-msg hook..."
-	@echo "feat: test commit message" | npx commitlint || echo "Commit message validation test completed"
+	@echo "feat: test commit message" | bunx commitlint || echo "Commit message validation test completed"
 	@echo "✅ Hook tests completed!"

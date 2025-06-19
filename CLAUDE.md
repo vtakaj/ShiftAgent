@@ -10,7 +10,7 @@ This is a Shift Scheduler API built with FastAPI and Timefold Solver (AI optimiz
 
 ### Development Setup
 ```bash
-# Complete setup - installs all Python dependencies including FastMCP (run this first!)
+# Complete setup - installs all Python dependencies including FastMCP and Bun dependencies (run this first!)
 make setup
 
 # Initialize Pulumi for infrastructure (if working with infrastructure)
@@ -172,9 +172,10 @@ The solver optimizes using HardMediumSoftScore:
 ## Development Notes
 
 ### Dependencies
-- Python 3.11+ required
+- Python 3.11+ required (3.13+ not supported by Timefold)
 - Java 17 required (for Timefold Solver)
-- Uses `uv` for dependency management
+- Uses `uv` for Python dependency management
+- Uses `bun` for Node.js dependency management (Husky, commitlint)
 - FastAPI for web framework
 - Timefold Solver for constraint optimization
 
@@ -188,6 +189,7 @@ uv run pytest test_models.py::test_name -v
 1. If `uv sync` fails, delete `uv.lock` and run `make setup`
 2. Java environment must be properly configured (JAVA_HOME)
 3. Port 8081 must be available for the server
+4. If `bun install` fails, ensure bun is installed: `curl -fsSL https://bun.sh/install | bash`
 
 ### API Testing
 The `api-test.http` file contains REST Client requests for testing endpoints. Use with VS Code REST Client extension or similar tools.

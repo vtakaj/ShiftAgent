@@ -44,8 +44,8 @@ Inside Dev Container:
 # Install dependencies
 make setup
 
-# Install Node.js dependencies (for Husky)
-npm install
+# Install Node.js dependencies with Bun (for Husky)
+bun install
 
 # Start application
 make run  # → http://localhost:8081
@@ -532,14 +532,14 @@ This project uses Husky to automatically run quality checks before commits:
 # ✅ Conventional commit format required
 ```
 
-#### Available npm Scripts
+#### Available bun Scripts
 ```bash
 # Manual code quality checks
-npm run lint          # Run ruff linting
-npm run lint:fix      # Run ruff linting with auto-fix
-npm run format        # Run ruff formatting
-npm run type-check    # Run mypy type checking
-npm run test          # Run pytest test suite
+bun run lint          # Run ruff linting
+bun run lint:fix      # Run ruff linting with auto-fix
+bun run format        # Run ruff formatting
+bun run type-check    # Run mypy type checking
+bun run test          # Run pytest test suite
 ```
 
 #### Bypassing Hooks (Emergency Use)

@@ -77,7 +77,7 @@
     }
   },
   // Step-by-step setup with error handling
-  "postCreateCommand": "bash -c 'rm -f uv.lock && echo \"Installing Python dependencies...\" && uv sync --no-install-project && echo \"Installing Node.js dependencies...\" && npm install && echo \"🎉 Dev Container is ready! Run: make run\"'",
+  "postCreateCommand": "bash -c 'rm -f uv.lock && echo \"Installing Python dependencies...\" && uv sync --no-install-project && echo \"Installing Bun...\" && curl -fsSL https://bun.sh/install | bash && export PATH=\"$HOME/.bun/bin:$PATH\" && echo \"Installing Node.js dependencies with Bun...\" && bun install && echo \"🎉 Dev Container is ready! Run: make run\"'",
   // Use 'postStartCommand' to run commands after the container starts
   "postStartCommand": "git config --global --add safe.directory /workspace",
   // Comment out to connect as root instead
