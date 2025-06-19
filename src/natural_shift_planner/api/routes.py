@@ -6,11 +6,10 @@ import threading
 import uuid
 from datetime import datetime
 
-from fastapi import HTTPException
+from fastapi import APIRouter, HTTPException
 
 from ..utils import create_demo_schedule
 from .analysis import analyze_weekly_hours, generate_recommendations
-from .app import app
 from .converters import convert_domain_to_response, convert_request_to_domain
 from .job_store import job_store
 from .jobs import (
@@ -29,14 +28,17 @@ from .schemas import (
 )
 from .solver import solver_factory
 
+# Create router
+router = APIRouter()
 
-@app.get("/")
+
+@router.get("/")
 async def root():
     """Root endpoint"""
     return {"message": "Shift Scheduler API", "version": "1.0.0", "docs": "/docs"}
 
 
-@app.get("/health")
+@router.get("/health")
 async def health_check():
     """Health check"""
     return {
@@ -46,14 +48,14 @@ async def health_check():
     }
 
 
-@app.get("/api/shifts/demo")
+@router.get("/api/shifts/demo")
 async def get_demo_data():
     """Get demo data"""
     schedule = create_demo_schedule()
     return convert_domain_to_response(schedule)
 
 
-@app.post("/api/shifts/solve", response_model=SolveResponse)
+@router.post("/api/shifts/solve", response_model=SolveResponse)
 async def solve_shifts(request: ShiftScheduleRequest):
     """Shift optimization (asynchronous)"""
     job_id = str(uuid.uuid4())
@@ -76,7 +78,7 @@ async def solve_shifts(request: ShiftScheduleRequest):
     return SolveResponse(job_id=job_id, status="SOLVING_SCHEDULED")
 
 
-@app.get("/api/shifts/solve/{job_id}", response_model=SolutionResponse)
+@router.get("/api/shifts/solve/{job_id}", response_model=SolutionResponse)
 async def get_solution(job_id: str):
     """Get optimization result"""
     with job_lock:
@@ -109,7 +111,7 @@ async def get_solution(job_id: str):
         return response
 
 
-@app.post("/api/shifts/solve-sync")
+@router.post("/api/shifts/solve-sync")
 async def solve_shifts_sync(request: ShiftScheduleRequest):
     """Shift optimization (synchronous)"""
     import logging
@@ -170,7 +172,7 @@ async def solve_shifts_sync(request: ShiftScheduleRequest):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@app.get("/api/shifts/weekly-analysis/{job_id}")
+@router.get("/api/shifts/weekly-analysis/{job_id}")
 async def get_weekly_analysis(job_id: str):
     """Detailed analysis of weekly working hours"""
     with job_lock:
@@ -187,7 +189,7 @@ async def get_weekly_analysis(job_id: str):
         return analysis
 
 
-@app.post("/api/shifts/analyze-weekly")
+@router.post("/api/shifts/analyze-weekly")
 async def analyze_weekly_hours_sync(request: ShiftScheduleRequest):
     """Immediate analysis of weekly working hours (without optimization)"""
     try:
@@ -198,7 +200,7 @@ async def analyze_weekly_hours_sync(request: ShiftScheduleRequest):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@app.get("/api/shifts/test-weekly")
+@router.get("/api/shifts/test-weekly")
 async def test_weekly_constraints():
     """Test weekly working hours constraints"""
     schedule = create_demo_schedule()
@@ -221,7 +223,7 @@ async def test_weekly_constraints():
 
 
 # Job Management endpoints
-@app.get("/api/jobs")
+@router.get("/api/jobs")
 async def list_jobs():
     """List all jobs (both in-memory and persistent)"""
     all_job_ids = set(jobs.keys())
@@ -256,7 +258,7 @@ async def list_jobs():
     return {"total": len(job_summaries), "jobs": job_summaries}
 
 
-@app.delete("/api/jobs/{job_id}")
+@router.delete("/api/jobs/{job_id}")
 async def delete_job(job_id: str):
     """Delete a job from both memory and persistent storage"""
     deleted = False
@@ -288,7 +290,7 @@ async def delete_job(job_id: str):
     return {"message": f"Job {job_id} deleted successfully"}
 
 
-@app.post("/api/jobs/cleanup")
+@router.post("/api/jobs/cleanup")
 async def cleanup_old_jobs(max_age_hours: int = 24):
     """Clean up old jobs from storage"""
     deleted_count = 0
@@ -325,7 +327,7 @@ async def cleanup_old_jobs(max_age_hours: int = 24):
 # Employee Addition to Completed Jobs
 
 
-@app.post("/api/shifts/{job_id}/add-employee")
+@router.post("/api/shifts/{job_id}/add-employee")
 async def add_employee_to_job(job_id: str, employee: EmployeeRequest):
     """Add employee to completed job and re-optimize"""
     # Convert employee to domain model
@@ -365,7 +367,7 @@ async def add_employee_to_job(job_id: str, employee: EmployeeRequest):
         raise HTTPException(status_code=400, detail=error_msg)
 
 
-@app.patch("/api/shifts/{job_id}/employee/{employee_id}/skills")
+@router.patch("/api/shifts/{job_id}/employee/{employee_id}/skills")
 async def update_employee_skills_api(job_id: str, employee_id: str, skills: list[str]):
     """Update employee skills and re-optimize affected assignments"""
     # Convert skills list to set
@@ -418,7 +420,7 @@ async def update_employee_skills_api(job_id: str, employee_id: str, skills: list
 
 
 # HTML Report Generation
-@app.get("/api/shifts/solve/{job_id}/html")
+@router.get("/api/shifts/solve/{job_id}/html")
 async def get_solution_html(job_id: str):
     """Get optimization result as HTML report"""
     from fastapi.responses import HTMLResponse

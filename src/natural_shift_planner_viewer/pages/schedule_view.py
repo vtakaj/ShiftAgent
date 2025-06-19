@@ -12,11 +12,14 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 # Add src to Python path
-src_path = Path(__file__).parent.parent / "src"
+src_path = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(src_path))
 
 # Configuration
-API_BASE_URL = "http://localhost:8081"
+API_BASE_URL = "https://localhost:8081"  # HTTPS for secure communication
+
+# For local development, you can use HTTP
+# API_BASE_URL = "http://localhost:8081"  # HTTP for local development
 
 
 # API Helper Functions
@@ -80,7 +83,7 @@ def main():
     ):
         st.error("❌ ジョブが選択されていません")
         if st.button("📋 ジョブ一覧に戻る", type="primary"):
-            st.switch_page("streamlit_main.py")
+            st.switch_page("natural_shift_planner_viewer/main.py")
         return
 
     job_id = st.session_state.selected_job_id
@@ -90,7 +93,7 @@ def main():
     with col1:
         if st.button("← ジョブ一覧に戻る", type="secondary"):
             st.session_state.selected_job_id = None
-            st.switch_page("streamlit_main.py")
+            st.switch_page("natural_shift_planner_viewer/main.py")
 
     with col2:
         st.title(f"📅 シフト表: {job_id[:8]}...")
@@ -177,7 +180,7 @@ def main():
         # Return button on error
         if st.button("📋 ジョブ一覧に戻る", type="primary"):
             st.session_state.selected_job_id = None
-            st.switch_page("streamlit_main.py")
+            st.switch_page("natural_shift_planner_viewer/main.py")
 
 
 if __name__ == "__main__":

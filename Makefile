@@ -50,12 +50,21 @@ run:
 	@echo "🚀 Starting FastAPI server..."
 	@echo "Server URL: http://localhost:8081"
 	@echo "API Documentation: http://localhost:8081/docs"
-	uv run uvicorn main:app --host 0.0.0.0 --port 8081 --reload
+	@echo "For HTTPS: make run-https"
+	PYTHONPATH=src uv run uvicorn natural_shift_planner.api.app:app --host 0.0.0.0 --port 8081 --reload
+
+# Start FastAPI server with HTTPS (self-signed certificate)
+run-https:
+	@echo "🔒 Starting FastAPI server with HTTPS..."
+	@echo "Server URL: https://localhost:8081"
+	@echo "API Documentation: https://localhost:8081/docs"
+	@echo "Note: Browser will show security warning for self-signed certificate"
+	PYTHONPATH=src uv run uvicorn natural_shift_planner.api.app:app --host 0.0.0.0 --port 8081 --reload --ssl-keyfile=./localhost-key.pem --ssl-certfile=./localhost.pem
 
 # Run tests
 test:
 	@echo "🧪 Running tests..."
-	uv run pytest -v
+	PYTHONPATH=src uv run pytest tests/ -v
 
 # Format code
 format:
@@ -113,29 +122,29 @@ dev-start: setup run
 # Debug mode
 debug:
 	@echo "🐛 Starting in debug mode..."
-	uv run uvicorn main:app --host 0.0.0.0 --port 8081 --reload --log-level debug
+	PYTHONPATH=src uv run uvicorn natural_shift_planner.api.app:app --host 0.0.0.0 --port 8081 --reload --log-level debug
 
 # Run with MCP server
 run-mcp:
-	@echo "🚀 Starting API and MCP Server..."
-	@./run-with-mcp.sh
+	@echo "🤖 Starting MCP server..."
+	@echo "MCP Server URL: http://localhost:8082"
+	PYTHONPATH=src uv run python -m natural_shift_planner.mcp.server
 
 # Run MCP server only
 mcp:
 	@echo "🔧 Starting MCP server (make sure API is running)..."
-	@uv run python mcp_server.py
+	PYTHONPATH=src uv run python -m natural_shift_planner.mcp.server
 
 # Test MCP server
 test-mcp:
 	@echo "🧪 Testing MCP server..."
-	@echo '{"jsonrpc":"2.0","method":"list_tools","id":1}' | uv run python mcp_server.py
+	@echo '{"jsonrpc":"2.0","method":"list_tools","id":1}' | PYTHONPATH=src uv run python -m natural_shift_planner.mcp.server
 
-# Start Streamlit web UI
-streamlit:
-	@echo "🌐 Starting Streamlit web UI..."
-	@echo "Make sure the FastAPI server is running (make run)"
-	@echo "Web UI will be available at: http://localhost:8501"
-	uv run streamlit run streamlit_main.py --server.port 8501
+# Start Streamlit app
+run-streamlit:
+	@echo "📊 Starting Streamlit app..."
+	@echo "Streamlit URL: http://localhost:8501"
+	cd src && PYTHONPATH=. uv run streamlit run natural_shift_planner_viewer/main.py --server.port 8501
 
 # Initialize Pulumi for infrastructure
 pulumi-setup:
