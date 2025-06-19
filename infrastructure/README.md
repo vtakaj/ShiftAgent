@@ -1,115 +1,86 @@
-# Infrastructure Deployment
+# Infrastructure Documentation
 
-This directory contains Pulumi Infrastructure as Code for deploying the Shift Scheduler application to Azure.
+## 🏗️ Infrastructure as Code with Pulumi
 
-## Setup Required Secrets
+The Shift Scheduler project uses Pulumi for Infrastructure as Code (IaC) to manage Azure resources. This provides version-controlled, reproducible infrastructure deployments.
 
-### GitHub Repository Secrets
+## 📁 Infrastructure Structure
 
-1. **PULUMI_ACCESS_TOKEN**: Pulumi access token for state management
-   - Go to [Pulumi Console](https://app.pulumi.com/) → Settings → Access Tokens
-   - Create new token and add to GitHub repository secrets
-
-2. **AZURE_CREDENTIALS**: Azure service principal credentials
-   ```bash
-   # Create service principal
-   az ad sp create-for-rbac --name "shift-scheduler-github" \
-     --role contributor \
-     --scopes /subscriptions/{subscription-id} \
-     --sdk-auth
-   ```
-   - Copy the JSON output and add to GitHub repository secrets
-
-### Environment Configuration
-
-Create environment protection rules in GitHub:
-- **development**: Auto-deploy from main branch
-- **production**: Require manual approval
-
-## Deployment Workflows
-
-### Infrastructure Deployment (`.github/workflows/infrastructure.yml`)
-
-**Automatic:**
-- **PR**: Runs `pulumi preview` and comments on PR
-- **Main branch push**: Deploys to dev environment
-
-**Manual:**
 ```
-Actions → Infrastructure Deployment → Run workflow
-- Stack: dev/prod
-- Action: preview/up/destroy
+infrastructure/
+├── __main__.py              # Main Pulumi program
+├── Pulumi.yaml             # Project configuration  
+├── Pulumi.dev.yaml         # Development stack config
+├── Pulumi.prod.yaml        # Production stack config
+├── requirements.txt        # Python dependencies
+├── README.md              # Infrastructure documentation
+├── modules/               # Reusable infrastructure modules
+│   ├── resource_group.py  # Resource group management
+│   ├── storage.py         # Storage account for job data
+│   ├── container_registry.py # Docker image registry
+│   └── container_apps.py  # Application hosting environment
+├── config/               # Configuration helpers
+│   └── common.py        # Shared configuration
+└── scripts/             # Deployment automation
+    ├── deploy-dev.sh    # Development deployment
+    ├── deploy-prod.sh   # Production deployment
+    └── destroy.sh       # Resource cleanup
 ```
 
-### Application Deployment (`.github/workflows/application.yml`)
+## 🏭 Azure Resources
 
-**Automatic:**
-- **Main branch push**: 
-  1. Runs tests and linting
-  2. Builds multi-arch Docker image
-  3. Pushes to GitHub Container Registry
-  4. Deploys to dev environment
+The infrastructure creates the following Azure resources:
 
-**Manual:**
-```
-Actions → Application Deployment → Run workflow
-- Environment: dev/prod
-```
+### Core Resources
+- **Resource Group**: Container for all related resources
+- **Storage Account**: For job data, logs, and application storage
+- **Container Registry**: For Docker image storage and distribution
+- **Container Apps Environment**: For hosting the application containers
+- **Log Analytics Workspace**: For monitoring and logging
 
-## Resource Naming Convention
+### Security & Networking
+- **Managed Identities**: For secure service-to-service authentication
+- **Private Endpoints**: For secure network access (production)
+- **Virtual Network**: For network isolation (production)
 
-Following Microsoft Cloud Adoption Framework (CAF):
+## 🚀 Quick Start
 
-| Resource Type | Naming Pattern | Example |
-|---------------|----------------|---------|
-| Resource Group | `rg-{org}-{project}-{workload}-{env}-{location}-{instance}` | `rg-org-shift-scheduler-core-dev-eastus-001` |
-| Storage Account | `st{org}{project}{env}{location}{instance}` | `storgshiftschedulerdeveus001` |
-| Container Registry | `cr{org}{project}{env}{location}{instance}` | `crorgshiftschedulerdeveus001` |
-| Container Apps Env | `cae-{org}-{project}-{workload}-{env}-{location}-{instance}` | `cae-org-shift-scheduler-core-dev-eastus-001` |
-| Log Analytics | `log-{org}-{project}-{workload}-{env}-{location}-{instance}` | `log-org-shift-scheduler-core-dev-eastus-001` |
+### Prerequisites
 
-## Local Development (without pip)
+1. **Azure CLI**: `brew install azure-cli && az login`
+2. **Pulumi CLI**: `brew install pulumi`
+3. **Python 3.11+**: For running the infrastructure code
 
-```bash
-# Install uv if not already installed
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Install Pulumi dependencies
-cd infrastructure
-uv sync --frozen
-
-# Preview changes
-uv run pulumi preview --stack dev
-
-# Deploy changes  
-uv run pulumi up --stack dev
-```
-
-### 🏃‍♂️ Quick Deployment
+### Quick Deployment
 
 #### Development Environment
-
 ```bash
 cd infrastructure
-
-# Initialize development stack
-pulumi stack init dev
-pulumi stack select dev
-
-# Deploy infrastructure
-pulumi up
+./scripts/deploy-dev.sh
 ```
 
 #### Production Environment
+```bash
+cd infrastructure
+./scripts/deploy-prod.sh
+```
+
+### Manual Deployment
 
 ```bash
 cd infrastructure
 
-# Initialize production stack
-pulumi stack init prod
-pulumi stack select prod
+# Install dependencies
+pip install -r requirements.txt
 
-# Deploy infrastructure
+# Initialize stack
+pulumi stack init dev
+pulumi stack select dev
+
+# Configure environment
+pulumi config set azure-native:location "East US"
+
+# Deploy
 pulumi up
 ```
 
@@ -117,10 +88,19 @@ pulumi up
 
 ### Stack Configuration
 
-Each stack has its own configuration file:
+Each environment has its own configuration:
 
-- `Pulumi.dev.yaml`: Development configuration
-- `Pulumi.prod.yaml`: Production configuration
+**Development (Pulumi.dev.yaml)**:
+- Location: East US
+- Instance Count: 1
+- SKU Size: Basic
+- Environment: development
+
+**Production (Pulumi.prod.yaml)**:
+- Location: East US  
+- Instance Count: 3
+- SKU Size: Standard
+- Environment: production
 
 ### Environment Variables
 
@@ -128,8 +108,8 @@ Each stack has its own configuration file:
 |----------|-------------|---------|
 | `azure-native:location` | Azure region | East US |
 | `environment` | Environment name | dev |
-| `instance_count` | Number of instances | 1 |
-| `sku_size` | Resource SKU size | Basic |
+| `instance_count` | Container instances | 1 |
+| `sku_size` | Resource tier | Basic |
 
 ### Setting Configuration Values
 
@@ -145,40 +125,74 @@ pulumi config set sku_size Standard
 
 ## 📊 Outputs
 
-After deployment, the following outputs are available:
+After deployment, key outputs include:
 
+- `resource_group_name`: Azure resource group name
+- `storage_account_name`: Storage account for job data
+- `container_registry_name`: Docker registry name
+- `container_registry_login_server`: Registry URL
+- `container_apps_environment_name`: App hosting environment
+
+View outputs:
 ```bash
-# View all outputs
 pulumi stack output
-
-# Get specific output
-pulumi stack output resource_group_name
-pulumi stack output container_registry_login_server
 ```
 
-Key outputs:
-- `resource_group_name`: Name of the resource group
-- `storage_account_name`: Name of the storage account
-- `container_registry_name`: Name of the container registry
-- `container_registry_login_server`: Registry login server URL
-- `container_apps_environment_name`: Container Apps environment name
+## 🔄 Integration with Application
+
+### Container Registry Integration
+
+1. **Build and Push Images**:
+   ```bash
+   # Get registry details
+   REGISTRY=$(pulumi stack output container_registry_login_server)
+   
+   # Build and tag image
+   docker build -t $REGISTRY/shift-scheduler:latest .
+   
+   # Push to registry
+   docker push $REGISTRY/shift-scheduler:latest
+   ```
+
+2. **Configure Docker Compose**:
+   ```yaml
+   services:
+     shift-scheduler:
+       image: ${CONTAINER_REGISTRY}/shift-scheduler:latest
+   ```
+
+### Storage Integration
+
+Configure the application to use Azure Storage:
+
+```bash
+# Get storage connection string
+STORAGE_CONNECTION=$(pulumi stack output storage_connection_string)
+
+# Set environment variable
+export JOB_STORAGE_CONNECTION_STRING=$STORAGE_CONNECTION
+```
+
+### Container Apps Deployment
+
+The Container Apps environment is ready for application deployment. Future phases will include:
+
+1. **Application Deployment**: Deploy shift-scheduler containers
+2. **Database Integration**: Connect to managed PostgreSQL
+3. **Scaling Configuration**: Auto-scaling based on load
+4. **Monitoring Setup**: Application insights and alerts
 
 ## 🛠️ Management Commands
 
 ### Stack Management
-
 ```bash
-# List all stacks
+# List stacks
 pulumi stack ls
 
-# Switch between stacks
-pulumi stack select dev
-pulumi stack select prod
+# Switch stacks
+pulumi stack select dev|prod
 
-# View stack outputs
-pulumi stack output
-
-# View stack configuration
+# View configuration
 pulumi config
 
 # Preview changes
@@ -187,34 +201,58 @@ pulumi preview
 # Deploy changes
 pulumi up
 
-# Rollback to previous deployment
-pulumi stack history
-pulumi cancel  # if deployment is in progress
+# View outputs
+pulumi stack output
 ```
 
 ### Resource Management
-
 ```bash
-# View resources in current stack
+# View all resources
 pulumi stack --show-urns
 
-# Export stack state
-pulumi stack export > stack-backup.json
-
-# Import stack state
-pulumi stack import < stack-backup.json
-
-# Refresh stack state
+# Refresh state
 pulumi refresh
+
+# Export/backup stack
+pulumi stack export > backup.json
 ```
 
-## 🔒 Security Best Practices
+### Cleanup
+```bash
+# Destroy resources
+./scripts/destroy.sh
 
-1. **Use Managed Identities**: Enable managed identities for container apps
-2. **Network Security**: Configure virtual networks and subnets
-3. **Access Control**: Use Azure RBAC for resource access
-4. **Secrets Management**: Use Azure Key Vault for secrets
-5. **Monitoring**: Enable Azure Monitor and alerts
+# Or manually
+pulumi destroy
+pulumi stack rm <stack-name>
+```
+
+## 🔒 Security Considerations
+
+### Development Environment
+- Basic security settings for cost optimization
+- Admin access enabled for simplicity
+- Public network access allowed
+
+### Production Environment
+- Enhanced security configurations
+- Managed identities for service authentication
+- Private endpoints for secure access
+- Network security groups and firewalls
+- Azure Key Vault for secrets management
+
+## 📈 Cost Optimization
+
+### Development
+- **Basic SKU** resources for minimal cost
+- **Single instance** deployments
+- **Local storage redundancy** (LRS)
+
+### Production
+- **Standard/Premium SKU** for performance
+- **Multiple instances** for availability
+- **Geo-redundant storage** (GRS) for durability
+- **Auto-scaling** to optimize costs
 
 ## 🚨 Troubleshooting
 
@@ -223,47 +261,51 @@ pulumi refresh
 1. **Authentication Errors**:
    ```bash
    az login
-   pulumi config set azure-native:clientId <client-id>
-   pulumi config set azure-native:clientSecret <client-secret> --secret
-   pulumi config set azure-native:tenantId <tenant-id>
+   pulumi login
    ```
 
 2. **Resource Naming Conflicts**:
-   - Storage account names must be globally unique
-   - Container registry names must be globally unique
-   - Use stack name in resource naming
+   - Storage accounts need globally unique names
+   - Container registries need globally unique names
+   - Use stack names to ensure uniqueness
 
 3. **Permission Issues**:
    - Ensure Azure subscription has required permissions
-   - Check RBAC assignments for the deployment principal
+   - Check RBAC roles for the deployment principal
 
 ### Debugging
-
 ```bash
-# Enable verbose logging
+# Verbose logging
 pulumi up --verbose
 
-# View detailed logs
+# Check logs
 pulumi logs
 
-# Check stack status
-pulumi stack --show-urns
+# Validate configuration
+pulumi config
+pulumi about
 ```
 
-## 🧹 Cleanup
+## 🔮 Future Enhancements
 
-To destroy all resources:
+### Phase 3-8 Implementation
+The current infrastructure provides the foundation for:
 
-```bash
-# Destroy current stack resources
-pulumi destroy
+1. **Phase 3**: Storage Account for job data ✅
+2. **Phase 4**: Container Registry ✅  
+3. **Phase 5**: Container Apps Environment ✅
+4. **Phase 6**: CI/CD Pipeline integration
+5. **Phase 7**: Monitoring and security enhancements
+6. **Phase 8**: Production optimization
 
-# Remove stack completely
-pulumi stack rm <stack-name>
-```
+### Planned Additions
+- **Azure Key Vault**: Secrets management
+- **Application Insights**: Application monitoring
+- **Azure Database for PostgreSQL**: Managed database
+- **Azure CDN**: Content delivery
+- **Azure Front Door**: Load balancing and WAF
 
-## 📚 Additional Resources
+## 📚 Resources
 
 - [Pulumi Azure Native Provider](https://www.pulumi.com/registry/packages/azure-native/)
 - [Azure Container Apps Documentation](https://docs.microsoft.com/en-us/azure/container-apps/)
-- [Pulumi Best Practices](https://www.pulumi.com/docs/guides/best-practices/)

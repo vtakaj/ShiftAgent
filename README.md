@@ -714,3 +714,38 @@ sequenceDiagram
 8. **Result Presentation (Human)**
    - Review shift table in tabular format
    - Review optimization results explanation
+
+## 🏗️ Infrastructure
+
+This project includes Infrastructure as Code (IaC) using Pulumi for Azure deployment.
+
+### Infrastructure Documentation
+
+- **包括的なインフラドキュメント**: [infrastructure/README.md](infrastructure/README.md)
+
+### Quick Infrastructure Setup
+
+```bash
+# Navigate to infrastructure directory
+cd infrastructure
+
+# Install dependencies
+uv sync
+
+# Deploy development environment
+uv run pulumi up --stack dev
+
+# Deploy production environment
+uv run pulumi up --stack prod
+```
+
+### Infrastructure Features
+
+- **Azure Container Apps**: Application hosting
+- **Azure Container Registry**: Docker image storage
+- **Azure Storage**: Job data persistence
+- **Azure Key Vault**: Secrets management (production)
+- **Azure Monitor**: Application monitoring
+- **CI/CD Integration**: GitHub Actions workflows
+
+For detailed infrastructure documentation, see [infrastructure/README.md](infrastructure/README.md).
