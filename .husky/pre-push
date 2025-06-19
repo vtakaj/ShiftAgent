@@ -9,9 +9,9 @@ if [ "$SKIP_TESTS" = "true" ]; then
     exit 0
 fi
 
-# Run tests before pushing
+# Run tests before pushing using make (uses Dev Container environment)
 echo "🔬 Running test suite..."
-if ! uv run pytest -v --tb=short; then
+if ! make test; then
     echo ""
     echo "❌ Tests failed! Please fix failing tests before pushing."
     echo ""

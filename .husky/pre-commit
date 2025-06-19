@@ -3,20 +3,16 @@
 
 echo "🔍 Running pre-commit checks..."
 
-# Format Python code with ruff
-echo "📝 Formatting Python code..."
-uv run ruff format .
-
-# Run Python linting with auto-fix
-echo "🧹 Running Python linting..."
-if ! uv run ruff check . --fix; then
-    echo "❌ Ruff linting failed. Please fix the issues above."
+# Format and lint Python code using make (uses Dev Container environment)
+echo "📝 Formatting and linting Python code..."
+if ! make format; then
+    echo "❌ Code formatting/linting failed. Please fix the issues above."
     exit 1
 fi
 
 # Run type checking (non-blocking, warnings only)
 echo "🔍 Running type checking..."
-uv run mypy . || echo "⚠️  MyPy warnings found (non-blocking)"
+make lint || echo "⚠️  MyPy warnings found (non-blocking)"
 
 # Stage any files that were automatically formatted
 echo "📝 Staging formatted files..."
