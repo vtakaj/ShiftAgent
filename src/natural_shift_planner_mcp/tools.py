@@ -332,3 +332,23 @@ async def get_schedule_html_report(ctx: Context, job_id: str) -> dict[str, Any]:
             return {"error": f"API error: {e.response.status_code}", "job_id": job_id}
     except Exception as e:
         return {"error": f"Failed to generate HTML report: {str(e)}", "job_id": job_id}
+
+
+# Continuous Planning Tools
+async def swap_shifts(ctx: Context, job_id: str, shift1_id: str, shift2_id: str) -> dict[str, Any]:
+    """
+    Swap employees between two shifts during optimization
+
+    This tool swaps the employee assignments between two shifts in a completed schedule.
+    It performs a targeted re-optimization to find the best possible assignment after the swap.
+
+    Args:
+        job_id: ID of the completed optimization job
+        shift1_id: ID of the first shift to swap
+        shift2_id: ID of the second shift to swap
+
+    Returns:
+        Success message with swap details and updated schedule statistics
+    """
+    request_data = {"shift1_id": shift1_id, "shift2_id": shift2_id}
+    return await call_api("POST", f"/api/shifts/{job_id}/swap", request_data)
