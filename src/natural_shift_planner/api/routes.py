@@ -439,9 +439,13 @@ async def swap_shifts(job_id: str, request: SwapShiftsRequest):
         shift2_employee = None
         for shift in solution.shifts:
             if shift.id == request.shift1_id:
-                shift1_employee = shift.employee.name if shift.employee else "unassigned"
+                shift1_employee = (
+                    shift.employee.name if shift.employee else "unassigned"
+                )
             elif shift.id == request.shift2_id:
-                shift2_employee = shift.employee.name if shift.employee else "unassigned"
+                shift2_employee = (
+                    shift.employee.name if shift.employee else "unassigned"
+                )
 
         return SwapShiftsResponse(
             job_id=job_id,

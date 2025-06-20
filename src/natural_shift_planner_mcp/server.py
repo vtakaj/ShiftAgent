@@ -4,6 +4,7 @@ FastMCP server for Shift Scheduler
 
 import logging
 import os
+import sys
 
 from fastmcp import FastMCP
 
@@ -21,19 +22,16 @@ from .tools import (
     update_employee_skills,
 )
 
+# Ensure all logging goes to stderr, as stdout is used for MCP communication.
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper(), stream=sys.stderr)
+
 # Create FastMCP server with logging
-logger = logging.getLogger("fastmcp.server")
+logger = logging.getLogger(__name__)
 mcp: FastMCP = FastMCP("shift-scheduler-mcp", dependencies=["httpx"])
 
-# Configure logging
-log_level = os.getenv("LOG_LEVEL", "INFO")
-mcp_log_level = os.getenv("MCP_LOG_LEVEL", log_level)
-logging.getLogger("fastmcp").setLevel(
-    getattr(logging, mcp_log_level.upper(), logging.INFO)
-)
-logging.getLogger("fastmcp.server").setLevel(
-    getattr(logging, mcp_log_level.upper(), logging.INFO)
-)
+# Configure logging for fastmcp specifically if needed
+mcp_log_level = os.getenv("MCP_LOG_LEVEL", "INFO").upper()
+logging.getLogger("fastmcp").setLevel(mcp_log_level)
 
 # Register original tools
 mcp.tool()(health_check)
@@ -131,5 +129,10 @@ The following additional employee management features are planned but not yet im
 """
 
 
-if __name__ == "__main__":
+def main():
+    """Entry point for MCP server"""
     mcp.run()
+
+
+if __name__ == "__main__":
+    main()
