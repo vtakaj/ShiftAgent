@@ -128,17 +128,17 @@ debug:
 run-mcp:
 	@echo "🤖 Starting MCP server..."
 	@echo "MCP Server URL: http://localhost:8082"
-	PYTHONPATH=src uv run python -m natural_shift_planner.mcp.server
+	PYTHONPATH=src uv run python -m natural_shift_planner_mcp.server
 
 # Run MCP server only
 mcp:
 	@echo "🔧 Starting MCP server (make sure API is running)..."
-	PYTHONPATH=src uv run python -m natural_shift_planner.mcp.server
+	PYTHONPATH=src uv run python -m natural_shift_planner_mcp.server
 
 # Test MCP server
 test-mcp:
 	@echo "🧪 Testing MCP server..."
-	@echo '{"jsonrpc":"2.0","method":"list_tools","id":1}' | PYTHONPATH=src uv run python -m natural_shift_planner.mcp.server
+	@echo '{"jsonrpc":"2.0","method":"list_tools","id":1}' | PYTHONPATH=src uv run python -m natural_shift_planner_mcp.server
 
 # Start Streamlit app
 run-streamlit:
@@ -173,3 +173,37 @@ hooks-test:
 	@echo "🔍 Testing commit-msg hook..."
 	@echo "feat: test commit message" | bunx commitlint || echo "Commit message validation test completed"
 	@echo "✅ Hook tests completed!"
+
+# Docker commands
+docker-build:
+	@echo "🐳 Building Docker images..."
+	docker-compose build
+
+docker-build-mcp:
+	@echo "🤖 Building MCP server Docker image..."
+	docker build -f Dockerfile.mcp -t shift-scheduler-mcp-server .
+
+docker-run:
+	@echo "🚀 Starting services with Docker Compose..."
+	docker-compose up -d
+
+docker-run-mcp:
+	@echo "🤖 Starting MCP server with Docker Compose..."
+	docker-compose --profile mcp up -d mcp-server
+
+docker-stop:
+	@echo "🛑 Stopping Docker services..."
+	docker-compose down
+
+docker-logs:
+	@echo "📋 Showing Docker logs..."
+	docker-compose logs -f
+
+docker-logs-mcp:
+	@echo "📋 Showing MCP server logs..."
+	docker-compose logs -f mcp-server
+
+# Test Docker MCP server
+test-docker-mcp:
+	@echo "🧪 Testing Docker MCP server..."
+	@echo '{"jsonrpc":"2.0","method":"list_tools","id":1}' | docker run -i --rm --network shift-scheduler-network shift-scheduler-mcp-server:latest

@@ -484,13 +484,17 @@ def swap_shifts_in_job(job_id: str, shift1_id: str, shift2_id: str) -> bool:
             )
 
         # Check availability constraints
-        if employee1 is not None and employee1.is_unavailable_on_date(shift2.start_time):
+        if employee1 is not None and employee1.is_unavailable_on_date(
+            shift2.start_time
+        ):
             swap_valid = False
             validation_errors.append(
                 f"Employee {employee1.name} is unavailable on {shift2.start_time.date()}"
             )
 
-        if employee2 is not None and employee2.is_unavailable_on_date(shift1.start_time):
+        if employee2 is not None and employee2.is_unavailable_on_date(
+            shift1.start_time
+        ):
             swap_valid = False
             validation_errors.append(
                 f"Employee {employee2.name} is unavailable on {shift1.start_time.date()}"
@@ -499,8 +503,16 @@ def swap_shifts_in_job(job_id: str, shift1_id: str, shift2_id: str) -> bool:
         # Check for shift overlap (if both employees are assigned)
         if employee1 is not None and employee2 is not None:
             # Get all shifts for each employee to check for conflicts
-            employee1_shifts = [s for s in current_solution.shifts if s.employee == employee1 and s.id != shift1_id]
-            employee2_shifts = [s for s in current_solution.shifts if s.employee == employee2 and s.id != shift2_id]
+            employee1_shifts = [
+                s
+                for s in current_solution.shifts
+                if s.employee == employee1 and s.id != shift1_id
+            ]
+            employee2_shifts = [
+                s
+                for s in current_solution.shifts
+                if s.employee == employee2 and s.id != shift2_id
+            ]
 
             # Check if employee1 (moving to shift2) has conflicts
             for other_shift in employee1_shifts:
