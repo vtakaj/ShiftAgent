@@ -69,7 +69,12 @@ class AzureNamingConvention:
         """Get environment abbreviation"""
         if not environment:
             config = pulumi.Config()
-            environment = config.get("environment") or pulumi.get_stack()
+            # Try to get environment from project-specific config first, then generic config, then stack name
+            environment = (
+                config.get("environment") 
+                or pulumi.Config("shift-scheduler-infra").get("environment")
+                or pulumi.get_stack()
+            )
 
         return ENVIRONMENT_ABBREVIATIONS.get(
             environment.lower(), environment.lower()[:3]
@@ -204,11 +209,16 @@ class AzureNamingConvention:
 def get_naming_convention() -> AzureNamingConvention:
     """Get naming convention instance with current Pulumi configuration"""
     config = pulumi.Config()
+    project_config = pulumi.Config("shift-scheduler-infra")
 
     return AzureNamingConvention(
         organization="vtakaj",
         project="shift-scheduler",
-        environment=config.get("environment") or pulumi.get_stack(),
+        environment=(
+            config.get("environment") 
+            or project_config.get("environment")
+            or pulumi.get_stack()
+        ),
         location=config.get("azure-native:location"),
         instance="001",
     )
