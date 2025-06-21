@@ -352,3 +352,30 @@ async def swap_shifts(ctx: Context, job_id: str, shift1_id: str, shift2_id: str)
     """
     request_data = {"shift1_id": shift1_id, "shift2_id": shift2_id}
     return await call_api("POST", f"/api/shifts/{job_id}/swap", request_data)
+
+
+async def reassign_shift(
+    ctx: Context, job_id: str, shift_id: str, employee_id: str | None = None, force: bool = False
+) -> dict[str, Any]:
+    """
+    Reassign a shift to a specific employee or unassign it
+
+    This tool allows managers to manually override the optimizer's decisions by reassigning
+    a shift to a specific employee or unassigning it entirely. It validates skill requirements
+    and constraints but can be forced to override soft constraint violations.
+
+    Args:
+        job_id: ID of the completed optimization job
+        shift_id: ID of the shift to reassign
+        employee_id: ID of the employee to assign (null/None to unassign)
+        force: Whether to override soft constraint violations (default: False)
+
+    Returns:
+        Success message with reassignment details, warnings, and updated schedule statistics
+    """
+    request_data = {
+        "shift_id": shift_id,
+        "employee_id": employee_id,
+        "force": force,
+    }
+    return await call_api("POST", f"/api/shifts/{job_id}/reassign", request_data)

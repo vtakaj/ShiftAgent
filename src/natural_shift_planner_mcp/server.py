@@ -16,6 +16,7 @@ from .tools import (
     get_schedule_shifts,
     get_solve_status,
     health_check,
+    reassign_shift,
     solve_schedule_async,
     solve_schedule_sync,
     swap_shifts,
@@ -55,11 +56,11 @@ mcp.tool()(get_schedule_html_report)
 
 # Register continuous planning tools
 mcp.tool()(swap_shifts)
+mcp.tool()(reassign_shift)
 
 # TODO: Register remaining continuous planning tools when implemented
 # mcp.tool()(find_shift_replacement)
 # mcp.tool()(pin_shifts)
-# mcp.tool()(reassign_shift)
 
 # TODO: Register additional employee management tools when implemented
 # mcp.tool()(add_employees_batch_to_job)
@@ -104,12 +105,12 @@ async def shift_scheduling_prompt() -> str:
 
 ### Continuous Planning (Available Now)
 - swap_shifts: Swap employees between two shifts during optimization
+- reassign_shift: Reassign shift to specific employee or unassign (with validation and force override)
 
 ### Continuous Planning (Coming Soon)
 The following real-time modification features are planned but not yet implemented:
 - find_shift_replacement: Find replacement when employee becomes unavailable
 - pin_shifts: Pin/unpin shifts to prevent changes during optimization
-- reassign_shift: Reassign shift to specific employee or unassign
 
 ### Additional Employee Management (Coming Soon)
 The following additional employee management features are planned but not yet implemented:
