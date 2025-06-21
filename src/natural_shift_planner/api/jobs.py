@@ -406,6 +406,192 @@ def update_employee_skills(job_id: str, employee_id: str, new_skills: set[str]) 
         return False
 
 
+def reassign_shift_in_job(job_id: str, shift_id: str, new_employee_id: str | None, force: bool = False) -> tuple[bool, list[str]]:
+    """Reassign a shift to a specific employee or unassign it"""
+    warnings = []
+    
+    try:
+        with job_lock:
+            if job_id not in jobs:
+                logger.error(f"Job {job_id} not found")
+                return False, [f"Job {job_id} not found"]
+
+            job = jobs[job_id]
+
+            # Only allow reassigning in completed jobs
+            if job["status"] != "SOLVING_COMPLETED":
+                logger.error(f"Job {job_id} status is {job['status']}, not completed")
+                return False, [f"Job {job_id} is not completed"]
+
+            if "solution" not in job:
+                logger.error(f"Job {job_id} has no solution")
+                return False, [f"Job {job_id} has no solution"]
+
+            # Get the current solution
+            current_solution = job["solution"]
+
+            # Find the shift to reassign
+            target_shift = None
+            for shift in current_solution.shifts:
+                if shift.id == shift_id:
+                    target_shift = shift
+                    break
+
+            if target_shift is None:
+                logger.error(f"Shift {shift_id} not found in solution")
+                return False, [f"Shift {shift_id} not found"]
+
+            # Find the new employee if specified
+            new_employee = None
+            if new_employee_id is not None:
+                for emp in current_solution.employees:
+                    if emp.id == new_employee_id:
+                        new_employee = emp
+                        break
+
+                if new_employee is None:
+                    logger.error(f"Employee {new_employee_id} not found in solution")
+                    return False, [f"Employee {new_employee_id} not found"]
+
+            # Mark job as being modified
+            jobs[job_id]["status"] = "REASSIGNING_SHIFT"
+            _sync_job_to_store(job_id)
+
+        # Perform validation
+        validation_errors = []
+        
+        if new_employee is not None:
+            # Check skill requirements
+            if not new_employee.has_required_skills(target_shift.required_skills):
+                missing_skills = target_shift.required_skills - new_employee.skills
+                error_msg = f"Employee {new_employee.name} lacks required skills: {missing_skills}"
+                if force:
+                    warnings.append(f"WARNING: {error_msg} (forced)")
+                    logger.warning(f"[Job {job_id}] {error_msg} - forced by user")
+                else:
+                    validation_errors.append(error_msg)
+
+            # Check availability
+            if new_employee.is_unavailable_on_date(target_shift.start_time):
+                error_msg = f"Employee {new_employee.name} is unavailable on {target_shift.start_time.date()}"
+                if force:
+                    warnings.append(f"WARNING: {error_msg} (forced)")
+                    logger.warning(f"[Job {job_id}] {error_msg} - forced by user")
+                else:
+                    validation_errors.append(error_msg)
+
+            # Check for shift overlap
+            for other_shift in current_solution.shifts:
+                if (other_shift.id != shift_id and 
+                    other_shift.employee == new_employee and 
+                    target_shift.overlaps_with(other_shift)):
+                    error_msg = f"Employee {new_employee.name} already has overlapping shift {other_shift.id} ({other_shift.start_time} - {other_shift.end_time})"
+                    if force:
+                        warnings.append(f"WARNING: {error_msg} (forced)")
+                        logger.warning(f"[Job {job_id}] {error_msg} - forced by user")
+                    else:
+                        validation_errors.append(error_msg)
+
+        # If validation failed and not forced, return errors
+        if validation_errors and not force:
+            error_msg = f"Reassignment validation failed: {'; '.join(validation_errors)}"
+            logger.error(f"[Job {job_id}] {error_msg}")
+            with job_lock:
+                jobs[job_id]["status"] = "SOLVING_FAILED"
+                jobs[job_id]["error"] = error_msg
+                _sync_job_to_store(job_id)
+            return False, validation_errors
+
+        # Store the old assignment for logging
+        old_employee = target_shift.employee
+        old_employee_name = old_employee.name if old_employee else "unassigned"
+        new_employee_name = new_employee.name if new_employee else "unassigned"
+
+        logger.info(
+            f"[Job {job_id}] Reassigning shift {shift_id} from {old_employee_name} to {new_employee_name}"
+        )
+
+        # Pin all other assignments to preserve them during re-optimization
+        pinned_count = 0
+        for shift in current_solution.shifts:
+            if shift.id != shift_id and shift.employee is not None and not shift.pinned:
+                # Only pin assignments without violations
+                current_emp = shift.employee
+                has_violation = False
+
+                # Check for hard constraint violations
+                if not current_emp.has_required_skills(shift.required_skills):
+                    has_violation = True
+                elif current_emp.is_unavailable_on_date(shift.start_time):
+                    has_violation = True
+
+                # Only pin valid assignments
+                if not has_violation:
+                    shift.pin()
+                    pinned_count += 1
+
+        logger.info(f"[Job {job_id}] Pinned {pinned_count} other assignments")
+
+        # Directly set the new assignment
+        target_shift.employee = new_employee
+
+        # Use solver to validate and optimize around the new assignment
+        solver = solver_factory.build_solver()
+
+        logger.info(f"[Job {job_id}] Running solver to validate reassignment...")
+        updated_solution = solver.solve(current_solution)
+
+        # Unpin shifts for future modifications
+        for shift in updated_solution.shifts:
+            if shift.pinned:
+                shift.pinned = False
+
+        # Update the job with new solution
+        with job_lock:
+            jobs[job_id]["status"] = "SOLVING_COMPLETED"
+            jobs[job_id]["solution"] = updated_solution
+            jobs[job_id]["updated_at"] = datetime.now()
+            jobs[job_id]["final_score"] = str(updated_solution.score)
+
+            # Track the reassignment
+            if "shift_reassignments" not in jobs[job_id]:
+                jobs[job_id]["shift_reassignments"] = []
+            jobs[job_id]["shift_reassignments"].append(
+                {
+                    "shift_id": shift_id,
+                    "old_employee_id": old_employee.id if old_employee else None,
+                    "old_employee_name": old_employee_name,
+                    "new_employee_id": new_employee.id if new_employee else None,
+                    "new_employee_name": new_employee_name,
+                    "forced": force,
+                    "warnings": warnings,
+                    "timestamp": datetime.now(),
+                }
+            )
+            _sync_job_to_store(job_id)
+
+        total_assigned = sum(
+            1 for s in updated_solution.shifts if s.employee is not None
+        )
+
+        logger.info(
+            f"[Job {job_id}] Shift reassignment completed successfully. "
+            f"Score: {updated_solution.score}, "
+            f"Total assigned shifts: {total_assigned}/{len(updated_solution.shifts)}"
+        )
+
+        return True, warnings
+
+    except Exception as e:
+        logger.error(f"[Job {job_id}] Failed to reassign shift: {str(e)}")
+        with job_lock:
+            if job_id in jobs:
+                jobs[job_id]["status"] = "SOLVING_FAILED"
+                jobs[job_id]["error"] = f"Shift reassignment failed: {str(e)}"
+                _sync_job_to_store(job_id)
+        return False, [f"Internal error: {str(e)}"]
+
+
 def swap_shifts_in_job(job_id: str, shift1_id: str, shift2_id: str) -> bool:
     """Swap employee assignments between two shifts in a completed job"""
     try:
@@ -484,13 +670,17 @@ def swap_shifts_in_job(job_id: str, shift1_id: str, shift2_id: str) -> bool:
             )
 
         # Check availability constraints
-        if employee1 is not None and employee1.is_unavailable_on_date(shift2.start_time):
+        if employee1 is not None and employee1.is_unavailable_on_date(
+            shift2.start_time
+        ):
             swap_valid = False
             validation_errors.append(
                 f"Employee {employee1.name} is unavailable on {shift2.start_time.date()}"
             )
 
-        if employee2 is not None and employee2.is_unavailable_on_date(shift1.start_time):
+        if employee2 is not None and employee2.is_unavailable_on_date(
+            shift1.start_time
+        ):
             swap_valid = False
             validation_errors.append(
                 f"Employee {employee2.name} is unavailable on {shift1.start_time.date()}"
@@ -499,8 +689,16 @@ def swap_shifts_in_job(job_id: str, shift1_id: str, shift2_id: str) -> bool:
         # Check for shift overlap (if both employees are assigned)
         if employee1 is not None and employee2 is not None:
             # Get all shifts for each employee to check for conflicts
-            employee1_shifts = [s for s in current_solution.shifts if s.employee == employee1 and s.id != shift1_id]
-            employee2_shifts = [s for s in current_solution.shifts if s.employee == employee2 and s.id != shift2_id]
+            employee1_shifts = [
+                s
+                for s in current_solution.shifts
+                if s.employee == employee1 and s.id != shift1_id
+            ]
+            employee2_shifts = [
+                s
+                for s in current_solution.shifts
+                if s.employee == employee2 and s.id != shift2_id
+            ]
 
             # Check if employee1 (moving to shift2) has conflicts
             for other_shift in employee1_shifts:

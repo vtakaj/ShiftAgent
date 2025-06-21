@@ -49,7 +49,7 @@ After updating the configuration, restart Claude Desktop for the changes to take
 
 ## 🛠 Available MCP Tools
 
-The MCP server exposes 10 tools organized into 4 categories:
+The MCP server exposes 11 tools organized into 4 categories:
 
 ### Basic Operations (7 tools)
 1. **`health_check`** - Check API health status
@@ -63,16 +63,16 @@ The MCP server exposes 10 tools organized into 4 categories:
 ### Schedule Management (1 tool)
 8. **`get_schedule_shifts`** - Inspect completed schedules in detail
 
-### Employee Management (2 tools - NEW!)
+### Employee Management (3 tools - NEW!)
 9. **`add_employee_to_job`** - Add new employee to completed job with minimal re-optimization
 10. **`update_employee_skills`** - Update employee skills and re-optimize affected assignments
+11. **`reassign_shift`** - Reassign shift to specific employee or unassign it
 
 ### Continuous Planning (Coming Soon)
 The following tools are planned but not yet implemented:
 - **`swap_shifts`** - Swap employees between two shifts during optimization
 - **`find_shift_replacement`** - Find replacement when employee becomes unavailable
 - **`pin_shifts`** - Pin/unpin shifts to prevent changes during optimization
-- **`reassign_shift`** - Reassign shift to specific employee or unassign
 
 
 ## 📋 Usage Examples

@@ -36,8 +36,8 @@ dev = [
 
 # Console scripts for uvx support
 [project.scripts]
-shift-scheduler-api = "main:main"
-shift-scheduler-mcp = "mcp_server:main"
+shift-scheduler-api = "natural_shift_planner.main:main"
+shift-scheduler-mcp = "natural_shift_planner_mcp.server:main"
 
 [build-system]
 requires = ["hatchling"]

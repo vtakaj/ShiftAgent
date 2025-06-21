@@ -17,12 +17,15 @@ from .jobs import (
     add_employee_to_completed_job,
     job_lock,
     jobs,
+    reassign_shift_in_job,
     solve_problem_async,
     swap_shifts_in_job,
     update_employee_skills,
 )
 from .schemas import (
     EmployeeRequest,
+    ReassignShiftRequest,
+    ReassignShiftResponse,
     ShiftScheduleRequest,
     SolutionResponse,
     SolveResponse,
@@ -439,9 +442,13 @@ async def swap_shifts(job_id: str, request: SwapShiftsRequest):
         shift2_employee = None
         for shift in solution.shifts:
             if shift.id == request.shift1_id:
-                shift1_employee = shift.employee.name if shift.employee else "unassigned"
+                shift1_employee = (
+                    shift.employee.name if shift.employee else "unassigned"
+                )
             elif shift.id == request.shift2_id:
-                shift2_employee = shift.employee.name if shift.employee else "unassigned"
+                shift2_employee = (
+                    shift.employee.name if shift.employee else "unassigned"
+                )
 
         return SwapShiftsResponse(
             job_id=job_id,
@@ -459,6 +466,57 @@ async def swap_shifts(job_id: str, request: SwapShiftsRequest):
                 error_msg = jobs[job_id].get("error", "Unknown error occurred")
             else:
                 error_msg = "Job not found"
+
+        raise HTTPException(status_code=400, detail=error_msg)
+
+
+@router.post("/api/shifts/{job_id}/reassign", response_model=ReassignShiftResponse)
+async def reassign_shift(job_id: str, request: ReassignShiftRequest):
+    """Reassign a shift to a specific employee or unassign it"""
+    # Perform the reassignment
+    success, warnings_or_errors = reassign_shift_in_job(
+        job_id, request.shift_id, request.employee_id, request.force
+    )
+
+    if success:
+        # Get updated job info
+        with job_lock:
+            job = jobs[job_id]
+            solution = job["solution"]
+
+        # Find the reassigned shift to get current assignment
+        current_employee = None
+        current_employee_name = None
+        for shift in solution.shifts:
+            if shift.id == request.shift_id:
+                current_employee = shift.employee
+                current_employee_name = (
+                    shift.employee.name if shift.employee else None
+                )
+                break
+
+        return ReassignShiftResponse(
+            job_id=job_id,
+            shift_id=request.shift_id,
+            employee_id=current_employee.id if current_employee else None,
+            employee_name=current_employee_name,
+            status="SUCCESS",
+            message=f"Successfully reassigned shift {request.shift_id} to {current_employee_name or 'unassigned'}",
+            warnings=warnings_or_errors,  # These are warnings when success=True
+            final_score=str(solution.score),
+            html_report_url=f"/api/shifts/solve/{job_id}/html",
+        )
+    else:
+        # Get error details from job
+        with job_lock:
+            if job_id in jobs:
+                error_msg = jobs[job_id].get("error", "Unknown error occurred")
+            else:
+                error_msg = "Job not found"
+
+        # Use the specific errors returned from the function
+        if warnings_or_errors:
+            error_msg = "; ".join(warnings_or_errors)
 
         raise HTTPException(status_code=400, detail=error_msg)
 

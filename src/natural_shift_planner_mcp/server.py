@@ -4,6 +4,7 @@ FastMCP server for Shift Scheduler
 
 import logging
 import os
+import sys
 
 from fastmcp import FastMCP
 
@@ -15,25 +16,24 @@ from .tools import (
     get_schedule_shifts,
     get_solve_status,
     health_check,
+    reassign_shift,
     solve_schedule_async,
     solve_schedule_sync,
+    swap_shifts,
     test_weekly_constraints,
     update_employee_skills,
 )
 
+# Ensure all logging goes to stderr, as stdout is used for MCP communication.
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper(), stream=sys.stderr)
+
 # Create FastMCP server with logging
-logger = logging.getLogger("fastmcp.server")
+logger = logging.getLogger(__name__)
 mcp: FastMCP = FastMCP("shift-scheduler-mcp", dependencies=["httpx"])
 
-# Configure logging
-log_level = os.getenv("LOG_LEVEL", "INFO")
-mcp_log_level = os.getenv("MCP_LOG_LEVEL", log_level)
-logging.getLogger("fastmcp").setLevel(
-    getattr(logging, mcp_log_level.upper(), logging.INFO)
-)
-logging.getLogger("fastmcp.server").setLevel(
-    getattr(logging, mcp_log_level.upper(), logging.INFO)
-)
+# Configure logging for fastmcp specifically if needed
+mcp_log_level = os.getenv("MCP_LOG_LEVEL", "INFO").upper()
+logging.getLogger("fastmcp").setLevel(mcp_log_level)
 
 # Register original tools
 mcp.tool()(health_check)
@@ -54,11 +54,13 @@ mcp.tool()(update_employee_skills)
 # Register report generation tools
 mcp.tool()(get_schedule_html_report)
 
-# TODO: Register continuous planning tools when implemented
-# mcp.tool()(swap_shifts)
+# Register continuous planning tools
+mcp.tool()(swap_shifts)
+mcp.tool()(reassign_shift)
+
+# TODO: Register remaining continuous planning tools when implemented
 # mcp.tool()(find_shift_replacement)
 # mcp.tool()(pin_shifts)
-# mcp.tool()(reassign_shift)
 
 # TODO: Register additional employee management tools when implemented
 # mcp.tool()(add_employees_batch_to_job)
@@ -101,12 +103,14 @@ async def shift_scheduling_prompt() -> str:
 ### Report Generation (Available Now)
 - get_schedule_html_report: Generate beautiful HTML schedule report for viewing in browser
 
+### Continuous Planning (Available Now)
+- swap_shifts: Swap employees between two shifts during optimization
+- reassign_shift: Reassign shift to specific employee or unassign (with validation and force override)
+
 ### Continuous Planning (Coming Soon)
 The following real-time modification features are planned but not yet implemented:
-- swap_shifts: Swap employees between two shifts during optimization
 - find_shift_replacement: Find replacement when employee becomes unavailable
 - pin_shifts: Pin/unpin shifts to prevent changes during optimization
-- reassign_shift: Reassign shift to specific employee or unassign
 
 ### Additional Employee Management (Coming Soon)
 The following additional employee management features are planned but not yet implemented:
@@ -131,5 +135,10 @@ The following additional employee management features are planned but not yet im
 """
 
 
-if __name__ == "__main__":
+def main():
+    """Entry point for MCP server"""
     mcp.run()
+
+
+if __name__ == "__main__":
+    main()

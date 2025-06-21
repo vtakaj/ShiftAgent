@@ -1,0 +1,15 @@
+{
+    "mcpServers": {
+        "shift-scheduler": {
+            "command": "docker",
+            "args": [
+                "run",
+                "-i",
+                "--rm",
+                "-e",
+                "SHIFT_SCHEDULER_API_URL=http://172.17.0.1:8081",
+                "shift-scheduler-mcp-server:latest"
+            ]
+        }
+    }
+}

@@ -332,3 +332,50 @@ async def get_schedule_html_report(ctx: Context, job_id: str) -> dict[str, Any]:
             return {"error": f"API error: {e.response.status_code}", "job_id": job_id}
     except Exception as e:
         return {"error": f"Failed to generate HTML report: {str(e)}", "job_id": job_id}
+
+
+# Continuous Planning Tools
+async def swap_shifts(ctx: Context, job_id: str, shift1_id: str, shift2_id: str) -> dict[str, Any]:
+    """
+    Swap employees between two shifts during optimization
+
+    This tool swaps the employee assignments between two shifts in a completed schedule.
+    It performs a targeted re-optimization to find the best possible assignment after the swap.
+
+    Args:
+        job_id: ID of the completed optimization job
+        shift1_id: ID of the first shift to swap
+        shift2_id: ID of the second shift to swap
+
+    Returns:
+        Success message with swap details and updated schedule statistics
+    """
+    request_data = {"shift1_id": shift1_id, "shift2_id": shift2_id}
+    return await call_api("POST", f"/api/shifts/{job_id}/swap", request_data)
+
+
+async def reassign_shift(
+    ctx: Context, job_id: str, shift_id: str, employee_id: str | None = None, force: bool = False
+) -> dict[str, Any]:
+    """
+    Reassign a shift to a specific employee or unassign it
+
+    This tool allows managers to manually override the optimizer's decisions by reassigning
+    a shift to a specific employee or unassigning it entirely. It validates skill requirements
+    and constraints but can be forced to override soft constraint violations.
+
+    Args:
+        job_id: ID of the completed optimization job
+        shift_id: ID of the shift to reassign
+        employee_id: ID of the employee to assign (null/None to unassign)
+        force: Whether to override soft constraint violations (default: False)
+
+    Returns:
+        Success message with reassignment details, warnings, and updated schedule statistics
+    """
+    request_data = {
+        "shift_id": shift_id,
+        "employee_id": employee_id,
+        "force": force,
+    }
+    return await call_api("POST", f"/api/shifts/{job_id}/reassign", request_data)
