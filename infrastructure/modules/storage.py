@@ -126,6 +126,7 @@ class StorageModule:
                     ),
                 ]
             ),
+            opts=pulumi.ResourceOptions(depends_on=[self.storage_account])
         )
 
     def create_sas_token(
