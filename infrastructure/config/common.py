@@ -10,7 +10,7 @@ def get_common_config():
     config = pulumi.Config()
 
     return {
-        "project_name": "shift-scheduler",
+        "project_name": "nss",
         "environment": config.get("environment") or "dev",
         "location": config.get("azure-native:location") or "Japan East",
         "instance_count": config.get_int("instance_count") or 1,
@@ -21,9 +21,9 @@ def get_common_config():
 def get_common_tags(environment: str):
     """Get common resource tags"""
     return {
-        "Project": "shift-scheduler",
-        "Environment": environment,
-        "ManagedBy": "Pulumi",
-        "Application": "shift-scheduler",
-        "Owner": "shift-scheduler-team",
+        "project": "nss",
+        "environment": environment,
+        "managed_by": "pulumi",
+        "application": "nss",
+        "owner": "nss-team",
     }
