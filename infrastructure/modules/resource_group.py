@@ -14,7 +14,6 @@ class ResourceGroupModule:
 
     def __init__(
         self,
-        workload: str = "core",
         location: str = None,
         additional_tags: dict[str, Any] = None,
     ):
@@ -22,12 +21,11 @@ class ResourceGroupModule:
         Initialize Resource Group module
 
         Args:
-            workload: Workload name (e.g., 'core', 'data', 'web')
             location: Azure location
             additional_tags: Additional resource tags
         """
         self.naming = get_naming_convention()
-        self.name = self.naming.resource_group(workload)
+        self.name = self.naming.resource_group()
         self.location = location or self.naming.location
         self.tags = self.naming.get_resource_tags(additional_tags)
 

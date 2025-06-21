@@ -18,9 +18,7 @@ def main():
 
     # Create resource group using Microsoft CAF naming convention
     rg_module = ResourceGroupModule(
-        workload="core",
         additional_tags={
-            "Workload": "core-infrastructure",
             "Purpose": "Main infrastructure components",
         },
     )
