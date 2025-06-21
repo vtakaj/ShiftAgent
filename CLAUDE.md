@@ -162,6 +162,7 @@ The solver optimizes using HardMediumSoftScore:
 #### Employee Management (New Feature)
 - `POST /api/shifts/{job_id}/add-employee`: Add single employee to completed job
 - `PATCH /api/shifts/{job_id}/employee/{employee_id}/skills`: Update employee skills and re-optimize
+- `POST /api/shifts/{job_id}/reassign`: Reassign shift to specific employee or unassign
 
 #### Job Management
 - `GET /api/jobs`: List all jobs with status
@@ -223,6 +224,7 @@ make mcp
 #### Employee Management (Available Now)
 - `add_employee_to_job`: Add single employee to completed job with minimal re-optimization
 - `update_employee_skills`: Update employee skills and re-optimize affected assignments
+- `reassign_shift`: Reassign shift to specific employee or unassign it
 
 #### Schedule Inspection
 - `get_schedule_shifts`: Get all shifts from a completed schedule for inspection
