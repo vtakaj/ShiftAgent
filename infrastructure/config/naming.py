@@ -42,7 +42,7 @@ class AzureNamingConvention:
     def __init__(
         self,
         organization: str = "vtakaj",
-        project: str = "shift-scheduler",
+        project: str = "nss",
         environment: str | None = None,
         location: str | None = None,
         instance: str = "001",
@@ -78,98 +78,98 @@ class AzureNamingConvention:
     def resource_group(self, workload: str = "core") -> str:
         """
         Generate resource group name
-        Format: rg-{org}-{project}-{workload}-{env}-{instance}
-        Example: rg-vtakaj-shiftsch-core-dev-001
+        Format: rg-{project}-{workload}-{env}-{instance}
+        Example: rg-nss-core-dev-001
         """
         workload_abbr = workload.lower()[:8]
-        return f"rg-{self.organization}-{self.project}-{workload_abbr}-{self.environment}-{self.instance}"
+        return f"rg-{self.project}-{workload_abbr}-{self.environment}-{self.instance}"
 
     def storage_account(self, purpose: str = "data") -> str:
         """
         Generate storage account name
-        Format: st{org}{project}{purpose}{env}{instance}
-        Example: stvtakajshiftschdatadev001
+        Format: st{project}{purpose}{env}{instance}
+        Example: stnssDataDev001
         Note: Storage account names must be 3-24 chars, lowercase alphanumeric only
         """
         purpose_abbr = purpose.lower()[:4]
-        name = f"st{self.organization}{self.project}{purpose_abbr}{self.environment}{self.instance}"
+        name = f"st{self.project}{purpose_abbr}{self.environment}{self.instance}"
         return name[:24]  # Max 24 characters for storage account
 
     def container_registry(self) -> str:
         """
         Generate container registry name
-        Format: cr{org}{project}{env}{instance}
-        Example: crvtakajshiftschdev001
+        Format: cr{project}{env}{instance}
+        Example: crNssdev001
         Note: Registry names must be 5-50 chars, alphanumeric only
         """
-        name = f"cr{self.organization}{self.project}{self.environment}{self.instance}"
+        name = f"cr{self.project}{self.environment}{self.instance}"
         return name[:50]  # Max 50 characters for container registry
 
     def container_apps_environment(self) -> str:
         """
         Generate Container Apps Environment name
-        Format: cae-{org}-{project}-{env}-{instance}
-        Example: cae-vtakaj-shiftsch-dev-001
+        Format: cae-{project}-{env}-{instance}
+        Example: cae-nss-dev-001
         """
         return (
-            f"cae-{self.organization}-{self.project}-{self.environment}-{self.instance}"
+            f"cae-{self.project}-{self.environment}-{self.instance}"
         )
 
     def container_app(self, app_name: str) -> str:
         """
         Generate Container App name
-        Format: ca-{org}-{project}-{app}-{env}-{instance}
-        Example: ca-vtakaj-shiftsch-api-dev-001
+        Format: ca-{project}-{app}-{env}-{instance}
+        Example: ca-nss-api-dev-001
         """
         app_abbr = app_name.lower().replace("-", "")[:8]
-        return f"ca-{self.organization}-{self.project}-{app_abbr}-{self.environment}-{self.instance}"
+        return f"ca-{self.project}-{app_abbr}-{self.environment}-{self.instance}"
 
     def log_analytics_workspace(self) -> str:
         """
         Generate Log Analytics Workspace name
-        Format: log-{org}-{project}-{env}-{instance}
-        Example: log-vtakaj-shiftsch-dev-001
+        Format: log-{project}-{env}-{instance}
+        Example: log-nss-dev-001
         """
         return (
-            f"log-{self.organization}-{self.project}-{self.environment}-{self.instance}"
+            f"log-{self.project}-{self.environment}-{self.instance}"
         )
 
     def key_vault(self) -> str:
         """
         Generate Key Vault name
-        Format: kv-{org}-{project}-{env}-{instance}
-        Example: kv-vtakaj-shiftsch-dev-001
+        Format: kv-{project}-{env}-{instance}
+        Example: kv-nss-dev-001
         Note: Key Vault names must be 3-24 chars
         """
         name = (
-            f"kv-{self.organization}-{self.project}-{self.environment}-{self.instance}"
+            f"kv-{self.project}-{self.environment}-{self.instance}"
         )
         return name[:24]  # Max 24 characters for Key Vault
 
     def application_insights(self) -> str:
         """
         Generate Application Insights name
-        Format: appi-{org}-{project}-{env}-{instance}
-        Example: appi-vtakaj-shiftsch-dev-001
+        Format: appi-{project}-{env}-{instance}
+        Example: appi-nss-dev-001
         """
-        return f"appi-{self.organization}-{self.project}-{self.environment}-{self.instance}"
+        return f"appi-{self.project}-{self.environment}-{self.instance}"
 
     def postgresql_server(self) -> str:
         """
         Generate PostgreSQL server name
-        Format: psql-{org}-{project}-{env}-{instance}
-        Example: psql-vtakaj-shiftsch-dev-001
+        Format: psql-{project}-{env}-{instance}
+        Example: psql-nss-dev-001
         """
-        return f"psql-{self.organization}-{self.project}-{self.environment}-{self.instance}"
+        return f"psql-{self.project}-{self.environment}-{self.instance}"
 
     def postgresql_database(self, db_name: str = "main") -> str:
         """
         Generate PostgreSQL database name
-        Format: psqldb-{org}-{project}-{db}-{env}-{instance}
-        Example: psqldb-vtakaj-shiftsch-main-dev-001
+        Format: psqldb-{project}-{db}-{env}-{instance}
+        Example: psqldb-nss-main-dev-001
         """
         db_abbr = db_name.lower()[:8]
-        return f"psqldb-{self.organization}-{self.project}-{db_abbr}-{self.environment}-{self.instance}"
+        return f"psqldb-{self.project}-{db_abbr}-{self.environment}-{self.instance}"
 
     def get_resource_tags(
         self, additional_tags: dict[str, str] | None = None
@@ -185,13 +185,13 @@ class AzureNamingConvention:
         """
         tags = {
             "Organization": self.organization,
-            "Project": "shift-scheduler",
+            "Project": "nss",
             "Environment": self.environment,
             "Location": self.location,
             "ManagedBy": "Pulumi",
-            "Owner": "shift-scheduler-team",
-            "Application": "shift-scheduler",
-            "CostCenter": f"shift-scheduler-{self.environment}",
+            "Owner": "nss-team",
+            "Application": "nss",
+            "CostCenter": f"nss-{self.environment}",
             "CreatedBy": "infrastructure-as-code",
         }
 
@@ -207,7 +207,7 @@ def get_naming_convention() -> AzureNamingConvention:
 
     return AzureNamingConvention(
         organization="vtakaj",
-        project="shift-scheduler",
+        project="nss",
         environment=config.get("environment") or pulumi.get_stack(),
         location=config.get("azure-native:location"),
         instance="001",
