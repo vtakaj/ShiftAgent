@@ -42,7 +42,7 @@ class AzureNamingConvention:
     def __init__(
         self,
         organization: str = "vtakaj",
-        project: str = "shift-scheduler",
+        project: str = "nss",
         environment: str | None = None,
         location: str | None = None,
         instance: str = "001",
@@ -78,11 +78,11 @@ class AzureNamingConvention:
     def resource_group(self, workload: str = "core") -> str:
         """
         Generate resource group name
-        Format: rg-{org}-{project}-{workload}-{env}-{instance}
-        Example: rg-vtakaj-shiftsch-core-dev-001
+        Format: rg-{project}-{workload}-{env}-{instance}
+        Example: rg-nss-core-dev-001
         """
         workload_abbr = workload.lower()[:8]
-        return f"rg-{self.organization}-{self.project}-{workload_abbr}-{self.environment}-{self.instance}"
+        return f"rg-{self.project}-{workload_abbr}-{self.environment}-{self.instance}"
 
     def storage_account(self, purpose: str = "data") -> str:
         """
@@ -185,13 +185,13 @@ class AzureNamingConvention:
         """
         tags = {
             "Organization": self.organization,
-            "Project": "shift-scheduler",
+            "Project": "nss",
             "Environment": self.environment,
             "Location": self.location,
             "ManagedBy": "Pulumi",
-            "Owner": "shift-scheduler-team",
-            "Application": "shift-scheduler",
-            "CostCenter": f"shift-scheduler-{self.environment}",
+            "Owner": "nss-team",
+            "Application": "nss",
+            "CostCenter": f"nss-{self.environment}",
             "CreatedBy": "infrastructure-as-code",
         }
 
@@ -207,7 +207,7 @@ def get_naming_convention() -> AzureNamingConvention:
 
     return AzureNamingConvention(
         organization="vtakaj",
-        project="shift-scheduler",
+        project="nss",
         environment=config.get("environment") or pulumi.get_stack(),
         location=config.get("azure-native:location"),
         instance="001",
