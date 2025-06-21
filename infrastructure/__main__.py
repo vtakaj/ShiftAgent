@@ -20,8 +20,8 @@ def main():
     rg_module = ResourceGroupModule(
         workload="core",
         additional_tags={
-            "Workload": "core-infrastructure",
-            "Purpose": "Main infrastructure components",
+            "workload": "core-infrastructure",
+            "purpose": "main infrastructure components",
         },
     )
 
@@ -35,7 +35,7 @@ def main():
         resource_group_name=rg_module.resource_group.name,
         location=rg_module.resource_group.location,
         purpose="data",
-        additional_tags={"Purpose": "Job data and application storage"},
+        additional_tags={"purpose": "job data and application storage"},
     )
 
     # Export storage information
@@ -50,7 +50,7 @@ def main():
         resource_group_name=rg_module.resource_group.name,
         location=rg_module.resource_group.location,
         sku="Basic",
-        additional_tags={"Purpose": "Container image registry"},
+        additional_tags={"purpose": "container image registry"},
     )
 
     # Export registry information
@@ -63,7 +63,7 @@ def main():
     container_apps_module = ContainerAppsModule(
         resource_group_name=rg_module.resource_group.name,
         location=rg_module.resource_group.location,
-        additional_tags={"Purpose": "Container Apps hosting environment"},
+        additional_tags={"purpose": "container apps hosting environment"},
     )
 
     # Export Container Apps information

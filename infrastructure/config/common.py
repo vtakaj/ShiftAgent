@@ -21,9 +21,9 @@ def get_common_config():
 def get_common_tags(environment: str):
     """Get common resource tags"""
     return {
-        "Project": "shift-scheduler",
-        "Environment": environment,
-        "ManagedBy": "Pulumi",
-        "Application": "shift-scheduler",
-        "Owner": "shift-scheduler-team",
+        "project": "nss",
+        "environment": environment,
+        "managedby": "pulumi",
+        "application": "nss",
+        "owner": "nss-team",
     }
