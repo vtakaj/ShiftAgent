@@ -247,5 +247,16 @@ STORAGE_DIR = os.getenv("JOB_STORAGE_DIR", "./job_storage")
 
 if STORAGE_TYPE == "filesystem":
     job_store: JobStore | None = FileSystemJobStore(STORAGE_DIR)
+elif STORAGE_TYPE == "azure":
+    try:
+        from .azure_job_store import create_azure_job_store
+        job_store = create_azure_job_store()
+        if job_store is None:
+            print("Failed to create Azure job store, falling back to filesystem")
+            job_store = FileSystemJobStore(STORAGE_DIR)
+    except ImportError as e:
+        print(f"Azure storage dependencies not available: {e}")
+        print("Falling back to filesystem storage")
+        job_store = FileSystemJobStore(STORAGE_DIR)
 else:
     job_store = None  # Memory only

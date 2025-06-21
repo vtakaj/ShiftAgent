@@ -3,6 +3,7 @@ Storage module for Azure infrastructure
 """
 
 from typing import Any
+from datetime import datetime, timedelta
 
 import pulumi
 import pulumi_azure_native as azure_native
@@ -67,6 +68,99 @@ class StorageModule:
             account_name=self.storage_account.name,
             resource_group_name=resource_group_name,
             public_access=azure_native.storage.PublicAccess.NONE,
+        )
+
+        # Create lifecycle management policy for automatic cleanup
+        self.lifecycle_policy = azure_native.storage.ManagementPolicy(
+            resource_name=f"{self.name}-lifecycle",
+            account_name=self.storage_account.name,
+            resource_group_name=resource_group_name,
+            policy=azure_native.storage.ManagementPolicySchemaArgs(
+                rules=[
+                    azure_native.storage.ManagementPolicyRuleArgs(
+                        name="DeleteOldJobData",
+                        enabled=True,
+                        type="Lifecycle",
+                        definition=azure_native.storage.ManagementPolicyDefinitionArgs(
+                            actions=azure_native.storage.ManagementPolicyActionArgs(
+                                base_blob=azure_native.storage.ManagementPolicyBaseBlobArgs(
+                                    delete=azure_native.storage.DateAfterModificationArgs(
+                                        days_after_modification_greater_than=30
+                                    )
+                                ),
+                                snapshot=azure_native.storage.ManagementPolicySnapShotArgs(
+                                    delete=azure_native.storage.DateAfterCreationArgs(
+                                        days_after_creation_greater_than=7
+                                    )
+                                ),
+                            ),
+                            filters=azure_native.storage.ManagementPolicyFilterArgs(
+                                blob_types=["blockBlob"],
+                                prefix_match=["job-data/"],
+                            ),
+                        ),
+                    ),
+                    azure_native.storage.ManagementPolicyRuleArgs(
+                        name="ArchiveOldLogs",
+                        enabled=True,
+                        type="Lifecycle",
+                        definition=azure_native.storage.ManagementPolicyDefinitionArgs(
+                            actions=azure_native.storage.ManagementPolicyActionArgs(
+                                base_blob=azure_native.storage.ManagementPolicyBaseBlobArgs(
+                                    tier_to_cool=azure_native.storage.DateAfterModificationArgs(
+                                        days_after_modification_greater_than=7
+                                    ),
+                                    tier_to_archive=azure_native.storage.DateAfterModificationArgs(
+                                        days_after_modification_greater_than=30
+                                    ),
+                                    delete=azure_native.storage.DateAfterModificationArgs(
+                                        days_after_modification_greater_than=90
+                                    ),
+                                ),
+                            ),
+                            filters=azure_native.storage.ManagementPolicyFilterArgs(
+                                blob_types=["blockBlob"],
+                                prefix_match=["logs/"],
+                            ),
+                        ),
+                    ),
+                ]
+            ),
+        )
+
+    def create_sas_token(
+        self, container_name: str = "job-data", permissions: str = "rwd", hours: int = 24
+    ) -> pulumi.Output[str]:
+        """
+        Generate SAS token for container access
+        
+        Args:
+            container_name: Name of the container
+            permissions: Permissions string (r=read, w=write, d=delete, l=list)
+            hours: Token validity in hours
+        """
+        from datetime import datetime, timedelta
+        
+        start_time = datetime.utcnow()
+        expiry_time = start_time + timedelta(hours=hours)
+        
+        return pulumi.Output.all(
+            self.resource_group_name, 
+            self.storage_account.name,
+            container_name
+        ).apply(
+            lambda args: azure_native.storage.list_storage_account_service_sas(
+                resource_group_name=args[0],
+                account_name=args[1],
+                parameters=azure_native.storage.ServiceSasParametersArgs(
+                    canonicalized_resource=f"/blob/{args[1]}/{args[2]}",
+                    resource=azure_native.storage.SignedResource.C,  # Container
+                    permissions=azure_native.storage.Permissions(permissions),
+                    shared_access_start_time=start_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    shared_access_expiry_time=expiry_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    protocols=azure_native.storage.HttpProtocol.HTTPS,
+                )
+            ).service_sas_token
         )
 
     def get_connection_string(self) -> pulumi.Output[str]:

@@ -15,6 +15,9 @@ make setup
 
 # Initialize Pulumi for infrastructure (if working with infrastructure)
 make pulumi-setup
+
+# Test Azure Storage integration (requires Azure credentials)
+python scripts/test_azure_storage.py
 ```
 
 ### Running the Application
@@ -83,8 +86,12 @@ src/natural_shift_planner/
 │   ├── schemas.py    # Pydantic request/response models
 │   ├── solver.py     # Timefold solver configuration
 │   ├── jobs.py       # Async job management
+│   ├── job_store.py  # Job persistence abstraction
+│   ├── azure_job_store.py # Azure Blob Storage implementation
 │   ├── converters.py # Domain <-> API model converters
 │   └── analysis.py   # Weekly hours analysis logic
+├── config/           # Configuration management
+│   └── storage_config.py # Storage configuration utilities
 ├── core/             # Domain logic
 │   ├── models/       # Domain models with Timefold annotations
 │   │   ├── employee.py   # Employee entity
@@ -194,6 +201,40 @@ uv run pytest test_models.py::test_name -v
 
 ### API Testing
 The `api-test.http` file contains REST Client requests for testing endpoints. Use with VS Code REST Client extension or similar tools.
+
+### Storage Configuration
+
+The application supports multiple storage backends for job data persistence:
+
+#### File System Storage (Default)
+```bash
+export JOB_STORAGE_TYPE=filesystem
+export JOB_STORAGE_DIR=./job_storage
+```
+
+#### Azure Blob Storage
+```bash
+export JOB_STORAGE_TYPE=azure
+export AZURE_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net"
+# OR use managed identity
+export AZURE_STORAGE_ACCOUNT_NAME="mystorageaccount"
+export AZURE_STORAGE_CONTAINER_NAME="job-data"  # Optional, defaults to "job-data"
+```
+
+#### Azure Storage Features
+- **Automatic lifecycle management**: Job data deleted after 30 days, logs archived and cleaned up
+- **SAS token support**: Secure access with time-limited tokens
+- **High availability**: Azure-managed redundancy and backup
+- **Managed identity support**: Secure authentication without connection strings
+
+#### Testing Azure Storage
+```bash
+# Test Azure Storage integration
+python scripts/test_azure_storage.py
+
+# Run tests with Azure storage backend
+JOB_STORAGE_TYPE=azure make test
+```
 
 ## MCP Server
 
