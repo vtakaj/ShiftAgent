@@ -80,14 +80,13 @@ class AzureNamingConvention:
             environment.lower(), environment.lower()[:3]
         )
 
-    def resource_group(self, workload: str = "core") -> str:
+    def resource_group(self) -> str:
         """
         Generate resource group name
-        Format: rg-{project}-{workload}-{env}-{instance}
-        Example: rg-nss-core-dev-001
+        Format: rg-{project}-{env}-{instance}
+        Example: rg-nss-dev-001
         """
-        workload_abbr = workload.lower()[:8]
-        return f"rg-{self.project}-{workload_abbr}-{self.environment}-{self.instance}"
+        return f"rg-{self.project}-{self.environment}-{self.instance}"
 
     def storage_account(self, purpose: str = "data") -> str:
         """
