@@ -4,17 +4,17 @@ Azure Blob Storage implementation of JobStore
 
 import json
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
-from azure.storage.blob import BlobServiceClient, BlobClient
 from azure.core.exceptions import ResourceNotFoundError
 from azure.identity import DefaultAzureCredential
+from azure.storage.blob import BlobServiceClient
 
-from .job_store import JobStore
 from ..core.models.employee import Employee
 from ..core.models.schedule import ShiftSchedule
 from ..core.models.shift import Shift
+from .job_store import JobStore
 
 
 class AzureBlobJobStore(JobStore):
@@ -28,14 +28,14 @@ class AzureBlobJobStore(JobStore):
     ):
         """
         Initialize Azure Blob Storage job store
-        
+
         Args:
             connection_string: Azure Storage connection string
             account_name: Storage account name (uses DefaultAzureCredential if no connection_string)
             container_name: Blob container name for job data
         """
         self.container_name = container_name
-        
+
         if connection_string:
             self.blob_service_client = BlobServiceClient.from_connection_string(
                 connection_string
@@ -48,11 +48,15 @@ class AzureBlobJobStore(JobStore):
                 account_url=account_url, credential=credential
             )
         else:
-            raise ValueError("Either connection_string or account_name must be provided")
-        
+            raise ValueError(
+                "Either connection_string or account_name must be provided"
+            )
+
         # Ensure container exists
         try:
-            container_client = self.blob_service_client.get_container_client(container_name)
+            container_client = self.blob_service_client.get_container_client(
+                container_name
+            )
             container_client.get_container_properties()
         except ResourceNotFoundError:
             self.blob_service_client.create_container(container_name)
@@ -188,16 +192,16 @@ class AzureBlobJobStore(JobStore):
         blob_client = self.blob_service_client.get_blob_client(
             container=self.container_name, blob=blob_name
         )
-        
+
         json_data = json.dumps(serializable_data, indent=2, ensure_ascii=False)
         blob_client.upload_blob(
-            json_data, 
+            json_data,
             overwrite=True,
             metadata={
                 "job_id": job_id,
                 "status": job_data["status"],
                 "created_at": str(job_data.get("created_at", "")),
-            }
+            },
         )
 
     def get_job(self, job_id: str) -> dict[str, Any] | None:
@@ -235,7 +239,7 @@ class AzureBlobJobStore(JobStore):
         container_client = self.blob_service_client.get_container_client(
             self.container_name
         )
-        
+
         try:
             blobs = container_client.list_blobs(name_starts_with="jobs/")
             job_ids = []
@@ -255,7 +259,7 @@ class AzureBlobJobStore(JobStore):
         blob_client = self.blob_service_client.get_blob_client(
             container=self.container_name, blob=blob_name
         )
-        
+
         try:
             blob_client.delete_blob()
         except ResourceNotFoundError:
@@ -266,15 +270,15 @@ class AzureBlobJobStore(JobStore):
 
     def cleanup_old_jobs(self, max_age_hours: int = 24) -> int:
         """Remove jobs older than specified hours"""
-        from datetime import timezone, timedelta
-        
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=max_age_hours)
+        from datetime import timedelta
+
+        cutoff = datetime.now(UTC) - timedelta(hours=max_age_hours)
         deleted_count = 0
 
         container_client = self.blob_service_client.get_container_client(
             self.container_name
         )
-        
+
         try:
             blobs = container_client.list_blobs(name_starts_with="jobs/")
             for blob in blobs:
@@ -301,16 +305,14 @@ def create_azure_job_store() -> AzureBlobJobStore | None:
     connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
     account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
     container_name = os.getenv("AZURE_STORAGE_CONTAINER_NAME", "job-data")
-    
+
     if connection_string:
         return AzureBlobJobStore(
-            connection_string=connection_string,
-            container_name=container_name
+            connection_string=connection_string, container_name=container_name
         )
     elif account_name:
         return AzureBlobJobStore(
-            account_name=account_name,
-            container_name=container_name
+            account_name=account_name, container_name=container_name
         )
     else:
         print("Warning: No Azure Storage configuration found")

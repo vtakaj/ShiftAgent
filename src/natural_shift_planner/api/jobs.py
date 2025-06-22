@@ -406,10 +406,12 @@ def update_employee_skills(job_id: str, employee_id: str, new_skills: set[str]) 
         return False
 
 
-def reassign_shift_in_job(job_id: str, shift_id: str, new_employee_id: str | None, force: bool = False) -> tuple[bool, list[str]]:
+def reassign_shift_in_job(
+    job_id: str, shift_id: str, new_employee_id: str | None, force: bool = False
+) -> tuple[bool, list[str]]:
     """Reassign a shift to a specific employee or unassign it"""
     warnings = []
-    
+
     try:
         with job_lock:
             if job_id not in jobs:
@@ -459,7 +461,7 @@ def reassign_shift_in_job(job_id: str, shift_id: str, new_employee_id: str | Non
 
         # Perform validation
         validation_errors = []
-        
+
         if new_employee is not None:
             # Check skill requirements
             if not new_employee.has_required_skills(target_shift.required_skills):
@@ -482,9 +484,11 @@ def reassign_shift_in_job(job_id: str, shift_id: str, new_employee_id: str | Non
 
             # Check for shift overlap
             for other_shift in current_solution.shifts:
-                if (other_shift.id != shift_id and 
-                    other_shift.employee == new_employee and 
-                    target_shift.overlaps_with(other_shift)):
+                if (
+                    other_shift.id != shift_id
+                    and other_shift.employee == new_employee
+                    and target_shift.overlaps_with(other_shift)
+                ):
                     error_msg = f"Employee {new_employee.name} already has overlapping shift {other_shift.id} ({other_shift.start_time} - {other_shift.end_time})"
                     if force:
                         warnings.append(f"WARNING: {error_msg} (forced)")
@@ -494,7 +498,9 @@ def reassign_shift_in_job(job_id: str, shift_id: str, new_employee_id: str | Non
 
         # If validation failed and not forced, return errors
         if validation_errors and not force:
-            error_msg = f"Reassignment validation failed: {'; '.join(validation_errors)}"
+            error_msg = (
+                f"Reassignment validation failed: {'; '.join(validation_errors)}"
+            )
             logger.error(f"[Job {job_id}] {error_msg}")
             with job_lock:
                 jobs[job_id]["status"] = "SOLVING_FAILED"

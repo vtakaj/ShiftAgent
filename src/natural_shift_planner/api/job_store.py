@@ -250,6 +250,7 @@ if STORAGE_TYPE == "filesystem":
 elif STORAGE_TYPE == "azure":
     try:
         from .azure_job_store import create_azure_job_store
+
         job_store = create_azure_job_store()
         if job_store is None:
             print("Failed to create Azure job store, falling back to filesystem")

@@ -71,7 +71,7 @@ class AzureNamingConvention:
             config = pulumi.Config()
             # Try to get environment from project-specific config first, then generic config, then stack name
             environment = (
-                config.get("environment") 
+                config.get("environment")
                 or pulumi.Config("shift-scheduler-infra").get("environment")
                 or pulumi.get_stack()
             )
@@ -115,9 +115,7 @@ class AzureNamingConvention:
         Format: cae-{project}-{env}-{instance}
         Example: cae-nss-dev-001
         """
-        return (
-            f"cae-{self.project}-{self.environment}-{self.instance}"
-        )
+        return f"cae-{self.project}-{self.environment}-{self.instance}"
 
     def container_app(self, app_name: str) -> str:
         """
@@ -134,9 +132,7 @@ class AzureNamingConvention:
         Format: log-{project}-{env}-{instance}
         Example: log-nss-dev-001
         """
-        return (
-            f"log-{self.project}-{self.environment}-{self.instance}"
-        )
+        return f"log-{self.project}-{self.environment}-{self.instance}"
 
     def key_vault(self) -> str:
         """
@@ -145,9 +141,7 @@ class AzureNamingConvention:
         Example: kv-nss-dev-001
         Note: Key Vault names must be 3-24 chars
         """
-        name = (
-            f"kv-{self.project}-{self.environment}-{self.instance}"
-        )
+        name = f"kv-{self.project}-{self.environment}-{self.instance}"
         return name[:24]  # Max 24 characters for Key Vault
 
     def application_insights(self) -> str:
@@ -207,7 +201,6 @@ class AzureNamingConvention:
 def get_naming_convention() -> AzureNamingConvention:
     """Get naming convention instance with current Pulumi configuration"""
     config = pulumi.Config()
-    project_config = pulumi.Config("shift-scheduler-infra")
 
     return AzureNamingConvention(
         organization="",  # Organization removed as requested

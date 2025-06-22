@@ -335,7 +335,9 @@ async def get_schedule_html_report(ctx: Context, job_id: str) -> dict[str, Any]:
 
 
 # Continuous Planning Tools
-async def swap_shifts(ctx: Context, job_id: str, shift1_id: str, shift2_id: str) -> dict[str, Any]:
+async def swap_shifts(
+    ctx: Context, job_id: str, shift1_id: str, shift2_id: str
+) -> dict[str, Any]:
     """
     Swap employees between two shifts during optimization
 
@@ -355,7 +357,11 @@ async def swap_shifts(ctx: Context, job_id: str, shift1_id: str, shift2_id: str)
 
 
 async def reassign_shift(
-    ctx: Context, job_id: str, shift_id: str, employee_id: str | None = None, force: bool = False
+    ctx: Context,
+    job_id: str,
+    shift_id: str,
+    employee_id: str | None = None,
+    force: bool = False,
 ) -> dict[str, Any]:
     """
     Reassign a shift to a specific employee or unassign it
