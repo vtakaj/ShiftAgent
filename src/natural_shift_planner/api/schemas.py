@@ -62,8 +62,12 @@ class SwapShiftsResponse(BaseModel):
 
 class ReassignShiftRequest(BaseModel):
     shift_id: str = Field(description="ID of the shift to reassign")
-    employee_id: str | None = Field(description="ID of the employee to assign (null to unassign)")
-    force: bool = Field(default=False, description="Override soft constraint violations")
+    employee_id: str | None = Field(
+        description="ID of the employee to assign (null to unassign)"
+    )
+    force: bool = Field(
+        default=False, description="Override soft constraint violations"
+    )
 
 
 class ReassignShiftResponse(BaseModel):

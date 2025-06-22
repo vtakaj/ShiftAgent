@@ -2,8 +2,8 @@
 Storage module for Azure infrastructure
 """
 
-from typing import Any
 from datetime import datetime, timedelta
+from typing import Any
 
 import pulumi
 import pulumi_azure_native as azure_native
@@ -70,27 +70,26 @@ class StorageModule:
             public_access=azure_native.storage.PublicAccess.NONE,
         )
 
-
     def create_sas_token(
-        self, container_name: str = "job-data", permissions: str = "rwd", hours: int = 24
+        self,
+        container_name: str = "job-data",
+        permissions: str = "rwd",
+        hours: int = 24,
     ) -> pulumi.Output[str]:
         """
         Generate SAS token for container access
-        
+
         Args:
             container_name: Name of the container
             permissions: Permissions string (r=read, w=write, d=delete, l=list)
             hours: Token validity in hours
         """
-        from datetime import datetime, timedelta
-        
+
         start_time = datetime.utcnow()
         expiry_time = start_time + timedelta(hours=hours)
-        
+
         return pulumi.Output.all(
-            self.resource_group_name, 
-            self.storage_account.name,
-            container_name
+            self.resource_group_name, self.storage_account.name, container_name
         ).apply(
             lambda args: azure_native.storage.list_storage_account_service_sas(
                 resource_group_name=args[0],
@@ -100,24 +99,26 @@ class StorageModule:
                     resource=azure_native.storage.SignedResource.C,  # Container
                     permissions=azure_native.storage.Permissions(permissions),
                     shared_access_start_time=start_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                    shared_access_expiry_time=expiry_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    shared_access_expiry_time=expiry_time.strftime(
+                        "%Y-%m-%dT%H:%M:%SZ"
+                    ),
                     protocols=azure_native.storage.HttpProtocol.HTTPS,
-                )
+                ),
             ).service_sas_token
         )
 
     def get_connection_string(self) -> pulumi.Output[str]:
         """Get storage account connection string"""
-        return pulumi.Output.all(
+        keys = pulumi.Output.all(
             self.resource_group_name, self.storage_account.name
         ).apply(
             lambda args: azure_native.storage.list_storage_account_keys(
                 resource_group_name=args[0], account_name=args[1]
             )
-            .keys[0]
-            .value.apply(
-                lambda key: f"DefaultEndpointsProtocol=https;AccountName={args[1]};AccountKey={key};EndpointSuffix=core.windows.net"
-            )
+        )
+
+        return pulumi.Output.all(self.storage_account.name, keys).apply(
+            lambda args: f"DefaultEndpointsProtocol=https;AccountName={args[0]};AccountKey={args[1].keys[0].value};EndpointSuffix=core.windows.net"
         )
 
     def get_primary_access_key(self) -> pulumi.Output[str]:

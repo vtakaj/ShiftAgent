@@ -490,9 +490,7 @@ async def reassign_shift(job_id: str, request: ReassignShiftRequest):
         for shift in solution.shifts:
             if shift.id == request.shift_id:
                 current_employee = shift.employee
-                current_employee_name = (
-                    shift.employee.name if shift.employee else None
-                )
+                current_employee_name = shift.employee.name if shift.employee else None
                 break
 
         return ReassignShiftResponse(
