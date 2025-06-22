@@ -139,7 +139,7 @@ class AzureBlobJobStore(JobStore):
         end_time = self._deserialize_datetime(shift_data["end_time"])
         if start_time is None or end_time is None:
             raise ValueError(f"Shift {shift_data['id']} has invalid datetime values")
-            
+
         shift = Shift(
             id=shift_data["id"],
             start_time=start_time,
