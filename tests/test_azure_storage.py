@@ -3,7 +3,7 @@ Tests for Azure Storage integration
 """
 
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import Mock, patch
 
 import pytest
@@ -142,7 +142,7 @@ class TestAzureBlobJobStore:
         # Mock old blob
         mock_old_blob = Mock()
         mock_old_blob.name = "jobs/old-job.json"
-        mock_old_blob.last_modified = datetime(2023, 1, 1)  # Very old
+        mock_old_blob.last_modified = datetime(2023, 1, 1, tzinfo=UTC)  # Very old
         mock_container_client.list_blobs.return_value = [mock_old_blob]
 
         # Mock blob client for deletion
