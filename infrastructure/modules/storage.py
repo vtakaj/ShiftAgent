@@ -70,63 +70,6 @@ class StorageModule:
             public_access=azure_native.storage.PublicAccess.NONE,
         )
 
-        # Create lifecycle management policy for automatic cleanup
-        self.lifecycle_policy = azure_native.storage.ManagementPolicy(
-            resource_name=f"{self.name}-lifecycle",
-            account_name=self.storage_account.name,
-            resource_group_name=resource_group_name,
-            policy=azure_native.storage.ManagementPolicySchemaArgs(
-                rules=[
-                    azure_native.storage.ManagementPolicyRuleArgs(
-                        name="DeleteOldJobData",
-                        enabled=True,
-                        type="Lifecycle",
-                        definition=azure_native.storage.ManagementPolicyDefinitionArgs(
-                            actions=azure_native.storage.ManagementPolicyActionArgs(
-                                base_blob=azure_native.storage.ManagementPolicyBaseBlobArgs(
-                                    delete=azure_native.storage.DateAfterModificationArgs(
-                                        days_after_modification_greater_than=30
-                                    )
-                                ),
-                                snapshot=azure_native.storage.ManagementPolicySnapShotArgs(
-                                    delete=azure_native.storage.DateAfterCreationArgs(
-                                        days_after_creation_greater_than=7
-                                    )
-                                ),
-                            ),
-                            filters=azure_native.storage.ManagementPolicyFilterArgs(
-                                blob_types=["blockBlob"],
-                                prefix_match=["job-data/"],
-                            ),
-                        ),
-                    ),
-                    azure_native.storage.ManagementPolicyRuleArgs(
-                        name="ArchiveOldLogs",
-                        enabled=True,
-                        type="Lifecycle",
-                        definition=azure_native.storage.ManagementPolicyDefinitionArgs(
-                            actions=azure_native.storage.ManagementPolicyActionArgs(
-                                base_blob=azure_native.storage.ManagementPolicyBaseBlobArgs(
-                                    tier_to_cool=azure_native.storage.DateAfterModificationArgs(
-                                        days_after_modification_greater_than=7
-                                    ),
-                                    tier_to_archive=azure_native.storage.DateAfterModificationArgs(
-                                        days_after_modification_greater_than=30
-                                    ),
-                                    delete=azure_native.storage.DateAfterModificationArgs(
-                                        days_after_modification_greater_than=90
-                                    ),
-                                ),
-                            ),
-                            filters=azure_native.storage.ManagementPolicyFilterArgs(
-                                blob_types=["blockBlob"],
-                                prefix_match=["logs/"],
-                            ),
-                        ),
-                    ),
-                ]
-            ),
-        )
 
     def create_sas_token(
         self, container_name: str = "job-data", permissions: str = "rwd", hours: int = 24

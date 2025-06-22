@@ -222,7 +222,6 @@ export AZURE_STORAGE_CONTAINER_NAME="job-data"  # Optional, defaults to "job-dat
 ```
 
 #### Azure Storage Features
-- **Automatic lifecycle management**: Job data deleted after 30 days, logs archived and cleaned up
 - **SAS token support**: Secure access with time-limited tokens
 - **High availability**: Azure-managed redundancy and backup
 - **Managed identity support**: Secure authentication without connection strings
