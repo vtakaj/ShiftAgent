@@ -4,18 +4,12 @@
   "description": "Employee shift scheduling using Timefold Solver with MCP integration",
   "type": "module",
   "scripts": {
-    "prepare": "bunx husky install",
     "lint": "uv run ruff check .",
     "lint:fix": "uv run ruff check . --fix",
     "format": "uv run ruff format .",
     "type-check": "uv run mypy .",
     "test": "uv run pytest -v",
     "test:short": "uv run pytest -v --tb=short"
-  },
-  "devDependencies": {
-    "husky": "^8.0.3",
-    "@commitlint/cli": "^17.8.1",
-    "@commitlint/config-conventional": "^17.8.1"
   },
   "repository": {
     "type": "git",

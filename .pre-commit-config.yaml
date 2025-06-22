@@ -1,0 +1,68 @@
+repos:
+  # Python formatting and linting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      # Format Python code
+      - id: ruff-format
+        name: Format Python code with ruff
+      # Lint and fix Python code
+      - id: ruff
+        name: Lint Python code with ruff
+        args: [--fix, --exit-non-zero-on-fix]
+
+  # Python type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.2
+    hooks:
+      - id: mypy
+        name: Type check with mypy
+        # Allow mypy to fail without blocking commit (warnings only)
+        verbose: true
+        always_run: false
+        files: ^src/
+
+  # Conventional commit message validation
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.29.1
+    hooks:
+      - id: commitizen
+        name: Validate conventional commit message
+        stages: [commit-msg]
+
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      # Check for files that would conflict in case-insensitive filesystems
+      - id: check-case-conflict
+      # Check for merge conflict markers
+      - id: check-merge-conflict
+      # Check YAML syntax
+      - id: check-yaml
+        exclude: ^(.*\.sls|.*\.yaml\.j2)$
+      # Check JSON syntax
+      - id: check-json
+      # Check TOML syntax
+      - id: check-toml
+      # Ensure files end with newline
+      - id: end-of-file-fixer
+        exclude: ^.*\.ipynb$
+      # Remove trailing whitespace
+      - id: trailing-whitespace
+        exclude: ^.*\.ipynb$
+
+  # Python tests (pre-push only)
+  - repo: local
+    hooks:
+      - id: pytest
+        name: Run Python tests
+        entry: bash -c 'PYTHONPATH=src uv run pytest tests/ -v'
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+
+# Global configuration
+default_stages: [pre-commit]
+fail_fast: false
