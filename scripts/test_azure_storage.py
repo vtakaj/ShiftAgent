@@ -173,16 +173,6 @@ def test_upload_download():
         return False
 
 
-def test_lifecycle_policies():
-    """Test that lifecycle policies are properly configured"""
-    print("\n=== Testing Lifecycle Policies ===")
-    print("ℹ️  Lifecycle policies are configured in Pulumi infrastructure")
-    print("   - Job data: Deleted after 30 days")
-    print("   - Logs: Cool after 7 days, Archive after 30 days, Delete after 90 days")
-    print("✅ Lifecycle policies configured (verify in Azure Portal)")
-    return True
-
-
 def main():
     """Main test function"""
     print("🧪 Azure Storage Integration Test")
@@ -204,7 +194,6 @@ def main():
     success &= test_configuration()
     success &= test_azure_connection()
     success &= test_upload_download()
-    success &= test_lifecycle_policies()
     
     print("\n" + "=" * 50)
     if success:
