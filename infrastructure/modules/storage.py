@@ -109,14 +109,16 @@ class StorageModule:
 
     def get_connection_string(self) -> pulumi.Output[str]:
         """Get storage account connection string"""
-        return pulumi.Output.all(
+        keys = pulumi.Output.all(
             self.resource_group_name, self.storage_account.name
         ).apply(
             lambda args: azure_native.storage.list_storage_account_keys(
                 resource_group_name=args[0], account_name=args[1]
-            ).apply(
-                lambda result: f"DefaultEndpointsProtocol=https;AccountName={args[1]};AccountKey={result.keys[0].value};EndpointSuffix=core.windows.net"
             )
+        )
+
+        return pulumi.Output.all(self.storage_account.name, keys).apply(
+            lambda args: f"DefaultEndpointsProtocol=https;AccountName={args[0]};AccountKey={args[1].keys[0].value};EndpointSuffix=core.windows.net"
         )
 
     def get_primary_access_key(self) -> pulumi.Output[str]:
