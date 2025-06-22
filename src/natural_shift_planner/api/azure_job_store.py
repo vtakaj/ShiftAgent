@@ -126,9 +126,8 @@ class AzureBlobJobStore(JobStore):
             preferred_days_off=set(emp_data.get("preferred_days_off", [])),
             preferred_work_days=set(emp_data.get("preferred_work_days", [])),
             unavailable_dates={
-                self._deserialize_datetime(d)
-                for d in emp_data.get("unavailable_dates", [])
-                if d is not None
+                dt for d in emp_data.get("unavailable_dates", [])
+                if d is not None and (dt := self._deserialize_datetime(d)) is not None
             },
         )
 
@@ -136,10 +135,15 @@ class AzureBlobJobStore(JobStore):
         """Convert dict to Shift"""
         if not shift_data:
             return None
+        start_time = self._deserialize_datetime(shift_data["start_time"])
+        end_time = self._deserialize_datetime(shift_data["end_time"])
+        if start_time is None or end_time is None:
+            raise ValueError(f"Shift {shift_data['id']} has invalid datetime values")
+            
         shift = Shift(
             id=shift_data["id"],
-            start_time=self._deserialize_datetime(shift_data["start_time"]),
-            end_time=self._deserialize_datetime(shift_data["end_time"]),
+            start_time=start_time,
+            end_time=end_time,
             required_skills=set(shift_data["required_skills"]),
             location=shift_data["location"],
             priority=shift_data["priority"],
@@ -157,9 +161,13 @@ class AzureBlobJobStore(JobStore):
         if not schedule_data:
             return None
         employees = [
-            self._deserialize_employee(emp) for emp in schedule_data["employees"]
+            emp for emp in (self._deserialize_employee(emp) for emp in schedule_data["employees"])
+            if emp is not None
         ]
-        shifts = [self._deserialize_shift(shift) for shift in schedule_data["shifts"]]
+        shifts = [
+            shift for shift in (self._deserialize_shift(shift) for shift in schedule_data["shifts"])
+            if shift is not None
+        ]
         schedule = ShiftSchedule(employees=employees, shifts=shifts)
         if schedule_data.get("score"):
             # Note: Score reconstruction from string is complex, skip for now
@@ -227,7 +235,7 @@ class AzureBlobJobStore(JobStore):
             if data.get("solution"):
                 data["solution"] = self._deserialize_schedule(data["solution"])
 
-            return data
+            return data  # type: ignore[no-any-return]
         except ResourceNotFoundError:
             return None
         except Exception as e:
