@@ -91,19 +91,38 @@ Here are some example prompts you can use with the agent:
 
 ## Troubleshooting
 
+### NodeOperationError: Error in sub-node MCP Client
+This error occurs when the MCP Client node is not properly connected to other nodes.
+
+**Solution**:
+1. MCP Client cannot be executed directly
+2. It must be connected to an Agent node via the `ai_tool` connection
+3. The workflow execution flow should be: Trigger → Agent (which uses MCP Client as a tool)
+
+**Correct Setup**:
+```
+Manual Trigger → Set (with prompt) → Agent
+                                        ↑
+                    MCP Client ─────────┘ (ai_tool connection)
+                    LLM Model ──────────┘ (ai_languageModel connection)
+```
+
 ### MCP Client Connection Error
 - Ensure the MCP server is running: `make mcp-sse`
 - Verify the endpoint URL: `http://localhost:8082/sse`
 - Check if port 8082 is available
+- Test the SSE endpoint: `curl http://localhost:8082/sse`
 
 ### No Tools Available
 - The MCP server should automatically expose all tools
 - Check the MCP server logs for any errors
 - Ensure the API server is also running
+- Verify in server logs that tools are registered
 
 ### Agent Not Finding Tools
 - Make sure the MCP Client is connected to the Agent's ai_tool input
 - The connection must be properly established before running
+- Try reconnecting the nodes if issues persist
 
 ## Advanced Configuration
 
