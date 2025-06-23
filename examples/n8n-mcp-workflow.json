@@ -1,0 +1,146 @@
+{
+  "name": "Shift Scheduler MCP Example",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Shift Scheduler MCP Integration\n\nThis workflow demonstrates how to use the Shift Scheduler MCP server with n8n.\n\n### Prerequisites:\n1. Start the API server: `make run`\n2. Start the MCP server in SSE mode: `make mcp-sse`\n\n### Available MCP Tools:\n- health_check\n- get_demo_schedule\n- solve_schedule_sync\n- analyze_weekly_hours\n- and more..."
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        220,
+        140
+      ],
+      "id": "1",
+      "name": "Instructions"
+    },
+    {
+      "parameters": {
+        "sseEndpoint": "http://localhost:8082/sse"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        480,
+        340
+      ],
+      "id": "2",
+      "name": "Shift Scheduler MCP"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "options": {
+          "temperature": 0.3,
+          "responseFormat": "text"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAI",
+      "typeVersion": 1,
+      "position": [
+        480,
+        540
+      ],
+      "id": "3",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAIApi": {
+          "id": "add_your_credential_id",
+          "name": "OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "prompt": {
+          "system": "You are an AI assistant that helps with shift scheduling. Use the Shift Scheduler MCP tools to:\n1. Check the API health\n2. Get demo schedules\n3. Optimize shift assignments\n4. Analyze weekly hours\n\nAlways start by checking the health of the API."
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        720,
+        440
+      ],
+      "id": "4",
+      "name": "Shift Scheduler Agent"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "text": "=Get a demo shift schedule and analyze the weekly hours for all employees. Provide a summary of any violations found."
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainInput",
+      "typeVersion": 1,
+      "position": [
+        960,
+        440
+      ],
+      "id": "5",
+      "name": "User Request"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.chainOutput",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        440
+      ],
+      "id": "6",
+      "name": "AI Response"
+    }
+  ],
+  "connections": {
+    "Shift Scheduler MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Shift Scheduler Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Shift Scheduler Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shift Scheduler Agent": {
+      "main": [
+        [
+          {
+            "node": "AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User Request": {
+      "main": [
+        [
+          {
+            "node": "Shift Scheduler Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "description": "Example workflow demonstrating MCP integration with Shift Scheduler"
+  }
+}
