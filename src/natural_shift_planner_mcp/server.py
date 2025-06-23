@@ -140,13 +140,17 @@ def main():
     # Check if we should run as HTTP server (SSE) or stdio
     server_mode = os.getenv("MCP_SERVER_MODE", "stdio").lower()
     port = int(os.getenv("MCP_SERVER_PORT", "8082"))
+    host = os.getenv("MCP_SERVER_HOST", "0.0.0.0")
     
-    if server_mode == "sse" or server_mode == "http":
-        logger.info(f"Starting MCP server in SSE mode on port {port}")
-        mcp.run_sse(host="0.0.0.0", port=port)
+    if server_mode == "sse":
+        logger.info(f"Starting MCP server in SSE mode on {host}:{port}")
+        mcp.run(transport="sse", host=host, port=port)
+    elif server_mode == "http":
+        logger.info(f"Starting MCP server in HTTP mode on {host}:{port}")
+        mcp.run(transport="http", host=host, port=port)
     else:
         logger.info("Starting MCP server in stdio mode")
-        mcp.run()
+        mcp.run(transport="stdio")
 
 
 if __name__ == "__main__":

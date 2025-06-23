@@ -134,21 +134,37 @@ mcp:
 	@echo "🔧 Starting MCP server in stdio mode (make sure API is running)..."
 	PYTHONPATH=src uv run python -m natural_shift_planner_mcp.server
 
-# Run MCP server in SSE mode
+# Run MCP server in SSE mode (legacy)
 mcp-sse:
 	@echo "🌐 Starting MCP server in SSE mode on port 8082..."
-	@echo "MCP Server URL: http://localhost:8082"
+	@echo "MCP Server URL: http://localhost:8082/sse"
 	MCP_SERVER_MODE=sse MCP_SERVER_PORT=8082 PYTHONPATH=src uv run python -m natural_shift_planner_mcp.server
+
+# Run MCP server in HTTP mode (modern)
+mcp-http:
+	@echo "🌐 Starting MCP server in HTTP mode on port 8082..."
+	@echo "MCP Server URL: http://localhost:8082"
+	MCP_SERVER_MODE=http MCP_SERVER_PORT=8082 PYTHONPATH=src uv run python -m natural_shift_planner_mcp.server
 
 # Run with both API and MCP server in SSE mode
 run-mcp-sse:
 	@echo "🚀 Starting both API and MCP servers..."
 	@echo "API Server: http://localhost:8081"
-	@echo "MCP Server (SSE): http://localhost:8082"
+	@echo "MCP Server (SSE): http://localhost:8082/sse"
 	@echo "Starting API server in background..."
 	@PYTHONPATH=src uv run uvicorn natural_shift_planner.api.app:app --host 0.0.0.0 --port 8081 & \
 	echo "Starting MCP server in SSE mode..." && \
 	MCP_SERVER_MODE=sse MCP_SERVER_PORT=8082 PYTHONPATH=src uv run python -m natural_shift_planner_mcp.server
+
+# Run with both API and MCP server in HTTP mode
+run-mcp-http:
+	@echo "🚀 Starting both API and MCP servers..."
+	@echo "API Server: http://localhost:8081"
+	@echo "MCP Server (HTTP): http://localhost:8082"
+	@echo "Starting API server in background..."
+	@PYTHONPATH=src uv run uvicorn natural_shift_planner.api.app:app --host 0.0.0.0 --port 8081 & \
+	echo "Starting MCP server in HTTP mode..." && \
+	MCP_SERVER_MODE=http MCP_SERVER_PORT=8082 PYTHONPATH=src uv run python -m natural_shift_planner_mcp.server
 
 # Test MCP server
 test-mcp:
