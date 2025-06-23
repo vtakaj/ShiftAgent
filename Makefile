@@ -124,16 +124,31 @@ debug:
 	@echo "🐛 Starting in debug mode..."
 	PYTHONPATH=src uv run uvicorn natural_shift_planner.api.app:app --host 0.0.0.0 --port 8081 --reload --log-level debug
 
-# Run with MCP server
+# Run with MCP server (default: stdio mode)
 run-mcp:
-	@echo "🤖 Starting MCP server..."
-	@echo "MCP Server URL: http://localhost:8082"
+	@echo "🤖 Starting MCP server in stdio mode..."
 	PYTHONPATH=src uv run python -m natural_shift_planner_mcp.server
 
-# Run MCP server only
+# Run MCP server only (default: stdio mode)
 mcp:
-	@echo "🔧 Starting MCP server (make sure API is running)..."
+	@echo "🔧 Starting MCP server in stdio mode (make sure API is running)..."
 	PYTHONPATH=src uv run python -m natural_shift_planner_mcp.server
+
+# Run MCP server in SSE mode
+mcp-sse:
+	@echo "🌐 Starting MCP server in SSE mode on port 8082..."
+	@echo "MCP Server URL: http://localhost:8082"
+	MCP_SERVER_MODE=sse MCP_SERVER_PORT=8082 PYTHONPATH=src uv run python -m natural_shift_planner_mcp.server
+
+# Run with both API and MCP server in SSE mode
+run-mcp-sse:
+	@echo "🚀 Starting both API and MCP servers..."
+	@echo "API Server: http://localhost:8081"
+	@echo "MCP Server (SSE): http://localhost:8082"
+	@echo "Starting API server in background..."
+	@PYTHONPATH=src uv run uvicorn natural_shift_planner.api.app:app --host 0.0.0.0 --port 8081 & \
+	echo "Starting MCP server in SSE mode..." && \
+	MCP_SERVER_MODE=sse MCP_SERVER_PORT=8082 PYTHONPATH=src uv run python -m natural_shift_planner_mcp.server
 
 # Test MCP server
 test-mcp:

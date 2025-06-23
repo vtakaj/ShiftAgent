@@ -240,15 +240,29 @@ JOB_STORAGE_TYPE=azure make test
 The project includes a Python-based MCP (Model Context Protocol) server using FastMCP that exposes the Shift Scheduler API as MCP tools.
 
 ### MCP Server Setup
-The MCP server uses FastMCP and is automatically set up when you run `make setup`. To run both servers together:
-```bash
-make run-mcp
-```
+The MCP server uses FastMCP and supports both STDIO and SSE (Server-Sent Events) modes.
 
-Or run the MCP server separately:
+#### STDIO Mode (Default - for Claude Desktop)
 ```bash
+# Run API + MCP server together (STDIO mode)
+make run-mcp
+
+# Run MCP server only (STDIO mode)
 make mcp
 ```
+
+#### SSE Mode (HTTP Server)
+```bash
+# Run MCP server in SSE mode only
+make mcp-sse
+
+# Run API + MCP server together (SSE mode)
+make run-mcp-sse
+```
+
+#### Environment Variables
+- `MCP_SERVER_MODE`: Set to `stdio` (default) or `sse`
+- `MCP_SERVER_PORT`: Port for SSE mode (default: 8082)
 
 ### Available MCP Tools
 

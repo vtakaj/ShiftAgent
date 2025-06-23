@@ -1,6 +1,6 @@
 {
     "mcpServers": {
-        "shift-scheduler": {
+        "shift-scheduler-stdio": {
             "command": "docker",
             "args": [
                 "run",
@@ -8,8 +8,16 @@
                 "--rm",
                 "-e",
                 "SHIFT_SCHEDULER_API_URL=http://172.17.0.1:8081",
+                "-e",
+                "MCP_SERVER_MODE=stdio",
                 "shift-scheduler-mcp-server:latest"
             ]
+        },
+        "shift-scheduler-sse": {
+            "transport": {
+                "type": "sse",
+                "url": "http://localhost:8082/sse"
+            }
         }
     }
 }

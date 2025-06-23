@@ -137,7 +137,16 @@ The following additional employee management features are planned but not yet im
 
 def main():
     """Entry point for MCP server"""
-    mcp.run()
+    # Check if we should run as HTTP server (SSE) or stdio
+    server_mode = os.getenv("MCP_SERVER_MODE", "stdio").lower()
+    port = int(os.getenv("MCP_SERVER_PORT", "8082"))
+    
+    if server_mode == "sse" or server_mode == "http":
+        logger.info(f"Starting MCP server in SSE mode on port {port}")
+        mcp.run_sse(host="0.0.0.0", port=port)
+    else:
+        logger.info("Starting MCP server in stdio mode")
+        mcp.run()
 
 
 if __name__ == "__main__":
