@@ -5,7 +5,7 @@
 help:
 	@echo "🚀 Shift Scheduler Dev Container Commands:"
 	@echo ""
-	@echo "  setup        - Complete setup (Python, Node.js, MCP) - run this first!"
+	@echo "  setup        - Complete setup (Python, pre-commit, MCP) - run this first!"
 	@echo "  run          - Start FastAPI server only"
 	@echo "  run-mcp      - Start both API and MCP servers together"
 	@echo "  test         - Run tests"
@@ -13,8 +13,8 @@ help:
 	@echo "  lint         - Check code"
 	@echo "  clean        - Clear cache"
 	@echo ""
-	@echo "  Git Hooks (Husky):"
-	@echo "  hooks-install - Install Husky git hooks"
+	@echo "  Git Hooks (pre-commit):"
+	@echo "  hooks-install - Install pre-commit git hooks"
 	@echo "  hooks-test    - Test git hooks manually"
 	@echo ""
 	@echo "  Additional Commands:"
@@ -29,10 +29,10 @@ help:
 setup:
 	@echo "🔧 Setting up development environment..."
 	@rm -f uv.lock
-	@echo "📦 Installing Python dependencies (including FastMCP)..."
+	@echo "📦 Installing Python dependencies (including FastMCP and pre-commit)..."
 	uv sync --no-install-project
-	@echo "📦 Installing Node.js dependencies with Bun (including Husky)..."
-	bun install
+	@echo "🪝 Installing pre-commit git hooks..."
+	uv run pre-commit install --hook-type pre-commit --hook-type commit-msg --hook-type pre-push
 	@echo "✅ Setup complete!"
 
 # Install dependencies
@@ -159,19 +159,18 @@ pulumi-setup:
 	@echo "  4. pulumi config set azure-native:location 'East US'"
 	@echo "  5. pulumi up  (to deploy infrastructure)"
 
-# Husky Git Hooks
+# Pre-commit Git Hooks
 hooks-install:
-	@echo "🪝 Installing Husky git hooks with Bun..."
-	@bun install
-	@bunx husky install
+	@echo "🪝 Installing pre-commit git hooks..."
+	uv run pre-commit install --hook-type pre-commit --hook-type commit-msg --hook-type pre-push
 	@echo "✅ Git hooks installed successfully!"
 
 hooks-test:
 	@echo "🧪 Testing git hooks..."
-	@echo "📝 Testing pre-commit hook..."
-	@bash .husky/pre-commit || echo "Pre-commit hook test completed"
-	@echo "🔍 Testing commit-msg hook..."
-	@echo "feat: test commit message" | bunx commitlint || echo "Commit message validation test completed"
+	@echo "📝 Testing pre-commit hooks..."
+	uv run pre-commit run --all-files || echo "Pre-commit hooks test completed"
+	@echo "🔍 Testing commit message validation..."
+	@echo "feat: test commit message" | uv run cz check --message || echo "Commit message validation test completed"
 	@echo "✅ Hook tests completed!"
 
 # Docker commands

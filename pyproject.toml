@@ -32,6 +32,8 @@ dev = [
     "pytest-asyncio>=0.21.0",
     "ruff>=0.1.0",
     "mypy>=1.5.0",
+    "pre-commit>=3.5.0",
+    "commitizen>=3.29.0",
 ]
 
 # Console scripts for uvx support
@@ -75,6 +77,8 @@ dev-dependencies = [
     "pytest-asyncio>=0.21.0", 
     "ruff>=0.1.0",
     "mypy>=1.5.0",
+    "pre-commit>=3.5.0",
+    "commitizen>=3.29.0",
 ]
 
 [tool.mypy]
@@ -119,3 +123,9 @@ ignore = ["E501"]  # line too long (handled by formatter)
 
 [tool.ruff.lint.isort]
 known-first-party = ["natural_shift_planner"]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "v$version"
+version_provider = "pep621"
+update_changelog_on_bump = false
