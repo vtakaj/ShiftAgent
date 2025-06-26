@@ -274,7 +274,15 @@ make mcp-http  # Run with HTTP transport on port 8083
 MCP_HTTP_PORT=8084 MCP_HTTP_HOST=0.0.0.0 make mcp-http
 ```
 
-The HTTP transport enables web-based deployments and supports multiple concurrent clients.
+**SSE Transport (deprecated, for legacy clients):**
+```bash
+make mcp-sse  # Run with SSE transport on port 8084
+
+# With custom configuration
+MCP_SSE_PORT=8085 MCP_SSE_HOST=0.0.0.0 make mcp-sse
+```
+
+The HTTP transport enables web-based deployments and supports multiple concurrent clients. SSE transport is deprecated but available for backward compatibility.
 
 ### Available MCP Tools
 

@@ -8,7 +8,8 @@ help:
 	@echo "  setup        - Complete setup (Python, pre-commit, MCP) - run this first!"
 	@echo "  run          - Start FastAPI server only"
 	@echo "  run-mcp      - Start both API and MCP servers together"
-	@echo "  mcp-http     - Start MCP server with HTTP transport"
+	@echo "  mcp-http     - Start MCP server with HTTP transport (recommended)"
+	@echo "  mcp-sse      - Start MCP server with SSE transport (deprecated)"
 	@echo "  test         - Run tests"
 	@echo "  format       - Format code"
 	@echo "  lint         - Check code"
@@ -147,6 +148,14 @@ mcp-http:
 	@echo "MCP HTTP URL: http://localhost:8083/mcp"
 	@echo "Transport: Streamable HTTP"
 	PYTHONPATH=src uv run python scripts/run_mcp_http.py
+
+# Run MCP server with SSE transport (deprecated)
+mcp-sse:
+	@echo "📡 Starting MCP server with SSE transport..."
+	@echo "⚠️  WARNING: SSE transport is deprecated. Use 'make mcp-http' for new deployments."
+	@echo "MCP SSE URL: http://localhost:8084/sse/"
+	@echo "Transport: Server-Sent Events (Legacy)"
+	PYTHONPATH=src uv run python scripts/run_mcp_sse.py
 
 # Start Streamlit app
 run-streamlit:

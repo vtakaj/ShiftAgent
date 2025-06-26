@@ -93,6 +93,56 @@ async def connect():
 
 Note: Claude Desktop currently works best with stdio transport. Use HTTP transport for web-based or programmatic access.
 
+## 📡 SSE Transport (Deprecated)
+
+The MCP server also supports SSE (Server-Sent Events) transport for backward compatibility with legacy clients.
+
+### ⚠️ Deprecation Warning
+
+SSE transport is deprecated and may be removed in future versions. New deployments should use HTTP transport instead.
+
+### Starting with SSE Transport
+
+```bash
+# Run MCP server with SSE transport
+make mcp-sse
+
+# Or with custom configuration
+MCP_SSE_HOST=0.0.0.0 MCP_SSE_PORT=8085 make mcp-sse
+```
+
+### Environment Variables
+
+- `MCP_TRANSPORT`: Set to `sse` for SSE transport
+- `MCP_SSE_HOST`: SSE server host (default: `127.0.0.1`)
+- `MCP_SSE_PORT`: SSE server port (default: `8084`)
+
+### Connecting to SSE Transport
+
+```python
+from fastmcp import Client
+from fastmcp.client.transports import SSETransport
+
+# Automatic detection for URLs with /sse/
+async with Client("http://localhost:8084/sse/") as client:
+    result = await client.call_tool("solve_schedule_sync", {...})
+
+# Or explicit transport
+transport = SSETransport(
+    url="http://localhost:8084/sse/",
+    headers={"Authorization": "Bearer token"}
+)
+async with Client(transport) as client:
+    result = await client.call_tool("solve_schedule_sync", {...})
+```
+
+### Why SSE is Deprecated
+
+- Less efficient than HTTP transport
+- Limited bidirectional communication
+- More complex client-server architecture
+- HTTP transport provides all SSE features plus more
+
 ## 🛠 Available MCP Tools
 
 The MCP server exposes 11 tools organized into 4 categories:
