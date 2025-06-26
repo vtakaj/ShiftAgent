@@ -268,10 +268,10 @@ make mcp      # Run MCP server only
 
 **HTTP Transport (for web clients):**
 ```bash
-make mcp-http  # Run with HTTP transport on port 8081
+make mcp-http  # Run with HTTP transport on port 8083
 
 # With custom configuration
-MCP_HTTP_PORT=8082 MCP_HTTP_HOST=0.0.0.0 make mcp-http
+MCP_HTTP_PORT=8084 MCP_HTTP_HOST=0.0.0.0 make mcp-http
 ```
 
 The HTTP transport enables web-based deployments and supports multiple concurrent clients.

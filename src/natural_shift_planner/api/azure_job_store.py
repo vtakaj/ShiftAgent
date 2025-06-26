@@ -126,7 +126,8 @@ class AzureBlobJobStore(JobStore):
             preferred_days_off=set(emp_data.get("preferred_days_off", [])),
             preferred_work_days=set(emp_data.get("preferred_work_days", [])),
             unavailable_dates={
-                dt for d in emp_data.get("unavailable_dates", [])
+                dt
+                for d in emp_data.get("unavailable_dates", [])
                 if d is not None and (dt := self._deserialize_datetime(d)) is not None
             },
         )
@@ -161,11 +162,17 @@ class AzureBlobJobStore(JobStore):
         if not schedule_data:
             return None
         employees = [
-            emp for emp in (self._deserialize_employee(emp) for emp in schedule_data["employees"])
+            emp
+            for emp in (
+                self._deserialize_employee(emp) for emp in schedule_data["employees"]
+            )
             if emp is not None
         ]
         shifts = [
-            shift for shift in (self._deserialize_shift(shift) for shift in schedule_data["shifts"])
+            shift
+            for shift in (
+                self._deserialize_shift(shift) for shift in schedule_data["shifts"]
+            )
             if shift is not None
         ]
         schedule = ShiftSchedule(employees=employees, shifts=shifts)

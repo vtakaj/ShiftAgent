@@ -144,7 +144,7 @@ test-mcp:
 # Run MCP server with HTTP transport
 mcp-http:
 	@echo "🌐 Starting MCP server with HTTP transport..."
-	@echo "MCP HTTP URL: http://localhost:8081/mcp"
+	@echo "MCP HTTP URL: http://localhost:8083/mcp"
 	@echo "Transport: Streamable HTTP"
 	PYTHONPATH=src uv run python scripts/run_mcp_http.py
 

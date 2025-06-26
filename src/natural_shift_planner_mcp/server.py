@@ -143,7 +143,7 @@ def main():
     if transport == "http":
         # HTTP transport configuration
         host = os.getenv("MCP_HTTP_HOST", "127.0.0.1")
-        port = int(os.getenv("MCP_HTTP_PORT", "8081"))
+        port = int(os.getenv("MCP_HTTP_PORT", "8083"))
         path = os.getenv("MCP_HTTP_PATH", "/mcp")
 
         logger.info(f"Starting MCP server with HTTP transport on {host}:{port}{path}")

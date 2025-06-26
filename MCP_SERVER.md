@@ -65,7 +65,7 @@ MCP_HTTP_HOST=0.0.0.0 MCP_HTTP_PORT=8082 make mcp-http
 
 - `MCP_TRANSPORT`: Transport type (`stdio` or `http`, default: `stdio`)
 - `MCP_HTTP_HOST`: HTTP server host (default: `127.0.0.1`)
-- `MCP_HTTP_PORT`: HTTP server port (default: `8081`)
+- `MCP_HTTP_PORT`: HTTP server port (default: `8083`)
 - `MCP_HTTP_PATH`: HTTP endpoint path (default: `/mcp`)
 
 ### Connecting to HTTP Transport
@@ -74,7 +74,7 @@ MCP_HTTP_HOST=0.0.0.0 MCP_HTTP_PORT=8082 make mcp-http
 from fastmcp import Client
 
 async def connect():
-    async with Client("http://localhost:8081/mcp") as client:
+    async with Client("http://localhost:8083/mcp") as client:
         # List available tools
         tools = await client.list_tools()
         

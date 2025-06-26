@@ -9,7 +9,7 @@ import sys
 # Set HTTP transport environment variables
 os.environ["MCP_TRANSPORT"] = "http"
 os.environ["MCP_HTTP_HOST"] = os.getenv("MCP_HTTP_HOST", "0.0.0.0")
-os.environ["MCP_HTTP_PORT"] = os.getenv("MCP_HTTP_PORT", "8081")
+os.environ["MCP_HTTP_PORT"] = os.getenv("MCP_HTTP_PORT", "8083")
 os.environ["MCP_HTTP_PATH"] = os.getenv("MCP_HTTP_PATH", "/mcp")
 
 # Add src directory to Python path

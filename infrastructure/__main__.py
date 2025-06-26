@@ -50,19 +50,23 @@ def main():
     config = pulumi.Config()
     environment = config.get("environment") or "development"
     sku_size = config.get("sku_size") or "Basic"
-    
+
     # Map sku_size to registry SKU (Basic -> Basic, Standard -> Standard, Premium -> Premium)
     registry_sku = sku_size if sku_size in ["Basic", "Standard", "Premium"] else "Basic"
-    
+
     # Create container registry (for Docker images)
     registry_module = ContainerRegistryModule(
         resource_group_name=rg_module.resource_group.name,
         location=rg_module.resource_group.location,
         sku=registry_sku,
         environment=environment,
-        enable_admin_user=environment != "production",  # Disable admin user in production
-        enable_vulnerability_scanning=registry_sku != "Basic",  # Enable for Standard/Premium
-        retention_days=30 if environment == "production" else 7,  # Longer retention in production
+        enable_admin_user=environment
+        != "production",  # Disable admin user in production
+        enable_vulnerability_scanning=registry_sku
+        != "Basic",  # Enable for Standard/Premium
+        retention_days=30
+        if environment == "production"
+        else 7,  # Longer retention in production
         additional_tags={"Purpose": "Container image registry"},
     )
 
@@ -70,7 +74,7 @@ def main():
     registry_outputs = registry_module.get_outputs()
     for key, value in registry_outputs.items():
         pulumi.export(f"container_registry_{key}", value)
-    
+
     # Export legacy outputs for backward compatibility
     pulumi.export("container_registry_name", registry_module.registry.name)
     pulumi.export(
