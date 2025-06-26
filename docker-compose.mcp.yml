@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # MCP Server with stdio transport (for Claude Desktop)
   mcp-stdio:
@@ -70,4 +68,5 @@ services:
 
 networks:
   default:
-    name: shift-scheduler-network
+    name: shift-scheduler-mcp-network
+    external: false
