@@ -37,6 +37,9 @@ SOLVER_TIMEOUT_SECONDS=300 SOLVER_LOG_LEVEL=DEBUG make run
 # Start both API and MCP servers together
 make run-mcp
 
+# Start MCP server with HTTP transport (for web clients)
+make mcp-http
+
 # Start in debug mode with verbose logging
 make debug
 
@@ -255,15 +258,23 @@ JOB_STORAGE_TYPE=azure make test
 The project includes a Python-based MCP (Model Context Protocol) server using FastMCP that exposes the Shift Scheduler API as MCP tools.
 
 ### MCP Server Setup
-The MCP server uses FastMCP and is automatically set up when you run `make setup`. To run both servers together:
+The MCP server uses FastMCP and is automatically set up when you run `make setup`. 
+
+**Default (stdio transport for Claude Desktop):**
 ```bash
-make run-mcp
+make run-mcp  # Run both API and MCP servers
+make mcp      # Run MCP server only
 ```
 
-Or run the MCP server separately:
+**HTTP Transport (for web clients):**
 ```bash
-make mcp
+make mcp-http  # Run with HTTP transport on port 8081
+
+# With custom configuration
+MCP_HTTP_PORT=8082 MCP_HTTP_HOST=0.0.0.0 make mcp-http
 ```
+
+The HTTP transport enables web-based deployments and supports multiple concurrent clients.
 
 ### Available MCP Tools
 

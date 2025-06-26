@@ -8,6 +8,7 @@ help:
 	@echo "  setup        - Complete setup (Python, pre-commit, MCP) - run this first!"
 	@echo "  run          - Start FastAPI server only"
 	@echo "  run-mcp      - Start both API and MCP servers together"
+	@echo "  mcp-http     - Start MCP server with HTTP transport"
 	@echo "  test         - Run tests"
 	@echo "  format       - Format code"
 	@echo "  lint         - Check code"
@@ -139,6 +140,13 @@ mcp:
 test-mcp:
 	@echo "🧪 Testing MCP server..."
 	@echo '{"jsonrpc":"2.0","method":"list_tools","id":1}' | PYTHONPATH=src uv run python -m natural_shift_planner_mcp.server
+
+# Run MCP server with HTTP transport
+mcp-http:
+	@echo "🌐 Starting MCP server with HTTP transport..."
+	@echo "MCP HTTP URL: http://localhost:8081/mcp"
+	@echo "Transport: Streamable HTTP"
+	PYTHONPATH=src uv run python scripts/run_mcp_http.py
 
 # Start Streamlit app
 run-streamlit:

@@ -47,6 +47,52 @@ Add this configuration to your Claude Desktop config file:
 
 After updating the configuration, restart Claude Desktop for the changes to take effect. You should see the shift scheduler tools available in Claude Desktop.
 
+## 🌐 HTTP Transport (Alternative)
+
+The MCP server also supports Streamable HTTP transport for web-based deployments and multiple concurrent clients.
+
+### Starting with HTTP Transport
+
+```bash
+# Run MCP server with HTTP transport
+make mcp-http
+
+# Or with custom configuration
+MCP_HTTP_HOST=0.0.0.0 MCP_HTTP_PORT=8082 make mcp-http
+```
+
+### Environment Variables
+
+- `MCP_TRANSPORT`: Transport type (`stdio` or `http`, default: `stdio`)
+- `MCP_HTTP_HOST`: HTTP server host (default: `127.0.0.1`)
+- `MCP_HTTP_PORT`: HTTP server port (default: `8081`)
+- `MCP_HTTP_PATH`: HTTP endpoint path (default: `/mcp`)
+
+### Connecting to HTTP Transport
+
+```python
+from fastmcp import Client
+
+async def connect():
+    async with Client("http://localhost:8081/mcp") as client:
+        # List available tools
+        tools = await client.list_tools()
+        
+        # Call a tool
+        result = await client.call_tool("solve_schedule_sync", {
+            "schedule_input": {...}
+        })
+```
+
+### Use Cases for HTTP Transport
+
+- **Web Applications**: Deploy MCP server as a web service
+- **Multiple Clients**: Support concurrent connections from multiple AI agents
+- **Cloud Deployment**: Compatible with AWS Lambda, Google Cloud Functions, etc.
+- **API Integration**: Integrate with existing web applications
+
+Note: Claude Desktop currently works best with stdio transport. Use HTTP transport for web-based or programmatic access.
+
 ## 🛠 Available MCP Tools
 
 The MCP server exposes 11 tools organized into 4 categories:
