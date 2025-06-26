@@ -7,7 +7,7 @@
                 "-i",
                 "--rm",
                 "-e",
-                "SHIFT_SCHEDULER_API_URL=http://172.17.0.1:8081",
+                "SHIFT_SCHEDULER_API_URL=http://host.docker.internal:8081",
                 "shift-scheduler-mcp-server:latest"
             ]
         }

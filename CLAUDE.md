@@ -309,3 +309,4 @@ The HTTP transport enables web-based deployments and supports multiple concurren
 - `solve_schedule_sync_html`: Solve and return HTML report in one step
 
 See `MCP_SERVER.md` for detailed usage and Claude Desktop integration instructions.
+See `DOCKER_MCP.md` for running MCP servers in Docker containers with HTTP/SSE transport.

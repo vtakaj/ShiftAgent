@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # MCP Server with stdio transport (for Claude Desktop)
+  mcp-stdio:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+    image: shift-scheduler-mcp-server:latest
+    container_name: shift-scheduler-mcp-stdio
+    environment:
+      - SHIFT_SCHEDULER_API_URL=http://host.docker.internal:8081
+      - LOG_LEVEL=INFO
+      - MCP_LOG_LEVEL=INFO
+    profiles:
+      - stdio
+    stdin_open: true
+    tty: true
+
+  # MCP Server with HTTP transport (recommended for web clients)
+  mcp-http:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp.http
+    image: shift-scheduler-mcp-http:latest
+    container_name: shift-scheduler-mcp-http
+    ports:
+      - "8083:8083"
+    environment:
+      - SHIFT_SCHEDULER_API_URL=http://host.docker.internal:8081
+      - LOG_LEVEL=INFO
+      - MCP_LOG_LEVEL=INFO
+      - MCP_TRANSPORT=http
+      - MCP_HTTP_HOST=0.0.0.0
+      - MCP_HTTP_PORT=8083
+      - MCP_HTTP_PATH=/mcp
+    profiles:
+      - http
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/mcp/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # MCP Server with SSE transport (deprecated, for legacy clients)
+  mcp-sse:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp.sse
+    image: shift-scheduler-mcp-sse:latest
+    container_name: shift-scheduler-mcp-sse
+    ports:
+      - "8084:8084"
+    environment:
+      - SHIFT_SCHEDULER_API_URL=http://host.docker.internal:8081
+      - LOG_LEVEL=INFO
+      - MCP_LOG_LEVEL=INFO
+      - MCP_TRANSPORT=sse
+      - MCP_SSE_HOST=0.0.0.0
+      - MCP_SSE_PORT=8084
+    profiles:
+      - sse
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/sse/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  default:
+    name: shift-scheduler-network

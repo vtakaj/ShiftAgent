@@ -2,6 +2,8 @@
 
 This document provides detailed setup and usage instructions for the Model Context Protocol (MCP) server that exposes the Shift Scheduler API functionality to AI assistants like Claude Desktop.
 
+For Docker deployment with HTTP/SSE transport, see [`DOCKER_MCP.md`](DOCKER_MCP.md).
+
 ## 🚀 Quick Start
 
 ### Prerequisites
