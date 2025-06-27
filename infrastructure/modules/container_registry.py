@@ -2,7 +2,7 @@
 Container Registry module for Azure infrastructure
 """
 
-from typing import Any, Optional
+from typing import Any
 
 import pulumi
 import pulumi_azure_native as azure_native
@@ -43,7 +43,9 @@ class ContainerRegistryModule:
         self.sku = sku
         self.environment = environment
         self.enable_admin_user = enable_admin_user
-        self.enable_vulnerability_scanning = enable_vulnerability_scanning and sku != "Basic"
+        self.enable_vulnerability_scanning = (
+            enable_vulnerability_scanning and sku != "Basic"
+        )
         self.retention_days = retention_days
         self.tags = self.naming.get_resource_tags(additional_tags)
 
@@ -65,16 +67,24 @@ class ContainerRegistryModule:
         """Configure security settings based on environment"""
         if self.environment == "production":
             # Production security settings
-            self.public_network_access = azure_native.containerregistry.PublicNetworkAccess.DISABLED
+            self.public_network_access = (
+                azure_native.containerregistry.PublicNetworkAccess.DISABLED
+            )
             self.anonymous_pull_enabled = False
             self.data_endpoint_enabled = True
-            self.network_rule_bypass_options = azure_native.containerregistry.NetworkRuleBypassOptions.AZURE_SERVICES
+            self.network_rule_bypass_options = (
+                azure_native.containerregistry.NetworkRuleBypassOptions.AZURE_SERVICES
+            )
         else:
             # Development security settings
-            self.public_network_access = azure_native.containerregistry.PublicNetworkAccess.ENABLED
+            self.public_network_access = (
+                azure_native.containerregistry.PublicNetworkAccess.ENABLED
+            )
             self.anonymous_pull_enabled = False
             self.data_endpoint_enabled = False
-            self.network_rule_bypass_options = azure_native.containerregistry.NetworkRuleBypassOptions.AZURE_SERVICES
+            self.network_rule_bypass_options = (
+                azure_native.containerregistry.NetworkRuleBypassOptions.AZURE_SERVICES
+            )
 
     def _create_registry(self) -> azure_native.containerregistry.Registry:
         """Create the container registry with enhanced configuration"""
@@ -97,8 +107,10 @@ class ContainerRegistryModule:
 
         # Add encryption configuration for Premium SKU
         if self.sku == "Premium":
-            registry_args["encryption"] = azure_native.containerregistry.EncryptionPropertyArgs(
-                status=azure_native.containerregistry.EncryptionStatus.ENABLED
+            registry_args["encryption"] = (
+                azure_native.containerregistry.EncryptionPropertyArgs(
+                    status=azure_native.containerregistry.EncryptionStatus.ENABLED
+                )
             )
 
         return azure_native.containerregistry.Registry(**registry_args)
@@ -120,7 +132,9 @@ class ContainerRegistryModule:
         # This enables the basic scanning capabilities available in ACR
         pass  # Vulnerability scanning is enabled by default on Standard/Premium SKUs
 
-    def create_scope_map(self, name: str, actions: list[str]) -> azure_native.containerregistry.ScopeMap:
+    def create_scope_map(
+        self, name: str, actions: list[str]
+    ) -> azure_native.containerregistry.ScopeMap:
         """
         Create a scope map for fine-grained access control
 
@@ -139,7 +153,9 @@ class ContainerRegistryModule:
             actions=actions,
         )
 
-    def create_token(self, name: str, scope_map_id: pulumi.Input[str]) -> azure_native.containerregistry.Token:
+    def create_token(
+        self, name: str, scope_map_id: pulumi.Input[str]
+    ) -> azure_native.containerregistry.Token:
         """
         Create a repository-scoped token for authentication
 
@@ -163,7 +179,7 @@ class ContainerRegistryModule:
         """Get admin credentials for the registry"""
         if not self.enable_admin_user:
             return pulumi.Output.from_input({})
-        
+
         return pulumi.Output.all(self.resource_group_name, self.registry.name).apply(
             lambda args: azure_native.containerregistry.list_registry_credentials(
                 resource_group_name=args[0], registry_name=args[1]
@@ -191,8 +207,8 @@ class ContainerRegistryModule:
             "sku": pulumi.Output.from_input(self.sku),
             "environment": pulumi.Output.from_input(self.environment),
         }
-        
+
         if self.enable_admin_user:
             outputs["admin_credentials"] = self.get_admin_credentials()
-            
+
         return outputs

@@ -8,6 +8,8 @@ help:
 	@echo "  setup        - Complete setup (Python, pre-commit, MCP) - run this first!"
 	@echo "  run          - Start FastAPI server only"
 	@echo "  run-mcp      - Start both API and MCP servers together"
+	@echo "  mcp-http     - Start MCP server with HTTP transport (recommended)"
+	@echo "  mcp-sse      - Start MCP server with SSE transport (deprecated)"
 	@echo "  test         - Run tests"
 	@echo "  format       - Format code"
 	@echo "  lint         - Check code"
@@ -24,6 +26,15 @@ help:
 	@echo "  test-api     - Test API endpoints"
 	@echo "  streamlit    - Start Streamlit web UI"
 	@echo "  pulumi-setup - Initialize Pulumi for infrastructure"
+	@echo ""
+	@echo "  Docker MCP Commands:"
+	@echo "  docker-mcp-build-http  - Build HTTP MCP Docker image"
+	@echo "  docker-mcp-build-sse   - Build SSE MCP Docker image"
+	@echo "  docker-mcp-run-http    - Run HTTP MCP in Docker"
+	@echo "  docker-mcp-run-sse     - Run SSE MCP in Docker"
+	@echo "  docker-mcp-stop        - Stop all Docker MCP servers"
+	@echo "  docker-mcp-logs-http   - Show HTTP MCP logs"
+	@echo "  docker-mcp-logs-sse    - Show SSE MCP logs"
 
 # Development environment setup (with error handling)
 setup:
@@ -140,11 +151,55 @@ test-mcp:
 	@echo "🧪 Testing MCP server..."
 	@echo '{"jsonrpc":"2.0","method":"list_tools","id":1}' | PYTHONPATH=src uv run python -m natural_shift_planner_mcp.server
 
+# Run MCP server with HTTP transport
+mcp-http:
+	@echo "🌐 Starting MCP server with HTTP transport..."
+	@echo "MCP HTTP URL: http://localhost:8083/mcp"
+	@echo "Transport: Streamable HTTP"
+	PYTHONPATH=src uv run python scripts/run_mcp_http.py
+
+# Run MCP server with SSE transport (deprecated)
+mcp-sse:
+	@echo "📡 Starting MCP server with SSE transport..."
+	@echo "⚠️  WARNING: SSE transport is deprecated. Use 'make mcp-http' for new deployments."
+	@echo "MCP SSE URL: http://localhost:8084/sse/"
+	@echo "Transport: Server-Sent Events (Legacy)"
+	PYTHONPATH=src uv run python scripts/run_mcp_sse.py
+
 # Start Streamlit app
 run-streamlit:
 	@echo "📊 Starting Streamlit app..."
 	@echo "Streamlit URL: http://localhost:8501"
 	cd src && PYTHONPATH=. uv run streamlit run natural_shift_planner_viewer/main.py --server.port 8501
+
+# Docker MCP Server commands
+docker-mcp-build-http:
+	@echo "🔨 Building MCP Docker image for HTTP transport..."
+	./scripts/docker_mcp.sh build http
+
+docker-mcp-build-sse:
+	@echo "🔨 Building MCP Docker image for SSE transport..."
+	./scripts/docker_mcp.sh build sse
+
+docker-mcp-run-http:
+	@echo "🚀 Running MCP server with HTTP transport in Docker..."
+	./scripts/docker_mcp.sh run http
+
+docker-mcp-run-sse:
+	@echo "🚀 Running MCP server with SSE transport in Docker..."
+	./scripts/docker_mcp.sh run sse
+
+docker-mcp-stop:
+	@echo "🛑 Stopping Docker MCP servers..."
+	./scripts/docker_mcp.sh stop all
+
+docker-mcp-logs-http:
+	@echo "📋 Showing HTTP MCP server logs..."
+	./scripts/docker_mcp.sh logs http
+
+docker-mcp-logs-sse:
+	@echo "📋 Showing SSE MCP server logs..."
+	./scripts/docker_mcp.sh logs sse
 
 # Initialize Pulumi for infrastructure
 pulumi-setup:

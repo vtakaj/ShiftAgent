@@ -137,7 +137,31 @@ The following additional employee management features are planned but not yet im
 
 def main():
     """Entry point for MCP server"""
-    mcp.run()
+    # Get transport configuration from environment
+    transport = os.getenv("MCP_TRANSPORT", "stdio").lower()
+
+    if transport == "http":
+        # HTTP transport configuration
+        host = os.getenv("MCP_HTTP_HOST", "127.0.0.1")
+        port = int(os.getenv("MCP_HTTP_PORT", "8083"))
+        path = os.getenv("MCP_HTTP_PATH", "/mcp")
+
+        logger.info(f"Starting MCP server with HTTP transport on {host}:{port}{path}")
+        mcp.run(transport="http", host=host, port=port, path=path)
+    elif transport == "sse":
+        # SSE transport configuration (deprecated, but supported for legacy clients)
+        host = os.getenv("MCP_SSE_HOST", "127.0.0.1")
+        port = int(os.getenv("MCP_SSE_PORT", "8084"))
+
+        logger.warning(
+            "SSE transport is deprecated. Consider using HTTP transport instead."
+        )
+        logger.info(f"Starting MCP server with SSE transport on {host}:{port}")
+        mcp.run(transport="sse", host=host, port=port)
+    else:
+        # Default stdio transport for Claude Desktop
+        logger.info("Starting MCP server with stdio transport")
+        mcp.run()
 
 
 if __name__ == "__main__":

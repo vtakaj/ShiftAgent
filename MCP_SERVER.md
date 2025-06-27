@@ -2,6 +2,8 @@
 
 This document provides detailed setup and usage instructions for the Model Context Protocol (MCP) server that exposes the Shift Scheduler API functionality to AI assistants like Claude Desktop.
 
+For Docker deployment with HTTP/SSE transport, see [`DOCKER_MCP.md`](DOCKER_MCP.md).
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -46,6 +48,102 @@ Add this configuration to your Claude Desktop config file:
 ### 3. Restart Claude Desktop
 
 After updating the configuration, restart Claude Desktop for the changes to take effect. You should see the shift scheduler tools available in Claude Desktop.
+
+## 🌐 HTTP Transport (Alternative)
+
+The MCP server also supports Streamable HTTP transport for web-based deployments and multiple concurrent clients.
+
+### Starting with HTTP Transport
+
+```bash
+# Run MCP server with HTTP transport
+make mcp-http
+
+# Or with custom configuration
+MCP_HTTP_HOST=0.0.0.0 MCP_HTTP_PORT=8082 make mcp-http
+```
+
+### Environment Variables
+
+- `MCP_TRANSPORT`: Transport type (`stdio` or `http`, default: `stdio`)
+- `MCP_HTTP_HOST`: HTTP server host (default: `127.0.0.1`)
+- `MCP_HTTP_PORT`: HTTP server port (default: `8083`)
+- `MCP_HTTP_PATH`: HTTP endpoint path (default: `/mcp`)
+
+### Connecting to HTTP Transport
+
+```python
+from fastmcp import Client
+
+async def connect():
+    async with Client("http://localhost:8083/mcp") as client:
+        # List available tools
+        tools = await client.list_tools()
+        
+        # Call a tool
+        result = await client.call_tool("solve_schedule_sync", {
+            "schedule_input": {...}
+        })
+```
+
+### Use Cases for HTTP Transport
+
+- **Web Applications**: Deploy MCP server as a web service
+- **Multiple Clients**: Support concurrent connections from multiple AI agents
+- **Cloud Deployment**: Compatible with AWS Lambda, Google Cloud Functions, etc.
+- **API Integration**: Integrate with existing web applications
+
+Note: Claude Desktop currently works best with stdio transport. Use HTTP transport for web-based or programmatic access.
+
+## 📡 SSE Transport (Deprecated)
+
+The MCP server also supports SSE (Server-Sent Events) transport for backward compatibility with legacy clients.
+
+### ⚠️ Deprecation Warning
+
+SSE transport is deprecated and may be removed in future versions. New deployments should use HTTP transport instead.
+
+### Starting with SSE Transport
+
+```bash
+# Run MCP server with SSE transport
+make mcp-sse
+
+# Or with custom configuration
+MCP_SSE_HOST=0.0.0.0 MCP_SSE_PORT=8085 make mcp-sse
+```
+
+### Environment Variables
+
+- `MCP_TRANSPORT`: Set to `sse` for SSE transport
+- `MCP_SSE_HOST`: SSE server host (default: `127.0.0.1`)
+- `MCP_SSE_PORT`: SSE server port (default: `8084`)
+
+### Connecting to SSE Transport
+
+```python
+from fastmcp import Client
+from fastmcp.client.transports import SSETransport
+
+# Automatic detection for URLs with /sse/
+async with Client("http://localhost:8084/sse/") as client:
+    result = await client.call_tool("solve_schedule_sync", {...})
+
+# Or explicit transport
+transport = SSETransport(
+    url="http://localhost:8084/sse/",
+    headers={"Authorization": "Bearer token"}
+)
+async with Client(transport) as client:
+    result = await client.call_tool("solve_schedule_sync", {...})
+```
+
+### Why SSE is Deprecated
+
+- Less efficient than HTTP transport
+- Limited bidirectional communication
+- More complex client-server architecture
+- HTTP transport provides all SSE features plus more
 
 ## 🛠 Available MCP Tools
 
