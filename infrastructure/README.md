@@ -1,6 +1,6 @@
-# Terraform Infrastructure for Shift Scheduler
+# Terraform Infrastructure for ShiftAgent
 
-This directory contains the Terraform infrastructure code for the Shift Scheduler application.
+This directory contains the Terraform infrastructure code for the ShiftAgent application.
 
 ## Architecture
 
