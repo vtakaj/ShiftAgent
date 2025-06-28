@@ -47,6 +47,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy application source code
 COPY main.py ./
+COPY mcp_server.py ./
 COPY src/ ./src/
 
 # Create non-root user for security

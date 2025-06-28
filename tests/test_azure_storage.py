@@ -8,10 +8,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.natural_shift_planner.api.azure_job_store import AzureBlobJobStore
-from src.natural_shift_planner.core.models.employee import Employee
-from src.natural_shift_planner.core.models.schedule import ShiftSchedule
-from src.natural_shift_planner.core.models.shift import Shift
+from src.shift_agent.api.azure_job_store import AzureBlobJobStore
+from src.shift_agent.core.models.employee import Employee
+from src.shift_agent.core.models.schedule import ShiftSchedule
+from src.shift_agent.core.models.shift import Shift
 
 
 class TestAzureBlobJobStore:
@@ -21,7 +21,7 @@ class TestAzureBlobJobStore:
     def mock_blob_service_client(self):
         """Mock Azure Blob Service Client"""
         with patch(
-            "src.natural_shift_planner.api.azure_job_store.BlobServiceClient"
+            "src.shift_agent.api.azure_job_store.BlobServiceClient"
         ) as mock_client:
             mock_instance = Mock()
             mock_client.from_connection_string.return_value = mock_instance
@@ -52,9 +52,7 @@ class TestAzureBlobJobStore:
 
     def test_initialization_with_account_name(self, mock_blob_service_client):
         """Test job store initialization with account name"""
-        with patch(
-            "src.natural_shift_planner.api.azure_job_store.DefaultAzureCredential"
-        ):
+        with patch("src.shift_agent.api.azure_job_store.DefaultAzureCredential"):
             store = AzureBlobJobStore(account_name="testaccount")
             assert store.container_name == "job-data"
 
@@ -216,7 +214,7 @@ class TestAzureBlobJobStore:
 
 def test_create_azure_job_store():
     """Test factory function for creating Azure job store"""
-    from src.natural_shift_planner.api.azure_job_store import create_azure_job_store
+    from src.shift_agent.api.azure_job_store import create_azure_job_store
 
     # Test with no environment variables
     with patch.dict(os.environ, {}, clear=True):
@@ -231,7 +229,7 @@ def test_create_azure_job_store():
         },
         clear=True,
     ):
-        with patch("src.natural_shift_planner.api.azure_job_store.BlobServiceClient"):
+        with patch("src.shift_agent.api.azure_job_store.BlobServiceClient"):
             store = create_azure_job_store()
             assert store is not None
             assert store.container_name == "job-data"
@@ -241,10 +239,8 @@ def test_create_azure_job_store():
         os.environ, {"AZURE_STORAGE_ACCOUNT_NAME": "testaccount"}, clear=True
     ):
         with (
-            patch("src.natural_shift_planner.api.azure_job_store.BlobServiceClient"),
-            patch(
-                "src.natural_shift_planner.api.azure_job_store.DefaultAzureCredential"
-            ),
+            patch("src.shift_agent.api.azure_job_store.BlobServiceClient"),
+            patch("src.shift_agent.api.azure_job_store.DefaultAzureCredential"),
         ):
             store = create_azure_job_store()
             assert store is not None

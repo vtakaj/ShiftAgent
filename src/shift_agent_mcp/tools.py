@@ -1,5 +1,5 @@
 """
-MCP tools for shift scheduler operations
+MCP tools for ShiftAgent operations
 """
 
 import json
@@ -12,7 +12,7 @@ from fastmcp import Context
 from pydantic import BaseModel, Field
 
 # Configuration
-API_BASE_URL = os.getenv("SHIFT_SCHEDULER_API_URL", "http://localhost:8081")
+API_BASE_URL = os.getenv("SHIFT_AGENT_API_URL", "http://localhost:8081")
 
 
 # Helper functions
@@ -75,7 +75,7 @@ async def call_api(
     data: dict[str, Any] | None = None,
     timeout: float = 120.0,
 ) -> dict[str, Any]:
-    """Make an API call to the shift scheduler"""
+    """Make an API call to the ShiftAgent"""
     url = f"{API_BASE_URL}{endpoint}"
 
     async with httpx.AsyncClient(timeout=timeout) as client:
@@ -95,7 +95,7 @@ async def call_api(
 
 # Tool functions
 async def health_check(ctx: Context) -> dict[str, Any]:
-    """Check if the Shift Scheduler API is healthy"""
+    """Check if the ShiftAgent API is healthy"""
     return await call_api("GET", "/health")
 
 

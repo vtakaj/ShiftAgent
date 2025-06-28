@@ -41,6 +41,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy application source code
 COPY src/ ./src/
+COPY mcp_server.py ./
 
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash --uid 1000 app \
@@ -49,13 +50,13 @@ USER app
 
 # Set environment variables for MCP server
 ENV PYTHONPATH=/app/src
-ENV SHIFT_SCHEDULER_API_URL=http://host.docker.internal:8081
+ENV SHIFT_AGENT_API_URL=http://host.docker.internal:8081
 ENV LOG_LEVEL=INFO
 ENV MCP_LOG_LEVEL=INFO
 
 # Health check for MCP server (basic process check)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD ps aux | grep "natural_shift_planner_mcp" | grep -v grep || exit 1
+    CMD ps aux | grep "shift_agent_mcp" | grep -v grep || exit 1
 
 # Run MCP server in STDIO mode
-CMD ["python", "-m", "natural_shift_planner_mcp.server"]
+CMD ["python", "mcp_server.py"]

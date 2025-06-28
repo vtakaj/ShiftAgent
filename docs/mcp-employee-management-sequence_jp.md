@@ -7,7 +7,7 @@ sequenceDiagram
     participant User as ユーザー
     participant CD as Claude Desktop
     participant MCP as MCP Server
-    participant API as Shift Scheduler API
+    participant API as ShiftAgent API
     participant Solver as Timefold Solver
 
     Note over User,Solver: 1. 初期スケジュール最適化

@@ -1,5 +1,5 @@
 """
-Shift Scheduler API
+ShiftAgent API
 """
 
 from .app import app

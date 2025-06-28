@@ -50,7 +50,7 @@ USER app
 
 # Set environment variables for MCP server
 ENV PYTHONPATH=/app/src
-ENV SHIFT_SCHEDULER_API_URL=http://host.docker.internal:8081
+ENV SHIFT_AGENT_API_URL=http://host.docker.internal:8081
 ENV LOG_LEVEL=INFO
 ENV MCP_LOG_LEVEL=INFO
 

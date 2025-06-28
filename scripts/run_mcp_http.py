@@ -16,7 +16,7 @@ os.environ["MCP_HTTP_PATH"] = os.getenv("MCP_HTTP_PATH", "/mcp")
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "src"))
 
 # Import and run the MCP server
-from natural_shift_planner_mcp.server import main
+from shift_agent_mcp.server import main
 
 if __name__ == "__main__":
     print(

@@ -1,0 +1,17 @@
+# Use the main API image as base since it has all dependencies
+FROM shift-agent-api:latest
+
+# Switch back to root to modify files
+USER root
+
+# Copy MCP server entry point
+COPY mcp_server.py /app/
+
+# Ensure correct permissions
+RUN chown app:app /app/mcp_server.py
+
+# Switch back to app user
+USER app
+
+# Override the command
+CMD ["python", "mcp_server.py"]

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Shift Scheduler API built with FastAPI and Timefold Solver (AI optimization engine). The application optimizes employee shift assignments based on skills, work hours constraints, and fairness.
+This is a ShiftAgent API built with FastAPI and Timefold Solver (AI optimization engine). The application optimizes employee shift assignments based on skills, work hours constraints, and fairness.
 
 ## Key Commands
 
@@ -132,7 +132,7 @@ terraform output
 ### Folder Structure
 
 ```
-src/natural_shift_planner/
+src/shift_agent/
 ├── api/              # FastAPI application layer
 │   ├── app.py        # FastAPI instance and configuration
 │   ├── routes.py     # API endpoints
@@ -181,7 +181,7 @@ src/natural_shift_planner/
    - Soft constraints: minimize unassigned shifts, fair workload distribution
 
 5. **mcp_server.py**: Entry point for MCP server
-   - Exposes shift scheduler functionality to AI assistants
+   - Exposes ShiftAgent functionality to AI assistants
    - Uses FastMCP for protocol implementation
 
 ### Constraint System
@@ -290,7 +290,7 @@ JOB_STORAGE_TYPE=azure make test
 
 ## MCP Server
 
-The project includes a Python-based MCP (Model Context Protocol) server using FastMCP that exposes the Shift Scheduler API as MCP tools.
+The project includes a Python-based MCP (Model Context Protocol) server using FastMCP that exposes the ShiftAgent API as MCP tools.
 
 ### MCP Server Setup
 The MCP server uses FastMCP and is automatically set up when you run `make setup`.

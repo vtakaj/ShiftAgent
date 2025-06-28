@@ -6,7 +6,7 @@ This guide explains how to run the MCP (Model Context Protocol) server in Docker
 
 ### Prerequisites
 - Docker and Docker Compose installed
-- Shift Scheduler API running (accessible at `http://host.docker.internal:8081`)
+- ShiftAgent API running (accessible at `http://host.docker.internal:8081`)
 
 ### Available Transport Modes
 
@@ -98,15 +98,15 @@ Environment variables for SSE transport:
 docker run -d \
   -p 9000:9000 \
   -e MCP_HTTP_PORT=9000 \
-  -e SHIFT_SCHEDULER_API_URL=http://host.docker.internal:8081 \
-  shift-scheduler-mcp-http:latest
+  -e SHIFT_AGENT_API_URL=http://host.docker.internal:8081 \
+  shift-agent-mcp-http:latest
 
 # Custom SSE port
 docker run -d \
   -p 9001:9001 \
   -e MCP_SSE_PORT=9001 \
-  -e SHIFT_SCHEDULER_API_URL=http://host.docker.internal:8081 \
-  shift-scheduler-mcp-sse:latest
+  -e SHIFT_AGENT_API_URL=http://host.docker.internal:8081 \
+  shift-agent-mcp-sse:latest
 ```
 
 ### Using Docker Compose Override
@@ -157,7 +157,7 @@ For HTTP transport, create `claude_desktop_config.json`:
 ```json
 {
     "mcpServers": {
-        "shift-scheduler-http": {
+        "shift-agent-http": {
             "command": "curl",
             "args": [
                 "-X", "POST",
@@ -213,7 +213,7 @@ curl -f http://localhost:8083/mcp/health || echo "Health check failed"
 ### Common Issues
 
 1. **Port conflicts**: Change ports in environment variables
-2. **API connectivity**: Ensure Shift Scheduler API is running on port 8081
+2. **API connectivity**: Ensure ShiftAgent API is running on port 8081
 3. **Permission issues**: Containers run as non-root user
 
 ### Logs and Debugging
@@ -222,10 +222,10 @@ curl -f http://localhost:8083/mcp/health || echo "Health check failed"
 make docker-mcp-logs-http
 
 # Debug with verbose logging
-docker run -e LOG_LEVEL=DEBUG shift-scheduler-mcp-http:latest
+docker run -e LOG_LEVEL=DEBUG shift-agent-mcp-http:latest
 
 # Container shell access
-docker exec -it shift-scheduler-mcp-http /bin/bash
+docker exec -it shift-agent-mcp-http /bin/bash
 ```
 
 ## 🚦 Production Deployment
@@ -242,13 +242,13 @@ docker exec -it shift-scheduler-mcp-http /bin/bash
 version: '3.8'
 services:
   mcp-http:
-    image: shift-scheduler-mcp-http:latest
+    image: shift-agent-mcp-http:latest
     restart: unless-stopped
     ports:
       - "8083:8083"
     environment:
       - MCP_TRANSPORT=http
-      - SHIFT_SCHEDULER_API_URL=${API_URL}
+      - SHIFT_AGENT_API_URL=${API_URL}
       - LOG_LEVEL=INFO
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/mcp/health"]

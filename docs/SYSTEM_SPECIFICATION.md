@@ -1,10 +1,10 @@
-# Shift Scheduler System Specification
+# Shift Agent System Specification
 # For Claude Code Implementation
 
 ## 📋 Project Overview
 
 ### System Name
-Employee Shift Scheduler API
+Employee Shift Agent API
 
 ### Overview
 Employee shift optimization system using Timefold Solver. Solves complex shift requirements as a constraint satisfaction problem, balancing labor law compliance with operational efficiency.
@@ -233,7 +233,7 @@ application/json
 #### 1. Health Check
 ```http
 GET /health
-Response: {"status": "UP", "service": "shift-scheduler"}
+Response: {"status": "UP", "service": "shift-agent"}
 ```
 
 #### 2. Demo Data Retrieval
@@ -309,7 +309,7 @@ Response: WeeklyTestResponse
 
 ### Directory Structure
 ```
-shift-scheduler/
+shift-agent/
 ├── main.py                  # FastAPI application entry point
 ├── models.py                # Data models and Pydantic schemas
 ├── constraints.py           # Timefold constraint definitions

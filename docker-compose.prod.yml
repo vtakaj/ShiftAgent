@@ -1,11 +1,11 @@
 services:
-  shift-scheduler:
+  shift-agent:
     build:
       context: .
       dockerfile: Dockerfile
       target: runtime
     ports:
-      - "${SHIFT_SCHEDULER_PORT:-8081}:8081"
+      - "${SHIFT_AGENT_PORT:-8081}:8081"
     environment:
       - PYTHONUNBUFFERED=1
       # Logging configuration (production defaults)
@@ -19,12 +19,12 @@ services:
       # Solver configuration (longer timeout for production)
       - SOLVER_TIMEOUT_SECONDS=${SOLVER_TIMEOUT_SECONDS:-300}
       # MCP configuration
-      - SHIFT_SCHEDULER_API_URL=${SHIFT_SCHEDULER_API_URL:-http://shift-scheduler:8081}
+      - SHIFT_AGENT_API_URL=${SHIFT_AGENT_API_URL:-http://shift-agent:8081}
     volumes:
       # Production: Only job storage, no source code mounts
       - job_data:/app/job_storage
       # Optional: Bind mount for persistent storage
-      # - ${HOST_JOB_STORAGE_DIR:-/var/lib/shift-scheduler}:/app/job_storage
+      # - ${HOST_JOB_STORAGE_DIR:-/var/lib/shift-agent}:/app/job_storage
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
       interval: 30s
@@ -91,9 +91,9 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-WARN}
       - SOLVER_LOG_LEVEL=${SOLVER_LOG_LEVEL:-WARN}
       - MCP_LOG_LEVEL=${MCP_LOG_LEVEL:-WARN}
-      - SHIFT_SCHEDULER_API_URL=http://shift-scheduler:8081
+      - SHIFT_AGENT_API_URL=http://shift-agent:8081
     depends_on:
-      shift-scheduler:
+      shift-agent:
         condition: service_healthy
     restart: always
     networks:
@@ -122,7 +122,7 @@ services:
       # SSL certificates (if using HTTPS)
       # - ./ssl:/etc/nginx/ssl:ro
     depends_on:
-      - shift-scheduler
+      - shift-agent
     restart: always
     networks:
       - shift-network
@@ -170,7 +170,7 @@ volumes:
 networks:
   shift-network:
     driver: bridge
-    name: shift-scheduler-network-prod
+    name: shift-agent-network-prod
 
 # Production secrets (use Docker secrets in swarm mode)
 secrets:

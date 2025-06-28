@@ -1,5 +1,5 @@
 """
-Streamlit Web UI for Shift Scheduler - Job Management
+Streamlit Web UI for ShiftAgent - Job Management
 """
 
 import asyncio
@@ -17,7 +17,7 @@ API_BASE_URL = "http://localhost:8081"
 async def call_api(
     method: str, endpoint: str, data: dict[str, Any] | None = None
 ) -> dict[str, Any]:
-    """Make an API call to the shift scheduler"""
+    """Make an API call to the ShiftAgent"""
     url = f"{API_BASE_URL}{endpoint}"
 
     async with httpx.AsyncClient(timeout=120.0) as client:

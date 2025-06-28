@@ -15,7 +15,7 @@ if [ "$ENVIRONMENT" != "dev" ] && [ "$ENVIRONMENT" != "prod" ]; then
     exit 1
 fi
 
-echo "💥 Destroying Shift Scheduler infrastructure ($ENVIRONMENT)"
+echo "💥 Destroying ShiftAgent infrastructure ($ENVIRONMENT)"
 echo "=================================================="
 
 # Change to infrastructure directory
