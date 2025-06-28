@@ -1,6 +1,6 @@
 # Production environment configuration
 
-environment = "production"
+environment = "prod"
 location    = "Japan East"
 instance    = "001"
 

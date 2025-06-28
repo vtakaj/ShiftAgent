@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     wget \
     build-essential \
+    unzip \
     # Other utilities
     vim \
     nano \
@@ -45,13 +46,15 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/home/$USERNAME/.local/bin:$PATH"
 
 # Install Terraform CLI (Apple Silicon support)
+USER root
 RUN TERRAFORM_VERSION="1.8.0" && \
     ARCH=$(dpkg --print-architecture) && \
-    curl -LO "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip" && \
-    unzip "terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip" && \
-    sudo mv terraform /usr/local/bin/ && \
-    rm "terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip" && \
+    curl -Lo /tmp/terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip" && \
+    unzip /tmp/terraform.zip -d /tmp && \
+    mv /tmp/terraform /usr/local/bin/ && \
+    rm /tmp/terraform.zip && \
     terraform version
+USER vscode
 
 # Git configuration for the container
 RUN git config --global init.defaultBranch main && \

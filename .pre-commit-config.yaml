@@ -64,11 +64,6 @@ repos:
       - id: terraform_validate
         name: Validate Terraform configuration
         args: [--args=-json]
-      # Check Terraform documentation
-      - id: terraform_docs
-        name: Generate Terraform documentation
-        args: [--args=--output-file=README.md]
-        files: ^infrastructure/
 
   # Python tests (pre-push only)
   - repo: local
