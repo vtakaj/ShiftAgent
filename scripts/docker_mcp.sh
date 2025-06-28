@@ -35,7 +35,7 @@ show_help() {
 build_image() {
     local transport=${1:-stdio}
     echo "🔨 Building MCP server image for $transport transport..."
-    
+
     case $transport in
         stdio)
             docker-compose -f docker-compose.mcp.yml --profile stdio build mcp-stdio
@@ -59,7 +59,7 @@ build_image() {
 run_server() {
     local transport=${1:-stdio}
     echo "🚀 Starting MCP server with $transport transport..."
-    
+
     case $transport in
         stdio)
             echo "📌 STDIO mode - for Claude Desktop integration"
@@ -89,7 +89,7 @@ run_server() {
 stop_server() {
     local transport=${1:-all}
     echo "🛑 Stopping MCP server..."
-    
+
     if [ "$transport" = "all" ]; then
         docker-compose -f docker-compose.mcp.yml --profile stdio --profile http --profile sse down
     else
@@ -101,7 +101,7 @@ stop_server() {
 show_logs() {
     local transport=${1:-stdio}
     echo "📋 Showing logs for $transport transport..."
-    
+
     case $transport in
         stdio)
             docker-compose -f docker-compose.mcp.yml --profile stdio logs -f mcp-stdio

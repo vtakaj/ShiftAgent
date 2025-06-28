@@ -37,7 +37,7 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -117,7 +117,7 @@ jobs:
     needs: [test, build]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: development
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -142,14 +142,14 @@ jobs:
         run: |
           cd infrastructure
           terraform init
-          
+
           # Get infrastructure outputs
           RESOURCE_GROUP=$(terraform output -raw resource_group_name)
           CONTAINER_APP_ENV=$(terraform output -raw container_apps_environment_name)
           REGISTRY_LOGIN_SERVER=$(terraform output -raw container_registry_login_server)
           STORAGE_ACCOUNT=$(terraform output -raw storage_account_name)
           STORAGE_CONTAINER=$(terraform output -raw storage_job_data_container)
-          
+
           echo "resource_group=$RESOURCE_GROUP" >> $GITHUB_OUTPUT
           echo "container_app_env=$CONTAINER_APP_ENV" >> $GITHUB_OUTPUT
           echo "registry_login_server=$REGISTRY_LOGIN_SERVER" >> $GITHUB_OUTPUT
@@ -166,12 +166,12 @@ jobs:
           RESOURCE_GROUP="${{ steps.terraform.outputs.resource_group }}"
           CONTAINER_APP_ENV="${{ steps.terraform.outputs.container_app_env }}"
           IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }}"
-          
+
           echo "🚀 Deploying to development environment..."
           echo "Resource Group: $RESOURCE_GROUP"
           echo "Container App Environment: $CONTAINER_APP_ENV"
           echo "Image: $IMAGE_TAG"
-          
+
           # Check if Container App exists, create or update
           if az containerapp show --name ca-nss-api-dev-001 --resource-group $RESOURCE_GROUP >/dev/null 2>&1; then
             echo "🔄 Updating existing Container App..."
@@ -200,9 +200,9 @@ jobs:
                 AZURE_STORAGE_ACCOUNT_NAME=${{ steps.terraform.outputs.storage_account_name }} \
                 AZURE_STORAGE_CONTAINER_NAME=${{ steps.terraform.outputs.storage_job_data_container }}
           fi
-          
+
           echo "✅ Deployment completed successfully!"
-          
+
           # Get the application URL
           FQDN=$(az containerapp show --name ca-nss-api-dev-001 --resource-group $RESOURCE_GROUP --query properties.configuration.ingress.fqdn -o tsv)
           echo "🌐 Application URL: https://$FQDN"
@@ -214,7 +214,7 @@ jobs:
     needs: [test, build]
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod'
     environment: production
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -240,14 +240,14 @@ jobs:
           cd infrastructure
           terraform init
           terraform workspace select prod || terraform workspace new prod
-          
+
           # Get infrastructure outputs for production
           RESOURCE_GROUP=$(terraform output -raw resource_group_name)
           CONTAINER_APP_ENV=$(terraform output -raw container_apps_environment_name)
           REGISTRY_LOGIN_SERVER=$(terraform output -raw container_registry_login_server)
           STORAGE_ACCOUNT=$(terraform output -raw storage_account_name)
           STORAGE_CONTAINER=$(terraform output -raw storage_job_data_container)
-          
+
           echo "resource_group=$RESOURCE_GROUP" >> $GITHUB_OUTPUT
           echo "container_app_env=$CONTAINER_APP_ENV" >> $GITHUB_OUTPUT
           echo "registry_login_server=$REGISTRY_LOGIN_SERVER" >> $GITHUB_OUTPUT
@@ -264,13 +264,13 @@ jobs:
           RESOURCE_GROUP="${{ steps.terraform.outputs.resource_group }}"
           CONTAINER_APP_ENV="${{ steps.terraform.outputs.container_app_env }}"
           IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }}"
-          
+
           echo "🚀 Deploying to PRODUCTION environment..."
           echo "⚠️  This is a production deployment!"
           echo "Resource Group: $RESOURCE_GROUP"
           echo "Container App Environment: $CONTAINER_APP_ENV"
           echo "Image: $IMAGE_TAG"
-          
+
           if az containerapp show --name ca-nss-api-prod-001 --resource-group $RESOURCE_GROUP >/dev/null 2>&1; then
             echo "🔄 Updating existing Container App..."
             az containerapp update \
@@ -298,9 +298,9 @@ jobs:
                 AZURE_STORAGE_ACCOUNT_NAME=${{ steps.terraform.outputs.storage_account_name }} \
                 AZURE_STORAGE_CONTAINER_NAME=${{ steps.terraform.outputs.storage_job_data_container }}
           fi
-          
+
           echo "✅ Production deployment completed successfully!"
-          
+
           # Get the application URL
           FQDN=$(az containerapp show --name ca-nss-api-prod-001 --resource-group $RESOURCE_GROUP --query properties.configuration.ingress.fqdn -o tsv)
           echo "🌐 Production Application URL: https://$FQDN"

@@ -82,7 +82,7 @@ terraform destroy -var-file="environments/dev.tfvars"
 - Standard Container Registry SKU
 - Admin user disabled (security)
 - 30-day image retention
-- 90-day log retention  
+- 90-day log retention
 - Zone redundancy enabled
 
 ## Outputs

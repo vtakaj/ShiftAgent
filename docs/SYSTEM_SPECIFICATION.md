@@ -35,7 +35,7 @@ Employee shift optimization system using Timefold Solver. Solves complex shift r
 - **Description**: Asynchronous processing for large datasets
 - **Input**: Employee list, shift list
 - **Output**: Job ID, processing status
-- **Endpoints**: 
+- **Endpoints**:
   - `POST /api/shifts/solve` (Job submission)
   - `GET /api/shifts/solve/{job_id}` (Result retrieval)
 
@@ -158,7 +158,7 @@ class Employee:
     id: str                    # Unique identifier
     name: str                  # Employee name
     skills: Set[str]           # List of skills
-    
+
     # Method specifications
     has_skill(skill: str) -> bool
     has_all_skills(required_skills: Set[str]) -> bool
@@ -167,7 +167,7 @@ class Employee:
 ### Shift
 ```python
 @planning_entity
-@dataclass  
+@dataclass
 class Shift:
     id: str                           # Unique identifier
     start_time: datetime              # Start date/time
@@ -176,10 +176,10 @@ class Shift:
     location: Optional[str]           # Work location
     priority: int                     # Priority (1-10, 1 is highest)
     is_pinned: bool                   # Pin flag
-    
+
     # Planning Variable (Timefold optimization target)
     employee: Optional[Employee]      # Assigned employee
-    
+
     # Method specifications
     get_duration_minutes() -> int
     overlaps_with(other: Shift) -> bool
@@ -195,7 +195,7 @@ class Shift:
 class ShiftSchedule:
     # Problem Facts (unchanged during optimization)
     employees: List[Employee]
-    
+
     # Planning Entities (optimization targets)
     shifts: List[Shift]
 ```
@@ -252,7 +252,7 @@ Response: ShiftScheduleResponse
 #### 4. Asynchronous Shift Optimization
 ```http
 POST /api/shifts/solve
-Request: ShiftScheduleRequest  
+Request: ShiftScheduleRequest
 Response: {"job_id": string, "status": "SOLVING_SCHEDULED"}
 
 GET /api/shifts/solve/{job_id}
@@ -311,7 +311,7 @@ Response: WeeklyTestResponse
 ```
 shift-scheduler/
 ├── main.py                  # FastAPI application entry point
-├── models.py                # Data models and Pydantic schemas  
+├── models.py                # Data models and Pydantic schemas
 ├── constraints.py           # Timefold constraint definitions
 ├── pyproject.toml          # uv configuration and dependencies
 ├── .devcontainer/          # Dev Container configuration
@@ -324,7 +324,7 @@ shift-scheduler/
 ```toml
 [dependencies]
 fastapi = ">=0.104.1"           # Web framework
-uvicorn = ">=0.24.0"            # ASGI server  
+uvicorn = ">=0.24.0"            # ASGI server
 timefold = ">=1.14.0"           # Optimization solver
 pydantic = ">=2.5.0"            # Data validation
 python-multipart = ">=0.0.6"   # Form data support
@@ -345,7 +345,7 @@ python-multipart = ">=0.0.6"   # Form data support
 # Standard test data set
 employees = [
     Employee("emp1", "John Smith", {"Nurse", "CPR", "Full-time"}),
-    Employee("emp2", "Sarah Johnson", {"Nurse", "Full-time"}), 
+    Employee("emp2", "Sarah Johnson", {"Nurse", "Full-time"}),
     Employee("emp3", "Michael Brown", {"Security", "Full-time"}),
     Employee("emp4", "Emily Davis", {"Reception", "Admin", "Part-time"})
 ]
@@ -364,7 +364,7 @@ make test
 # Test coverage
 uv run pytest --cov=.
 
-# Specific test execution  
+# Specific test execution
 uv run pytest test_models.py::test_employee_creation
 ```
 
@@ -462,7 +462,7 @@ TIMEFOLD_SOLVER_TIMEOUT=60s
 
 ### Development Team Contact
 - **Lead Developer**: [Contact]
-- **System Architecture**: [Contact]  
+- **System Architecture**: [Contact]
 - **QA Engineer**: [Contact]
 
 ### Repository Information
@@ -477,6 +477,6 @@ TIMEFOLD_SOLVER_TIMEOUT=60s
 
 ---
 
-**Document Version**: 1.0.0  
-**Last Updated**: 2025-06-02  
+**Document Version**: 1.0.0
+**Last Updated**: 2025-06-02
 **Next Review**: 2025-07-02

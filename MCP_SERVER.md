@@ -79,7 +79,7 @@ async def connect():
     async with Client("http://localhost:8083/mcp") as client:
         # List available tools
         tools = await client.list_tools()
-        
+
         # Call a tool
         result = await client.call_tool("solve_schedule_sync", {
             "schedule_input": {...}
@@ -217,7 +217,7 @@ The system will preserve existing valid assignments and only re-optimize where n
 ```json
 {
   "id": "emp1",
-  "name": "John Doe", 
+  "name": "John Doe",
   "skills": ["Nurse", "CPR", "Full-time"],
   "preferred_days_off": ["friday", "saturday"],
   "preferred_work_days": ["monday", "tuesday"],
@@ -230,7 +230,7 @@ The system will preserve existing valid assignments and only re-optimize where n
 {
   "id": "morning_shift_mon",
   "start_time": "2025-06-01T08:00:00",
-  "end_time": "2025-06-01T16:00:00", 
+  "end_time": "2025-06-01T16:00:00",
   "required_skills": ["Nurse"],
   "location": "Hospital Ward A",
   "priority": 1

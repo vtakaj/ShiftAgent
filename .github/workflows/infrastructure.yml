@@ -41,7 +41,7 @@ jobs:
     defaults:
       run:
         working-directory: ./infrastructure
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -97,7 +97,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            
+
             // Read the plan output if it exists
             let planOutput = '';
             try {

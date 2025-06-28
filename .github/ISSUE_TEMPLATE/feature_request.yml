@@ -77,7 +77,7 @@ body:
       label: Use Case Example
       description: Provide a concrete example of how this feature would be used
       placeholder: |
-        A hospital needs to ensure nurses don't work more than 60 hours per week, 
+        A hospital needs to ensure nurses don't work more than 60 hours per week,
         with overtime rates applied after 40 hours. The scheduler should:
         - Prioritize regular hours first
         - Apply overtime constraints

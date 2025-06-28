@@ -186,7 +186,7 @@ docker push $REGISTRY/shift-scheduler:latest
    export AZURE_CLIENT_ID="<client-id>"
    export AZURE_CLIENT_SECRET="<client-secret>"
    export AZURE_TENANT_ID="<tenant-id>"
-   
+
    az login --service-principal --username $AZURE_CLIENT_ID --password $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
    az acr login --name <registry-name>
    ```
@@ -196,7 +196,7 @@ docker push $REGISTRY/shift-scheduler:latest
    # Get credentials from Terraform
    USERNAME=$(terraform output -raw container_registry_admin_username)
    PASSWORD=$(terraform output -raw container_registry_admin_password)
-   
+
    echo $PASSWORD | docker login <registry-url> --username $USERNAME --password-stdin
    ```
 
@@ -204,7 +204,7 @@ docker push $REGISTRY/shift-scheduler:latest
    ```bash
    # Create scope map (via Terraform or Azure CLI)
    az acr scope-map create --name read-only --registry <registry-name> --repository repo1 content/read
-   
+
    # Create token
    az acr token create --name ci-token --registry <registry-name> --scope-map read-only
    ```
@@ -225,7 +225,7 @@ steps:
         --username $AZURE_CLIENT_ID \
         --password $AZURE_CLIENT_SECRET \
         --tenant $AZURE_TENANT_ID
-  
+
   - name: Build and Push
     run: |
       ./infrastructure/scripts/build-and-push.sh -s prod -t ${{ github.sha }}

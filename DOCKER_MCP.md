@@ -142,7 +142,7 @@ from fastmcp import Client
 async with Client("http://localhost:8083/mcp") as client:
     # List available tools
     tools = await client.list_tools()
-    
+
     # Call a tool
     result = await client.call_tool("solve_schedule_sync", {
         "schedule_input": {

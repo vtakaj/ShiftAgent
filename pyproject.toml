@@ -57,7 +57,7 @@ include = [
 # 不要なファイルを除外
 exclude = [
     ".devcontainer/",
-    ".vscode/", 
+    ".vscode/",
     ".git/",
     "__pycache__/",
     ".pytest_cache/",
@@ -75,7 +75,7 @@ exclude = [
 [tool.uv]
 dev-dependencies = [
     "pytest>=7.4.0",
-    "pytest-asyncio>=0.21.0", 
+    "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.1.0",
     "ruff>=0.1.0",
     "mypy>=1.5.0",

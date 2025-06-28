@@ -34,7 +34,7 @@ sequenceDiagram
     User->>CD: Add new employee to resolve<br/>constraint violations
     CD->>MCP: add_employee_to_job(job_id, employee)
     MCP->>API: POST /api/shifts/{job_id}/add-employee
-    
+
     rect rgb(240, 248, 255)
         Note right of API: Pinning Strategy
         API->>API: 1. Pin valid assignments
@@ -54,7 +54,7 @@ sequenceDiagram
     User->>CD: Update employee skills for<br/>better assignments
     CD->>MCP: update_employee_skills(job_id, employee_id, skills)
     MCP->>API: PATCH /api/shifts/{job_id}/employee/{employee_id}/skills
-    
+
     rect rgb(255, 248, 240)
         Note right of API: Intelligent Pinning
         API->>API: 1. Analyze skill change impact
@@ -119,7 +119,7 @@ graph LR
 ## Error Handling
 
 - Job not found: 404 error
-- Job not completed: 400 error  
+- Job not completed: 400 error
 - Employee not found: 404 error
 - Optimization failure: 500 error
 

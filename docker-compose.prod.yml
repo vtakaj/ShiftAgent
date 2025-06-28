@@ -1,6 +1,6 @@
 services:
   shift-scheduler:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
       target: runtime
@@ -79,7 +79,7 @@ services:
 
   # MCP Server for production AI assistant integration
   mcp-server:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
       target: runtime

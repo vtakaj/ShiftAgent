@@ -1,6 +1,6 @@
 services:
   shift-scheduler:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     ports:
@@ -65,7 +65,7 @@ services:
 
   # MCP Server (for AI assistant integration)
   mcp-server:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile.mcp
     ports:

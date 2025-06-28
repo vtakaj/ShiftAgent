@@ -23,7 +23,7 @@ updates:
       separator: "/"
     reviewers:
       - "vtakaj"
-    
+
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"

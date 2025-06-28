@@ -34,7 +34,7 @@ sequenceDiagram
     User->>CD: 新しい従業員を追加して<br/>制約違反を解消したい
     CD->>MCP: add_employee_to_job(job_id, employee)
     MCP->>API: POST /api/shifts/{job_id}/add-employee
-    
+
     rect rgb(240, 248, 255)
         Note right of API: Pinning戦略
         API->>API: 1. 有効な割り当てをpin
@@ -54,7 +54,7 @@ sequenceDiagram
     User->>CD: 従業員のスキルを更新して<br/>より良い配置にしたい
     CD->>MCP: update_employee_skills(job_id, employee_id, skills)
     MCP->>API: PATCH /api/shifts/{job_id}/employee/{employee_id}/skills
-    
+
     rect rgb(255, 248, 240)
         Note right of API: インテリジェントPinning
         API->>API: 1. スキル変更の影響分析

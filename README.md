@@ -44,9 +44,6 @@ Inside Dev Container:
 # Install dependencies
 make setup
 
-# Install Node.js dependencies with Bun (for Husky)
-bun install
-
 # Start application
 make run  # → http://localhost:8081
 
@@ -363,7 +360,7 @@ make mcp      # Terminal 2: MCP server
 - `analyze_weekly_hours` - Analyze weekly work hours for schedules
 - `test_weekly_constraints` - Test weekly hour constraints with demo data
 
-#### Schedule Management  
+#### Schedule Management
 - `get_schedule_shifts` - Inspect completed schedules in detail
 
 #### Continuous Planning (Real-time Modifications)
@@ -374,7 +371,7 @@ make mcp      # Terminal 2: MCP server
 
 #### Report Generation
 - `get_demo_schedule_html` - Get demo schedule as HTML report
-- `get_schedule_html_report` - Get completed schedule as HTML report  
+- `get_schedule_html_report` - Get completed schedule as HTML report
 - `solve_schedule_sync_html` - Solve and return HTML report in one step
 
 ### Claude Desktop Configuration
@@ -441,7 +438,7 @@ uv sync --no-install-project
 java -version
 echo $JAVA_HOME
 
-# Expected values: 
+# Expected values:
 # OpenJDK 17
 # JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 ```
@@ -513,15 +510,15 @@ make run
 - Auto-format on save (ruff)
 - Linting (ruff, mypy)
 - Type hints recommended
-- **Husky pre-commit hooks** automatically ensure code quality
+- **pre-commit hooks** automatically ensure code quality
 
-#### Git Hooks (Husky)
-This project uses Husky to automatically run quality checks before commits:
+#### Git Hooks (pre-commit)
+This project uses pre-commit to automatically run quality checks before commits:
 
 ```bash
 # Pre-commit hooks run automatically:
 # ✅ Code formatting (ruff format)
-# ✅ Linting (ruff check --fix)  
+# ✅ Linting (ruff check --fix)
 # ✅ Type checking (mypy - warnings only)
 # ✅ Auto-stage formatted files
 
@@ -532,14 +529,18 @@ This project uses Husky to automatically run quality checks before commits:
 # ✅ Conventional commit format required
 ```
 
-#### Available bun Scripts
+#### Manual Code Quality Checks
 ```bash
-# Manual code quality checks
-bun run lint          # Run ruff linting
-bun run lint:fix      # Run ruff linting with auto-fix
-bun run format        # Run ruff formatting
-bun run type-check    # Run mypy type checking
-bun run test          # Run pytest test suite
+# Using make commands
+make lint             # Run linting (ruff + mypy)
+make format           # Run formatting (ruff)
+make test             # Run pytest test suite
+
+# Or using uv directly
+uv run ruff check .   # Run ruff linting
+uv run ruff format .  # Run ruff formatting
+uv run mypy .         # Run mypy type checking
+uv run pytest -v      # Run pytest test suite
 ```
 
 #### Bypassing Hooks (Emergency Use)
@@ -547,7 +548,7 @@ bun run test          # Run pytest test suite
 # Skip pre-commit hooks
 git commit --no-verify -m "emergency fix"
 
-# Skip pre-push hooks  
+# Skip pre-push hooks
 git push --no-verify
 
 # Skip tests during push
@@ -558,7 +559,7 @@ SKIP_TESTS=true git push
 ```bash
 # Required format: type: description
 feat: add new feature
-fix: fix a bug  
+fix: fix a bug
 docs: update documentation
 style: code style changes
 refactor: code refactoring
@@ -743,7 +744,7 @@ terraform apply -var-file=environments/prod.tfvars
 
 This project includes comprehensive CI/CD automation:
 - **Automated Testing**: Python tests with coverage reporting
-- **Security Scanning**: Vulnerability detection and dependency review  
+- **Security Scanning**: Vulnerability detection and dependency review
 - **Quality Gates**: Code formatting, linting, and type checking
 - **Infrastructure Validation**: Terraform plan and validation
 - **Multi-Environment Deployment**: Automated dev, manual production

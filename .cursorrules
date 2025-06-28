@@ -201,10 +201,10 @@ for shift in updated_solution.shifts:
 async def tool_name(ctx: Context, param: str) -> dict[str, Any]:
     """
     Clear description of what this tool does
-    
+
     Args:
         param: Description of parameter
-        
+
     Returns:
         Description of return value
     """

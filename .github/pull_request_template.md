@@ -22,17 +22,17 @@ Relates to #(issue number)
 <!-- Describe the changes made in this PR -->
 
 ### Core Changes
-- 
-- 
-- 
+-
+-
+-
 
 ### API Changes (if applicable)
-- 
-- 
+-
+-
 
 ### Database/Model Changes (if applicable)
-- 
-- 
+-
+-
 
 ## 🧪 Testing
 
@@ -46,9 +46,9 @@ Relates to #(issue number)
 <!-- Describe how you tested these changes -->
 
 **Test Steps:**
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 **Test Results:**
 - [ ] ✅ Feature works as expected

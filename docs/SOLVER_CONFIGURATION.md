@@ -82,6 +82,6 @@ With `SOLVER_LOG_LEVEL=DEBUG`, you'll additionally see:
 ## Recommendations
 
 - For small problems (< 10 shifts): 30-60 seconds
-- For medium problems (10-50 shifts): 120-300 seconds  
+- For medium problems (10-50 shifts): 120-300 seconds
 - For large problems (> 50 shifts): 300-600 seconds
 - Use DEBUG logging during development, INFO in production
