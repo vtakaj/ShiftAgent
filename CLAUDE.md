@@ -17,7 +17,7 @@ make setup
 cd infrastructure && terraform init
 
 # Test Azure Storage integration (requires Azure credentials)
-python scripts/test_azure_storage.py
+python scripts/test_azure_storage_manual.py
 ```
 
 ### Running the Application
@@ -195,7 +195,7 @@ The solver optimizes using HardMediumSoftScore:
 
 **Employee Unavailable Dates**:
 - **Format**: ISO 8601 (`YYYY-MM-DDTHH:MM:SS` or `YYYY-MM-DD`)
-- **Examples**: 
+- **Examples**:
   - `"2024-01-15T00:00:00"` (with time)
   - `"2024-01-15"` (date only)
   - `"2024-12-25T09:30:00"` (specific time)
@@ -204,7 +204,7 @@ The solver optimizes using HardMediumSoftScore:
 
 **Shift Times**:
 - **Format**: ISO 8601 with time (`YYYY-MM-DDTHH:MM:SS`)
-- **Examples**: 
+- **Examples**:
   - `"2024-01-15T09:00:00"` (9:00 AM start)
   - `"2024-01-15T17:30:00"` (5:30 PM end)
 
@@ -293,7 +293,7 @@ JOB_STORAGE_TYPE=azure make test
 The project includes a Python-based MCP (Model Context Protocol) server using FastMCP that exposes the Shift Scheduler API as MCP tools.
 
 ### MCP Server Setup
-The MCP server uses FastMCP and is automatically set up when you run `make setup`. 
+The MCP server uses FastMCP and is automatically set up when you run `make setup`.
 
 **Default (stdio transport for Claude Desktop):**
 ```bash
