@@ -31,13 +31,9 @@ if [ "$confirm" != "yes" ]; then
     exit 1
 fi
 
-# Initialize Terraform if needed
-if [ ! -d ".terraform" ]; then
-    echo "🔧 Initializing Terraform..."
-    terraform init
-else
-    echo "🔧 Terraform already initialized"
-fi
+# Initialize Terraform with production backend
+echo "🔧 Initializing Terraform with production backend..."
+terraform init -backend-config=backends/prod.backend.hcl -reconfigure
 
 # Validate configuration
 echo "✅ Validating Terraform configuration..."

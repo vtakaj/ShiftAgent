@@ -6,8 +6,8 @@ set -e
 echo "🏗️  Setting up Azure remote state storage for Terraform..."
 
 # Configuration
-RESOURCE_GROUP="rg-nss-tfstate-001"
-STORAGE_ACCOUNT="stnsstfstate001"
+RESOURCE_GROUP="rg-shiftagent-tfstate-001"
+STORAGE_ACCOUNT="stshiftagent001"
 CONTAINER_NAME="tfstate"
 LOCATION="Japan East"
 
@@ -32,7 +32,7 @@ echo "🏗️  Creating resource group..."
 az group create \
     --name "$RESOURCE_GROUP" \
     --location "$LOCATION" \
-    --tags purpose="terraform-state" project="nss" managed_by="terraform"
+    --tags purpose="terraform-state" project="shiftagent" managed_by="terraform"
 
 echo "✅ Resource group created"
 
@@ -48,7 +48,7 @@ az storage account create \
     --https-only true \
     --min-tls-version TLS1_2 \
     --allow-blob-public-access false \
-    --tags purpose="terraform-state" project="nss" managed_by="terraform"
+    --tags purpose="terraform-state" project="shiftagent" managed_by="terraform"
 
 echo "✅ Storage account created"
 
