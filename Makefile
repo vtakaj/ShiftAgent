@@ -18,7 +18,6 @@ help:
 	@echo "  clean        - Clear cache"
 	@echo ""
 	@echo "  Git Hooks (pre-commit):"
-	@echo "  hooks-install - Install pre-commit git hooks"
 	@echo "  hooks-test    - Test git hooks manually"
 	@echo ""
 	@echo "  Additional Commands:"
@@ -214,11 +213,6 @@ docker-mcp-logs-sse:
 	./scripts/docker_mcp.sh logs sse
 
 # Pre-commit Git Hooks
-hooks-install:
-	@echo "🪝 Installing pre-commit git hooks..."
-	uv run pre-commit install --hook-type pre-commit --hook-type commit-msg --hook-type pre-push
-	@echo "✅ Git hooks installed successfully!"
-
 hooks-test:
 	@echo "🧪 Testing git hooks..."
 	@echo "📝 Testing pre-commit hooks..."
