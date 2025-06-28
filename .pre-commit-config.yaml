@@ -52,6 +52,24 @@ repos:
       - id: trailing-whitespace
         exclude: ^.*\.ipynb$
 
+  # Terraform formatting and validation
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.88.4
+    hooks:
+      # Format Terraform files
+      - id: terraform_fmt
+        name: Format Terraform files
+        args: [--args=-recursive]
+      # Validate Terraform configuration
+      - id: terraform_validate
+        name: Validate Terraform configuration
+        args: [--args=-json]
+      # Check Terraform documentation
+      - id: terraform_docs
+        name: Generate Terraform documentation
+        args: [--args=--output-file=README.md]
+        files: ^infrastructure/
+
   # Python tests (pre-push only)
   - repo: local
     hooks:

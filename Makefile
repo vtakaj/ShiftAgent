@@ -11,7 +11,9 @@ help:
 	@echo "  mcp-http     - Start MCP server with HTTP transport (recommended)"
 	@echo "  mcp-sse      - Start MCP server with SSE transport (deprecated)"
 	@echo "  test         - Run tests"
-	@echo "  format       - Format code"
+	@echo "  format       - Format Python code"
+	@echo "  tf-format    - Format Terraform files"
+	@echo "  tf-format-check - Check Terraform formatting"
 	@echo "  lint         - Check code"
 	@echo "  clean        - Clear cache"
 	@echo ""
@@ -82,6 +84,16 @@ format:
 	@echo "✨ Formatting code..."
 	uv run ruff format .
 	uv run ruff check . --fix
+
+# Format Terraform code
+tf-format:
+	@echo "🏗️ Formatting Terraform files..."
+	terraform fmt -recursive
+
+# Check Terraform formatting
+tf-format-check:
+	@echo "🔍 Checking Terraform formatting..."
+	terraform fmt -check -recursive
 
 # Check code
 lint:
