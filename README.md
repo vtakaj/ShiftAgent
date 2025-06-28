@@ -717,7 +717,7 @@ sequenceDiagram
 
 ## 🏗️ Infrastructure
 
-This project includes Infrastructure as Code (IaC) using Terraform for Azure deployment.
+This project includes Infrastructure as Code (IaC) using Terraform for Azure deployment with comprehensive CI/CD automation.
 
 ### Infrastructure Documentation
 
@@ -738,6 +738,15 @@ terraform apply -var-file=environments/dev.tfvars
 # Deploy production environment
 terraform apply -var-file=environments/prod.tfvars
 ```
+
+### 🚀 CI/CD Features
+
+This project includes comprehensive CI/CD automation:
+- **Automated Testing**: Python tests with coverage reporting
+- **Security Scanning**: Vulnerability detection and dependency review  
+- **Quality Gates**: Code formatting, linting, and type checking
+- **Infrastructure Validation**: Terraform plan and validation
+- **Multi-Environment Deployment**: Automated dev, manual production
 
 ### Infrastructure Features
 
