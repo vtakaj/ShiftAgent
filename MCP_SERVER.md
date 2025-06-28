@@ -1,13 +1,13 @@
-# MCP Server for Natural Shift Planner
+# MCP Server for ShiftAgent
 
-This document provides detailed setup and usage instructions for the Model Context Protocol (MCP) server that exposes the Shift Scheduler API functionality to AI assistants like Claude Desktop.
+This document provides detailed setup and usage instructions for the Model Context Protocol (MCP) server that exposes the Shift Agent API functionality to AI assistants like Claude Desktop.
 
 For Docker deployment with HTTP/SSE transport, see [`DOCKER_MCP.md`](DOCKER_MCP.md).
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Natural Shift Planner API running on `http://localhost:8081`
+- ShiftAgent API running on `http://localhost:8081`
 - Claude Desktop or another MCP-compatible AI assistant
 - Python 3.11+ with FastMCP installed
 
@@ -32,22 +32,22 @@ Add this configuration to your Claude Desktop config file:
 ```json
 {
   "mcpServers": {
-    "shift-scheduler": {
+    "shift-agent": {
       "command": "uv",
-      "args": ["run", "--project", "/path/to/natural-shift-planner", "python", "/path/to/natural-shift-planner/mcp_server.py"],
+      "args": ["run", "--project", "/path/to/shift-agent", "python", "/path/to/shift-agent/mcp_server.py"],
       "env": {
-        "SHIFT_SCHEDULER_API_URL": "http://localhost:8081"
+        "SHIFT_AGENT_API_URL": "http://localhost:8081"
       }
     }
   }
 }
 ```
 
-**Important**: Replace `/path/to/natural-shift-planner` with the actual absolute path to your project directory.
+**Important**: Replace `/path/to/shift-agent` with the actual absolute path to your project directory.
 
 ### 3. Restart Claude Desktop
 
-After updating the configuration, restart Claude Desktop for the changes to take effect. You should see the shift scheduler tools available in Claude Desktop.
+After updating the configuration, restart Claude Desktop for the changes to take effect. You should see the shift agent tools available in Claude Desktop.
 
 ## 🌐 HTTP Transport (Alternative)
 
@@ -275,15 +275,15 @@ Employee management tools work on completed jobs:
 
 Set environment variable for detailed logging:
 ```bash
-export SHIFT_SCHEDULER_API_URL="http://localhost:8081"
-export PYTHONPATH="/path/to/natural-shift-planner/src"
+export SHIFT_AGENT_API_URL="http://localhost:8081"
+export PYTHONPATH="/path/to/shift-agent/src"
 ```
 
 ### Checking API Health
 
 Use the health check tool to verify connectivity:
 ```markdown
-@claude Can you check if the shift scheduler API is healthy?
+@claude Can you check if the shift agent API is healthy?
 ```
 
 ## 📊 Performance Considerations

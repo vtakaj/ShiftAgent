@@ -1,7 +1,7 @@
 [project]
-name = "shift-scheduler-mcp"
+name = "shift-agent"
 version = "1.0.0"
-description = "Employee shift scheduling using Timefold Solver"
+description = "AI-powered employee shift scheduling agent using Timefold Solver"
 readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.11"
@@ -39,8 +39,8 @@ dev = [
 
 # Console scripts for uvx support
 [project.scripts]
-shift-scheduler-api = "natural_shift_planner.main:main"
-shift-scheduler-mcp = "natural_shift_planner_mcp.server:main"
+shift-agent-api = "shift_agent.main:main"
+shift-agent-mcp = "shift_agent_mcp.server:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -91,12 +91,12 @@ disallow_untyped_defs = false
 
 # Ignore Timefold constraint system typing issues
 [[tool.mypy.overrides]]
-module = "natural_shift_planner.core.constraints.*"
+module = "shift_agent.core.constraints.*"
 ignore_errors = true
 
 # Ignore complex nested data analysis typing issues
 [[tool.mypy.overrides]]
-module = "natural_shift_planner.api.analysis"
+module = "shift_agent.api.analysis"
 ignore_errors = true
 
 [tool.ruff]
@@ -124,7 +124,7 @@ select = [
 ignore = ["E501"]  # line too long (handled by formatter)
 
 [tool.ruff.lint.isort]
-known-first-party = ["natural_shift_planner"]
+known-first-party = ["shift_agent"]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
@@ -148,7 +148,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src/natural_shift_planner"]
+source = ["src/shift_agent"]
 branch = true
 
 [tool.coverage.report]

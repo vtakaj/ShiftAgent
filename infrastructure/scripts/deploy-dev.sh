@@ -6,7 +6,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TERRAFORM_DIR="$(dirname "$SCRIPT_DIR")"
 
-echo "🚀 Deploying Shift Scheduler infrastructure (Development)"
+echo "🚀 Deploying ShiftAgent infrastructure (Development)"
 echo "=================================================="
 
 # Change to infrastructure directory

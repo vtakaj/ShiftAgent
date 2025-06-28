@@ -11,14 +11,14 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from natural_shift_planner.api.azure_job_store import create_azure_job_store
-from natural_shift_planner.config.storage_config import (
+from shift_agent.api.azure_job_store import create_azure_job_store
+from shift_agent.config.storage_config import (
     StorageConfigManager,
     get_current_storage_config,
 )
-from natural_shift_planner.core.models.employee import Employee
-from natural_shift_planner.core.models.schedule import ShiftSchedule
-from natural_shift_planner.core.models.shift import Shift
+from shift_agent.core.models.employee import Employee
+from shift_agent.core.models.schedule import ShiftSchedule
+from shift_agent.core.models.shift import Shift
 
 
 def create_test_data():

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Shift Scheduler now supports configurable solver timeout and verbose logging to improve optimization results and debugging capabilities.
+ShiftAgent now supports configurable solver timeout and verbose logging to improve optimization results and debugging capabilities.
 
 ## Environment Variables
 
@@ -55,11 +55,11 @@ SOLVER_TIMEOUT_SECONDS=300 SOLVER_LOG_LEVEL=DEBUG LOG_LEVEL=INFO make run
 ### INFO Level Logging
 
 ```
-2024-01-15 10:30:45 - natural_shift_planner.api.solver - INFO - Solver timeout configured: 300 seconds
-2024-01-15 10:30:50 - natural_shift_planner.api.jobs - INFO - [Job abc-123] Starting optimization with 20 shifts and 10 employees
-2024-01-15 10:30:52 - natural_shift_planner.api.jobs - INFO - [Job abc-123] New best score: 0hard/0medium/-50soft (time: 2.1s, improvements: 1)
-2024-01-15 10:30:55 - natural_shift_planner.api.jobs - INFO - [Job abc-123] New best score: 0hard/0medium/-30soft (time: 5.2s, improvements: 2)
-2024-01-15 10:31:45 - natural_shift_planner.api.jobs - INFO - [Job abc-123] Optimization completed. Final score: 0hard/0medium/-10soft, Assigned shifts: 19/20
+2024-01-15 10:30:45 - shift_agent.api.solver - INFO - Solver timeout configured: 300 seconds
+2024-01-15 10:30:50 - shift_agent.api.jobs - INFO - [Job abc-123] Starting optimization with 20 shifts and 10 employees
+2024-01-15 10:30:52 - shift_agent.api.jobs - INFO - [Job abc-123] New best score: 0hard/0medium/-50soft (time: 2.1s, improvements: 1)
+2024-01-15 10:30:55 - shift_agent.api.jobs - INFO - [Job abc-123] New best score: 0hard/0medium/-30soft (time: 5.2s, improvements: 2)
+2024-01-15 10:31:45 - shift_agent.api.jobs - INFO - [Job abc-123] Optimization completed. Final score: 0hard/0medium/-10soft, Assigned shifts: 19/20
 ```
 
 ### DEBUG Level Logging
@@ -67,7 +67,7 @@ SOLVER_TIMEOUT_SECONDS=300 SOLVER_LOG_LEVEL=DEBUG LOG_LEVEL=INFO make run
 With `SOLVER_LOG_LEVEL=DEBUG`, you'll additionally see:
 
 ```
-2024-01-15 10:30:52 - natural_shift_planner.api.jobs - DEBUG - [Job abc-123] Score details - Hard: 0, Medium: 0, Soft: -50
+2024-01-15 10:30:52 - shift_agent.api.jobs - DEBUG - [Job abc-123] Score details - Hard: 0, Medium: 0, Soft: -50
 2024-01-15 10:30:52 - timefold.solver - DEBUG - Construction Heuristic phase started
 2024-01-15 10:30:53 - timefold.solver - DEBUG - Local Search phase started
 ```

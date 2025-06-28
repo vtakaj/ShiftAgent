@@ -1,5 +1,5 @@
 """
-FastMCP server for Shift Scheduler
+FastMCP server for ShiftAgent
 """
 
 import logging
@@ -29,7 +29,7 @@ logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper(), stream=sys.std
 
 # Create FastMCP server with logging
 logger = logging.getLogger(__name__)
-mcp: FastMCP = FastMCP("shift-scheduler-mcp", dependencies=["httpx"])
+mcp: FastMCP = FastMCP("shift-agent-mcp", dependencies=["httpx"])
 
 # Configure logging for fastmcp specifically if needed
 mcp_log_level = os.getenv("MCP_LOG_LEVEL", "INFO").upper()

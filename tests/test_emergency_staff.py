@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from src.natural_shift_planner.core.models import Employee, Shift, ShiftSchedule
+from src.shift_agent.core.models import Employee, Shift, ShiftSchedule
 
 
 @pytest.fixture
@@ -80,8 +80,8 @@ def test_add_employee_to_completed_job_logic_only():
     import uuid
     from datetime import datetime
 
-    from src.natural_shift_planner.api.jobs import job_lock, jobs
-    from src.natural_shift_planner.core.models import Employee, ShiftSchedule
+    from src.shift_agent.api.jobs import job_lock, jobs
+    from src.shift_agent.core.models import Employee, ShiftSchedule
 
     # Create a simple completed job (mock, no actual solving)
     job_id = str(uuid.uuid4())
@@ -143,12 +143,12 @@ def test_add_employee_to_invalid_job():
     import uuid
     from datetime import datetime
 
-    from src.natural_shift_planner.api.jobs import (
+    from src.shift_agent.api.jobs import (
         add_employee_to_completed_job,
         job_lock,
         jobs,
     )
-    from src.natural_shift_planner.core.models import Employee
+    from src.shift_agent.core.models import Employee
 
     # Create a mock active job
     job_id = str(uuid.uuid4())
@@ -168,8 +168,8 @@ def test_add_employee_to_invalid_job():
 
 def test_add_employee_to_nonexistent_job():
     """Test adding employee to job that doesn't exist"""
-    from src.natural_shift_planner.api.jobs import add_employee_to_completed_job
-    from src.natural_shift_planner.core.models import Employee
+    from src.shift_agent.api.jobs import add_employee_to_completed_job
+    from src.shift_agent.core.models import Employee
 
     new_employee = Employee("emp_test", "Test Employee", {"skill1"})
 

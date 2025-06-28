@@ -1,6 +1,6 @@
-# Natural Shift Planner
+# ShiftAgent
 
-A Shift Scheduler API using Timefold Solver with FastMCP integration for AI assistant support.
+An AI-powered employee shift scheduling agent using Timefold Solver with FastMCP integration for AI assistant support.
 
 ## 🚀 Quick Start
 
@@ -20,14 +20,14 @@ code --install-extension ms-vscode-remote.remote-containers
 **Method 1: VS Code Dev Container (Recommended)**
 ```bash
 # Open project
-code /projects/shared/shift-scheduler
+code /projects/shared/shift-agent
 
 # Command Palette (Cmd+Shift+P) → "Dev Containers: Reopen in Container"
 ```
 
 **Method 2: Setup Script**
 ```bash
-cd /projects/shared/shift-scheduler
+cd /projects/shared/shift-agent
 
 # Docker environment setup
 chmod +x setup-docker.sh
@@ -110,7 +110,7 @@ All configuration is managed through environment variables. See `.env.example` f
 |----------|---------|-------------|
 | `LOG_LEVEL` | `INFO` | Application logging level |
 | `SOLVER_TIMEOUT_SECONDS` | `120` | Solver optimization timeout |
-| `SHIFT_SCHEDULER_PORT` | `8081` | API server port |
+| `SHIFT_AGENT_PORT` | `8081` | API server port |
 | `POSTGRES_PASSWORD` | - | Database password (required in production) |
 | `JAVA_OPTS` | `-Xmx1g` | JVM memory and optimization settings |
 
@@ -166,7 +166,7 @@ Access points:
 ## 📁 Project Structure
 
 ```
-shift-scheduler/
+shift-agent/
 ├── .devcontainer/          # Dev Container configuration
 │   ├── devcontainer.json   # VS Code Dev Container settings
 │   ├── docker-compose.yml  # Dev Container Docker Compose
@@ -176,7 +176,7 @@ shift-scheduler/
 │   ├── launch.json         # Debug settings
 │   └── extensions.json     # Recommended extensions
 ├── src/                    # Source code directory
-│   └── natural_shift_planner/
+│   └── shift_agent/
 │       ├── api/            # FastAPI application
 │       │   ├── app.py      # FastAPI instance
 │       │   ├── routes.py   # API endpoints
@@ -336,7 +336,7 @@ POST /api/shifts/solve-sync/html             # Synchronous solve with HTML repor
 
 ## 🤖 MCP Server for AI Assistants
 
-This project includes a built-in MCP (Model Context Protocol) server that allows AI assistants like Claude Desktop to interact with the Shift Scheduler API.
+This project includes a built-in MCP (Model Context Protocol) server that allows AI assistants like Claude Desktop to interact with the Shift Agent API.
 
 ### Quick Start with MCP
 
@@ -383,11 +383,11 @@ Add to your Claude Desktop config file:
 ```json
 {
   "mcpServers": {
-    "shift-scheduler": {
+    "shift-agent": {
       "command": "uv",
-      "args": ["run", "--project", "/path/to/shift-scheduler", "python", "/path/to/shift-scheduler/mcp_server.py"],
+      "args": ["run", "--project", "/path/to/shift-agent", "python", "/path/to/shift-agent/mcp_server.py"],
       "env": {
-        "SHIFT_SCHEDULER_API_URL": "http://localhost:8081"
+        "SHIFT_AGENT_API_URL": "http://localhost:8081"
       }
     }
   }
@@ -607,7 +607,7 @@ If issues persist, please provide:
 
 ---
 
-**🎉 Happy Coding with Shift Scheduler!**
+**🎉 Happy Coding with Shift Agent!**
 
 ## Development Environment
 

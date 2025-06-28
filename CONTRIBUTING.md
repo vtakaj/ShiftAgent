@@ -1,6 +1,6 @@
-# Contributing to Shift Scheduler
+# Contributing to Shift Agent
 
-Thank you for your interest in contributing to the Shift Scheduler project! This guide will help you get started.
+Thank you for your interest in contributing to the Shift Agent project! This guide will help you get started.
 
 ## 🚀 Quick Start
 
@@ -15,8 +15,8 @@ Thank you for your interest in contributing to the Shift Scheduler project! This
 
 1. **Fork and clone the repository**
    ```bash
-   git clone https://github.com/your-username/shift-scheduler.git
-   cd shift-scheduler
+   git clone https://github.com/your-username/shift-agent.git
+   cd shift-agent
    ```
 
 2. **Set up development environment**
@@ -91,7 +91,7 @@ Then create a pull request on GitHub with:
 
 ### Directory Structure
 ```
-src/natural_shift_planner/
+src/shift_agent/
 ├── api/              # FastAPI application layer
 │   ├── routes.py     # API endpoints
 │   ├── schemas.py    # Request/response models
@@ -276,6 +276,6 @@ By contributing, you agree that your contributions will be licensed under the Ap
 
 ---
 
-Thank you for contributing to Shift Scheduler! 🙏
+Thank you for contributing to Shift Agent! 🙏
 
 For questions about contributing, please open a GitHub issue or discussion.

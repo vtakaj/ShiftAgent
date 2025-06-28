@@ -37,12 +37,12 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown: Nothing special needed as jobs are saved in real-time
-    print("Shutting down Shift Scheduler API")
+    print("Shutting down ShiftAgent API")
 
 
 # Create FastAPI application
 app = FastAPI(
-    title="Shift Scheduler API",
+    title="ShiftAgent API",
     description="Shift creation API using Timefold Solver",
     version="1.0.0",
     lifespan=lifespan,

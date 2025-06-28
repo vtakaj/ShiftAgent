@@ -1,6 +1,6 @@
-# Cursor Rules for Natural Shift Planner
+# Cursor Rules for ShiftAgent
 
-You are an expert Python developer working on a **Natural Shift Planner** - a shift scheduling optimization system built with FastAPI and Timefold Solver.
+You are an expert Python developer working on a **ShiftAgent** - a shift scheduling optimization system built with FastAPI and Timefold Solver.
 
 ## Project Overview
 
@@ -120,7 +120,7 @@ except Exception as e:
 ## File Organization
 
 ```
-src/natural_shift_planner/
+src/shift_agent/
 ├── api/              # FastAPI application layer
 │   ├── routes.py     # API endpoints - RESTful design
 │   ├── schemas.py    # Pydantic models for validation

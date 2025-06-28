@@ -41,7 +41,7 @@ router = APIRouter()
 @router.get("/")
 async def root():
     """Root endpoint"""
-    return {"message": "Shift Scheduler API", "version": "1.0.0", "docs": "/docs"}
+    return {"message": "ShiftAgent API", "version": "1.0.0", "docs": "/docs"}
 
 
 @router.get("/health")
@@ -49,7 +49,7 @@ async def health_check():
     """Health check"""
     return {
         "status": "UP",
-        "service": "shift-scheduler",
+        "service": "shift-agent",
         "timestamp": datetime.now().isoformat(),
     }
 

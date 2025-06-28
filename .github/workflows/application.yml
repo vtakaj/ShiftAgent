@@ -26,7 +26,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/shift-scheduler
+  IMAGE_NAME: ${{ github.repository }}/shift-agent
 
 permissions:
   contents: read
@@ -67,7 +67,7 @@ jobs:
       - name: Run linting
         run: |
           uv run ruff check src/
-          PYTHONPATH=src uv run mypy -p natural_shift_planner
+          PYTHONPATH=src uv run mypy -p shift_agent
 
   build:
     name: Build and Push Docker Image
