@@ -11,19 +11,19 @@ terraform {
 
 # Storage Account
 resource "azurerm_storage_account" "main" {
-  name                      = var.name
-  resource_group_name       = var.resource_group_name
-  location                  = var.location
-  account_tier              = "Standard"
-  account_replication_type  = "LRS"
-  account_kind              = "StorageV2"
-  access_tier               = "Hot"
-  
+  name                     = var.name
+  resource_group_name      = var.resource_group_name
+  location                 = var.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+  account_kind             = "StorageV2"
+  access_tier              = "Hot"
+
   # Security settings
   allow_nested_items_to_be_public = false
   https_traffic_only_enabled      = true
   min_tls_version                 = "TLS1_2"
-  
+
   # Blob properties
   blob_properties {
     versioning_enabled = true
