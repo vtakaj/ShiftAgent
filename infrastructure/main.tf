@@ -25,7 +25,7 @@ provider "azurerm" {
 # Local values for common configuration
 locals {
   # Project configuration
-  project_name = "nss"
+  project_name = "shiftagent"
   environment  = var.environment
   location     = var.location
   instance     = var.instance
@@ -43,8 +43,8 @@ locals {
     environment = local.environment
     location    = local.location
     managed_by  = "terraform"
-    owner       = "nss-team"
-    application = "nss"
+    owner       = "shiftagent-team"
+    application = "shiftagent"
     cost_center = "${local.project_name}-${local.environment}"
     created_by  = "infrastructure-as-code"
   }
