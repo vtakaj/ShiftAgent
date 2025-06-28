@@ -33,7 +33,7 @@ The Azure Container Registry stores and manages Docker container images for the 
 
 1. **Azure CLI**: `brew install azure-cli && az login`
 2. **Docker**: Install Docker Desktop or Docker Engine
-3. **Pulumi**: Infrastructure must be deployed first
+3. **Terraform**: Infrastructure must be deployed first
 4. **Access permissions**: Contributor or AcrPush role on the registry
 
 ### Build and Push Your First Image
@@ -109,7 +109,7 @@ cd infrastructure/scripts
 | `-t, --tag` | Image tag | `latest` |
 | `-f, --dockerfile` | Dockerfile path | `Dockerfile` |
 | `-c, --context` | Build context | Project root |
-| `-s, --stack` | Pulumi stack | Auto-detect |
+| `-s, --stack` | Environment | Auto-detect |
 | `-p, --platform` | Target platform | `linux/amd64` |
 | `--no-cache` | Build without cache | false |
 | `--quiet` | Suppress output | false |
@@ -151,7 +151,7 @@ docker build --target production -t shift-scheduler:v1.0.0 .
 |--------|-------------|---------|
 | `-i, --image-name` | Local image name | `shift-scheduler` |
 | `-t, --tag` | Image tag | `latest` |
-| `-s, --stack` | Pulumi stack | Auto-detect |
+| `-s, --stack` | Environment | Auto-detect |
 | `-r, --registry` | Registry URL | From stack |
 | `--force-login` | Force re-login | false |
 | `--dry-run` | Show actions only | false |
@@ -159,9 +159,9 @@ docker build --target production -t shift-scheduler:v1.0.0 .
 ### Manual Push
 
 ```bash
-# Get registry details from Pulumi
+# Get registry details from Terraform
 cd infrastructure
-REGISTRY=$(pulumi stack output container_registry_login_server)
+REGISTRY=$(terraform output -raw container_registry_login_server)
 
 # Login to registry
 az acr login --name $REGISTRY
@@ -193,16 +193,16 @@ docker push $REGISTRY/shift-scheduler:latest
 
 3. **Admin Credentials** (Development Only)
    ```bash
-   # Get credentials from Pulumi
-   USERNAME=$(pulumi stack output container_registry_admin_credentials | jq -r '.username')
-   PASSWORD=$(pulumi stack output container_registry_admin_credentials | jq -r '.passwords[0].value')
+   # Get credentials from Terraform
+   USERNAME=$(terraform output -raw container_registry_admin_username)
+   PASSWORD=$(terraform output -raw container_registry_admin_password)
    
    echo $PASSWORD | docker login <registry-url> --username $USERNAME --password-stdin
    ```
 
 4. **Repository-Scoped Tokens** (Fine-grained Access)
    ```bash
-   # Create scope map (via Pulumi or Azure CLI)
+   # Create scope map (via Terraform or Azure CLI)
    az acr scope-map create --name read-only --registry <registry-name> --repository repo1 content/read
    
    # Create token
@@ -387,7 +387,7 @@ az acr repository list --name <registry-name>
 az acr repository show-tags --name <registry-name> --repository shift-scheduler
 
 # Verify registry URL
-pulumi stack output container_registry_login_server
+cd infrastructure && terraform output -raw container_registry_login_server
 ```
 
 #### 3. Push Failures
@@ -506,6 +506,6 @@ When making changes to the registry configuration:
 For issues with the Azure Container Registry setup:
 
 1. **Check this documentation** for troubleshooting steps
-2. **Review Pulumi stack outputs** for configuration details
+2. **Review Terraform outputs** for configuration details
 3. **Check Azure portal** for registry status and metrics
 4. **Contact the infrastructure team** for access or configuration issues

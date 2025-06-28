@@ -31,7 +31,7 @@ env:
 permissions:
   contents: read
   packages: write
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   test:
@@ -42,20 +42,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
         with:
-          python-version: '3.11'
+          distribution: 'temurin'
+          java-version: '17'
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        run: uv python install 3.11
 
       - name: Install dependencies
         run: uv sync --frozen
 
       - name: Run tests
         run: |
-          uv run pytest tests/ -v
+          PYTHONPATH=src uv run pytest tests/ -v
 
       - name: Run linting
         run: |
@@ -66,7 +73,7 @@ jobs:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
     needs: test
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     
     steps:
       - name: Checkout code
@@ -118,26 +125,65 @@ jobs:
       - name: Azure CLI Login
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        env:
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> 1.5"
+          terraform_wrapper: false
+
+      - name: Get Terraform Outputs
+        id: terraform
+        run: |
+          cd infrastructure
+          terraform init
+          
+          # Get infrastructure outputs
+          RESOURCE_GROUP=$(terraform output -raw resource_group_name)
+          CONTAINER_APP_ENV=$(terraform output -raw container_apps_environment_name)
+          REGISTRY_LOGIN_SERVER=$(terraform output -raw container_registry_login_server)
+          STORAGE_ACCOUNT=$(terraform output -raw storage_account_name)
+          STORAGE_CONTAINER=$(terraform output -raw storage_job_data_container)
+          
+          echo "resource_group=$RESOURCE_GROUP" >> $GITHUB_OUTPUT
+          echo "container_app_env=$CONTAINER_APP_ENV" >> $GITHUB_OUTPUT
+          echo "registry_login_server=$REGISTRY_LOGIN_SERVER" >> $GITHUB_OUTPUT
+          echo "storage_account_name=$STORAGE_ACCOUNT" >> $GITHUB_OUTPUT
+          echo "storage_job_data_container=$STORAGE_CONTAINER" >> $GITHUB_OUTPUT
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Deploy to Container Apps (Dev)
         run: |
-          # Get Container Apps Environment from Pulumi outputs or use direct naming
-          RESOURCE_GROUP="rg-org-shift-scheduler-core-dev-eastus-001"
-          CONTAINER_APP_ENV="cae-org-shift-scheduler-core-dev-eastus-001"
+          RESOURCE_GROUP="${{ steps.terraform.outputs.resource_group }}"
+          CONTAINER_APP_ENV="${{ steps.terraform.outputs.container_app_env }}"
           IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }}"
           
+          echo "🚀 Deploying to development environment..."
+          echo "Resource Group: $RESOURCE_GROUP"
+          echo "Container App Environment: $CONTAINER_APP_ENV"
+          echo "Image: $IMAGE_TAG"
+          
           # Check if Container App exists, create or update
-          if az containerapp show --name shift-scheduler-api --resource-group $RESOURCE_GROUP >/dev/null 2>&1; then
-            echo "Updating existing Container App..."
+          if az containerapp show --name ca-nss-api-dev-001 --resource-group $RESOURCE_GROUP >/dev/null 2>&1; then
+            echo "🔄 Updating existing Container App..."
             az containerapp update \
-              --name shift-scheduler-api \
+              --name ca-nss-api-dev-001 \
               --resource-group $RESOURCE_GROUP \
-              --image $IMAGE_TAG
+              --image $IMAGE_TAG \
+              --revision-suffix $(date +%s)
           else
-            echo "Creating new Container App..."
+            echo "🆕 Creating new Container App..."
             az containerapp create \
-              --name shift-scheduler-api \
+              --name ca-nss-api-dev-001 \
               --resource-group $RESOURCE_GROUP \
               --environment $CONTAINER_APP_ENV \
               --image $IMAGE_TAG \
@@ -149,8 +195,18 @@ jobs:
               --memory 2.0Gi \
               --env-vars \
                 SOLVER_TIMEOUT_SECONDS=300 \
-                SOLVER_LOG_LEVEL=INFO
+                SOLVER_LOG_LEVEL=INFO \
+                JOB_STORAGE_TYPE=azure \
+                AZURE_STORAGE_ACCOUNT_NAME=${{ steps.terraform.outputs.storage_account_name }} \
+                AZURE_STORAGE_CONTAINER_NAME=${{ steps.terraform.outputs.storage_job_data_container }}
           fi
+          
+          echo "✅ Deployment completed successfully!"
+          
+          # Get the application URL
+          FQDN=$(az containerapp show --name ca-nss-api-dev-001 --resource-group $RESOURCE_GROUP --query properties.configuration.ingress.fqdn -o tsv)
+          echo "🌐 Application URL: https://$FQDN"
+          echo "📋 API Documentation: https://$FQDN/docs"
 
   deploy-prod:
     name: Deploy to Production
@@ -166,25 +222,66 @@ jobs:
       - name: Azure CLI Login
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        env:
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> 1.5"
+          terraform_wrapper: false
+
+      - name: Get Terraform Outputs (Prod)
+        id: terraform
+        run: |
+          cd infrastructure
+          terraform init
+          terraform workspace select prod || terraform workspace new prod
+          
+          # Get infrastructure outputs for production
+          RESOURCE_GROUP=$(terraform output -raw resource_group_name)
+          CONTAINER_APP_ENV=$(terraform output -raw container_apps_environment_name)
+          REGISTRY_LOGIN_SERVER=$(terraform output -raw container_registry_login_server)
+          STORAGE_ACCOUNT=$(terraform output -raw storage_account_name)
+          STORAGE_CONTAINER=$(terraform output -raw storage_job_data_container)
+          
+          echo "resource_group=$RESOURCE_GROUP" >> $GITHUB_OUTPUT
+          echo "container_app_env=$CONTAINER_APP_ENV" >> $GITHUB_OUTPUT
+          echo "registry_login_server=$REGISTRY_LOGIN_SERVER" >> $GITHUB_OUTPUT
+          echo "storage_account_name=$STORAGE_ACCOUNT" >> $GITHUB_OUTPUT
+          echo "storage_job_data_container=$STORAGE_CONTAINER" >> $GITHUB_OUTPUT
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Deploy to Container Apps (Prod)
         run: |
-          # Production deployment with higher resource limits
-          RESOURCE_GROUP="rg-org-shift-scheduler-core-prod-eastus-001"
-          CONTAINER_APP_ENV="cae-org-shift-scheduler-core-prod-eastus-001"
+          RESOURCE_GROUP="${{ steps.terraform.outputs.resource_group }}"
+          CONTAINER_APP_ENV="${{ steps.terraform.outputs.container_app_env }}"
           IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }}"
           
-          if az containerapp show --name shift-scheduler-api --resource-group $RESOURCE_GROUP >/dev/null 2>&1; then
-            echo "Updating existing Container App..."
+          echo "🚀 Deploying to PRODUCTION environment..."
+          echo "⚠️  This is a production deployment!"
+          echo "Resource Group: $RESOURCE_GROUP"
+          echo "Container App Environment: $CONTAINER_APP_ENV"
+          echo "Image: $IMAGE_TAG"
+          
+          if az containerapp show --name ca-nss-api-prod-001 --resource-group $RESOURCE_GROUP >/dev/null 2>&1; then
+            echo "🔄 Updating existing Container App..."
             az containerapp update \
-              --name shift-scheduler-api \
+              --name ca-nss-api-prod-001 \
               --resource-group $RESOURCE_GROUP \
-              --image $IMAGE_TAG
+              --image $IMAGE_TAG \
+              --revision-suffix $(date +%s)
           else
-            echo "Creating new Container App..."
+            echo "🆕 Creating new Container App..."
             az containerapp create \
-              --name shift-scheduler-api \
+              --name ca-nss-api-prod-001 \
               --resource-group $RESOURCE_GROUP \
               --environment $CONTAINER_APP_ENV \
               --image $IMAGE_TAG \
@@ -196,4 +293,15 @@ jobs:
               --memory 4.0Gi \
               --env-vars \
                 SOLVER_TIMEOUT_SECONDS=600 \
-                SOLVER_LOG_LEVEL=INFO
+                SOLVER_LOG_LEVEL=INFO \
+                JOB_STORAGE_TYPE=azure \
+                AZURE_STORAGE_ACCOUNT_NAME=${{ steps.terraform.outputs.storage_account_name }} \
+                AZURE_STORAGE_CONTAINER_NAME=${{ steps.terraform.outputs.storage_job_data_container }}
+          fi
+          
+          echo "✅ Production deployment completed successfully!"
+          
+          # Get the application URL
+          FQDN=$(az containerapp show --name ca-nss-api-prod-001 --resource-group $RESOURCE_GROUP --query properties.configuration.ingress.fqdn -o tsv)
+          echo "🌐 Production Application URL: https://$FQDN"
+          echo "📋 Production API Documentation: https://$FQDN/docs"

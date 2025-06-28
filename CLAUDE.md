@@ -13,8 +13,8 @@ This is a Shift Scheduler API built with FastAPI and Timefold Solver (AI optimiz
 # Complete setup - installs all Python dependencies including FastMCP and pre-commit hooks (run this first!)
 make setup
 
-# Initialize Pulumi for infrastructure (if working with infrastructure)
-make pulumi-setup
+# Initialize Terraform for infrastructure
+cd infrastructure && terraform init
 
 # Test Azure Storage integration (requires Azure credentials)
 python scripts/test_azure_storage.py
@@ -91,6 +91,41 @@ make troubleshoot
 # Clean cache and Python artifacts
 make clean
 ```
+
+### Infrastructure Management
+
+```bash
+# Navigate to infrastructure directory
+cd infrastructure
+
+# Initialize Terraform
+terraform init
+
+# Validate configuration
+./scripts/validate.sh
+
+# Deploy development environment
+./scripts/deploy-dev.sh
+
+# Deploy production environment
+./scripts/deploy-prod.sh
+
+# Plan specific environment
+terraform plan -var-file="environments/dev.tfvars"
+terraform plan -var-file="environments/prod.tfvars"
+
+# Apply specific environment
+terraform apply -var-file="environments/dev.tfvars"
+terraform apply -var-file="environments/prod.tfvars"
+
+# Destroy environment (use with caution)
+./scripts/destroy.sh dev
+./scripts/destroy.sh prod
+
+# View outputs
+terraform output
+```
+
 
 ## Architecture
 

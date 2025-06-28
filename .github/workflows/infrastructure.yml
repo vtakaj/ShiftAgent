@@ -11,8 +11,8 @@ on:
       - 'infrastructure/**'
   workflow_dispatch:
     inputs:
-      stack:
-        description: 'Pulumi stack to deploy (dev/prod)'
+      environment:
+        description: 'Environment to deploy (dev/prod)'
         required: true
         default: 'dev'
         type: choice
@@ -22,11 +22,11 @@ on:
       action:
         description: 'Action to perform'
         required: true
-        default: 'preview'
+        default: 'plan'
         type: choice
         options:
-          - preview
-          - up
+          - plan
+          - apply
           - destroy
 
 permissions:
@@ -35,8 +35,8 @@ permissions:
   id-token: write
 
 jobs:
-  infrastructure:
-    name: Deploy Infrastructure
+  terraform:
+    name: Terraform
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -46,18 +46,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
-          python-version: '3.11'
-
-      - name: Install Pulumi dependencies
-        run: |
-          python -m venv .venv
-          source .venv/bin/activate
-          pip install -r requirements.txt
-          echo "VIRTUAL_ENV=$(pwd)/.venv" >> $GITHUB_ENV
-          echo "$(pwd)/.venv/bin" >> $GITHUB_PATH
+          terraform_version: "~> 1.5"
 
       - name: Azure CLI Login
         uses: azure/login@v2
@@ -70,87 +62,158 @@ jobs:
               "subscriptionId": "${{ secrets.ARM_SUBSCRIPTION_ID }}"
             }
 
-      - name: Pulumi Preview (PR)
+      - name: Terraform Format Check
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
+
+      - name: Terraform Plan (PR - Dev)
+        id: plan-pr
         if: github.event_name == 'pull_request'
-        uses: pulumi/actions@v6
-        with:
-          command: preview
-          stack-name: dev
-          work-dir: ./infrastructure
-          comment-on-pr: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          terraform plan \
+            -var-file="environments/dev.tfvars" \
+            -no-color \
+            -detailed-exitcode \
+            -out=tfplan
         env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        continue-on-error: true
+
+      - name: Comment PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Read the plan output if it exists
+            let planOutput = '';
+            try {
+              const { exec } = require('child_process');
+              exec('cd infrastructure && terraform show -no-color tfplan', (error, stdout, stderr) => {
+                if (!error) {
+                  planOutput = stdout;
+                }
+              });
+            } catch (e) {
+              planOutput = 'Could not read plan output';
+            }
+
+            const comment = `## Terraform Plan Results
+
+            ### Format and Style 🖌
+            ${process.env.FMT_OUTCOME === 'failure' ? '❌ Failed' : '✅ Passed'}
+
+            ### Initialization ⚙️
+            ${process.env.INIT_OUTCOME === 'failure' ? '❌ Failed' : '✅ Passed'}
+
+            ### Validation 🤖
+            ${process.env.VALIDATE_OUTCOME === 'failure' ? '❌ Failed' : '✅ Passed'}
+
+            ### Plan 📖
+            ${process.env.PLAN_OUTCOME === 'failure' ? '❌ Failed' : process.env.PLAN_OUTCOME === 'success' ? '✅ Passed' : '⚠️ Changes Detected'}
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`terraform
+            ${planOutput}
+            \`\`\`
+
+            </details>
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`infrastructure\`, Workflow: \`${{ github.workflow }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+        env:
+          FMT_OUTCOME: ${{ steps.fmt.outcome }}
+          INIT_OUTCOME: ${{ steps.init.outcome }}
+          VALIDATE_OUTCOME: ${{ steps.validate.outcome }}
+          PLAN_OUTCOME: ${{ steps.plan-pr.outcome }}
+
+      - name: Select Environment
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          ENV="${{ github.event.inputs.environment }}"
+          if [ "$ENV" = "prod" ]; then
+            echo "🔴 PRODUCTION ENVIRONMENT SELECTED"
+            echo "⚠️  This will affect production resources!"
+          else
+            echo "🟢 Development environment selected"
+          fi
+          echo "ENVIRONMENT=$ENV" >> $GITHUB_ENV
+
+      - name: Terraform Plan (Manual)
+        id: plan-manual
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'plan'
+        run: |
+          ENV_FILE="environments/${{ github.event.inputs.environment }}.tfvars"
+          echo "📋 Planning infrastructure for ${{ github.event.inputs.environment }} environment..."
+          terraform plan \
+            -var-file="$ENV_FILE" \
+            -no-color
+        env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
-      - name: Pulumi Preview (Manual)
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'preview'
-        uses: pulumi/actions@v6
-        with:
-          command: preview
-          stack-name: ${{ github.event.inputs.stack }}
-          work-dir: ./infrastructure
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-
-      - name: Pulumi Up (Main Branch)
+      - name: Terraform Apply (Main Branch - Dev)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: pulumi/actions@v6
-        with:
-          command: up
-          stack-name: dev
-          work-dir: ./infrastructure
+        run: |
+          terraform apply \
+            -var-file="environments/dev.tfvars" \
+            -auto-approve
         env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
-      - name: Pulumi Up (Manual)
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'up'
-        uses: pulumi/actions@v6
-        with:
-          command: up
-          stack-name: ${{ github.event.inputs.stack }}
-          work-dir: ./infrastructure
+      - name: Terraform Apply (Manual)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
+        run: |
+          terraform apply \
+            -var-file="environments/${{ github.event.inputs.environment }}.tfvars" \
+            -auto-approve
         env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
-      - name: Pulumi Destroy (Manual)
+      - name: Terraform Destroy (Manual)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
-        uses: pulumi/actions@v6
-        with:
-          command: destroy
-          stack-name: ${{ github.event.inputs.stack }}
-          work-dir: ./infrastructure
+        run: |
+          terraform destroy \
+            -var-file="environments/${{ github.event.inputs.environment }}.tfvars" \
+            -auto-approve
         env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
-      - name: Export Stack Outputs
-        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'up')
-        uses: pulumi/actions@v6
-        with:
-          command: output
-          stack-name: ${{ github.event.inputs.stack || 'dev' }}
-          work-dir: ./infrastructure
+      - name: Terraform Output
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply')
+        run: terraform output
         env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}

@@ -717,7 +717,7 @@ sequenceDiagram
 
 ## 🏗️ Infrastructure
 
-This project includes Infrastructure as Code (IaC) using Pulumi for Azure deployment.
+This project includes Infrastructure as Code (IaC) using Terraform for Azure deployment.
 
 ### Infrastructure Documentation
 
@@ -729,14 +729,14 @@ This project includes Infrastructure as Code (IaC) using Pulumi for Azure deploy
 # Navigate to infrastructure directory
 cd infrastructure
 
-# Install dependencies
-uv sync
+# Initialize Terraform
+terraform init
 
 # Deploy development environment
-uv run pulumi up --stack dev
+terraform apply -var-file=environments/dev.tfvars
 
 # Deploy production environment
-uv run pulumi up --stack prod
+terraform apply -var-file=environments/prod.tfvars
 ```
 
 ### Infrastructure Features

@@ -197,5 +197,13 @@ bun.lockb
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform.lock.hcl
+
 # Job storage directory
 job_storage/

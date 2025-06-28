@@ -19,7 +19,7 @@ This is a production-grade shift scheduler that uses:
 - **AI Integration**: FastMCP for Claude Desktop integration
 - **Development**: uv package manager, ruff formatter/linter, mypy
 - **Testing**: pytest
-- **Infrastructure**: Docker, Docker Compose, Pulumi
+- **Infrastructure**: Docker, Docker Compose, Terraform
 
 ## Architecture Patterns
 

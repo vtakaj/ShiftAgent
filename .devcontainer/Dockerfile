@@ -44,9 +44,14 @@ USER $USERNAME
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/home/$USERNAME/.local/bin:$PATH"
 
-# Install Pulumi CLI (Apple Silicon support)
-RUN curl -fsSL https://get.pulumi.com | sh
-ENV PATH="/home/$USERNAME/.pulumi/bin:$PATH"
+# Install Terraform CLI (Apple Silicon support)
+RUN TERRAFORM_VERSION="1.8.0" && \
+    ARCH=$(dpkg --print-architecture) && \
+    curl -LO "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip" && \
+    unzip "terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip" && \
+    sudo mv terraform /usr/local/bin/ && \
+    rm "terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip" && \
+    terraform version
 
 # Git configuration for the container
 RUN git config --global init.defaultBranch main && \
@@ -69,8 +74,8 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
     echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >> /home/$USERNAME/.bashrc; \
     fi
 
-# uv and Pulumi path configuration
-RUN echo 'export PATH="/home/vscode/.local/bin:/home/vscode/.pulumi/bin:$PATH"' >> /home/$USERNAME/.bashrc
+# uv path configuration
+RUN echo 'export PATH="/home/vscode/.local/bin:$PATH"' >> /home/$USERNAME/.bashrc
 
 # Development aliases
 RUN echo 'alias ll="ls -la"' >> /home/$USERNAME/.bashrc && \
