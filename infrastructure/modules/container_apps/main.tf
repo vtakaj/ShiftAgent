@@ -15,7 +15,9 @@ resource "azurerm_container_app_environment" "main" {
   resource_group_name        = var.resource_group_name
   location                   = var.location
   log_analytics_workspace_id = var.log_analytics_workspace_id
-  zone_redundancy_enabled    = var.zone_redundant
+  # Note: zone_redundancy_enabled requires infrastructure_subnet_id
+  # Disabled for basic deployment without custom VNet
+  # zone_redundancy_enabled    = var.zone_redundant
 
   tags = var.tags
 }
