@@ -126,7 +126,7 @@ jobs:
   dependency-review:
     name: Dependency Review
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && !github.event.repository.private
+    if: false  # Disabled for private repositories without GitHub Advanced Security
     
     steps:
       - name: Checkout code

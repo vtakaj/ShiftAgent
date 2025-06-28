@@ -19,9 +19,6 @@ provider "azurerm" {
     resource_group {
       prevent_deletion_if_contains_resources = false
     }
-    container_registry {
-      quarantine_policy_enabled = true
-    }
   }
 }
 
