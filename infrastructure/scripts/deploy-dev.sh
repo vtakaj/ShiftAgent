@@ -23,13 +23,9 @@ fi
 SUBSCRIPTION=$(az account show --query name -o tsv)
 echo "📋 Using Azure subscription: $SUBSCRIPTION"
 
-# Initialize Terraform if needed
-if [ ! -d ".terraform" ]; then
-    echo "🔧 Initializing Terraform..."
-    terraform init
-else
-    echo "🔧 Terraform already initialized"
-fi
+# Initialize Terraform with development backend
+echo "🔧 Initializing Terraform with development backend..."
+terraform init -backend-config=backends/dev.backend.hcl -reconfigure
 
 # Validate configuration
 echo "✅ Validating Terraform configuration..."

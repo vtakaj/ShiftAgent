@@ -106,4 +106,22 @@ The infrastructure exports these key outputs:
 
 ## Backend Configuration
 
-For team usage, configure remote state storage by uncommenting the backend configuration in `versions.tf` and setting up an Azure Storage Account for Terraform state.
+The project uses environment-specific backend configurations for Terraform state storage:
+
+### Setup
+1. Run `./setup-remote-state.sh` to create the Azure Storage Account
+2. Use environment-specific backend files during initialization:
+
+```bash
+# Development environment
+terraform init -backend-config=backends/dev.backend.hcl
+
+# Production environment
+terraform init -backend-config=backends/prod.backend.hcl
+```
+
+### State File Locations
+- Development: `dev/shift-scheduler.tfstate`
+- Production: `prod/shift-scheduler.tfstate`
+
+This ensures complete isolation between environments.

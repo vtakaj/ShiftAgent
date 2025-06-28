@@ -3,10 +3,8 @@
 
 terraform {
   # Backend configuration for remote state storage in Azure
-  backend "azurerm" {
-    resource_group_name  = "rg-nss-tfstate-001"
-    storage_account_name = "stnsstfstate001"
-    container_name       = "tfstate"
-    key                  = "shift-scheduler.tfstate"
-  }
+  # Use environment-specific backend files:
+  # - Development: terraform init -backend-config=backends/dev.backend.hcl
+  # - Production:  terraform init -backend-config=backends/prod.backend.hcl
+  backend "azurerm" {}
 }
