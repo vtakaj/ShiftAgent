@@ -122,11 +122,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # Dependency Analysis
+  # Dependency Analysis (only for public repos or repos with GitHub Advanced Security)
   dependency-review:
     name: Dependency Review
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && !github.event.repository.private
     
     steps:
       - name: Checkout code
@@ -205,6 +205,10 @@ jobs:
               }
             };
 
+            // Handle dependency review status for private repos
+            const dependencyStatus = results.dependencies || 'skipped';
+            const dependencyNote = dependencyStatus === 'skipped' ? ' (private repo)' : '';
+
             const comment = `## 🔍 Pull Request Checks Summary
 
             | Check | Status | Result |
@@ -212,7 +216,7 @@ jobs:
             | Code Quality & Tests | ${getIcon(results.quality)} | ${results.quality} |
             | Security Scan | ${getIcon(results.security)} | ${results.security} |
             | Docker Build | ${getIcon(results.docker)} | ${results.docker} |
-            | Dependency Review | ${getIcon(results.dependencies)} | ${results.dependencies} |
+            | Dependency Review | ${getIcon(dependencyStatus)} | ${dependencyStatus}${dependencyNote} |
 
             ### 📋 Next Steps
             ${results.quality === 'success' && results.security === 'success' && results.docker === 'success' ? 
