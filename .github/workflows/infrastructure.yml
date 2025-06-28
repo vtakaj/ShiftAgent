@@ -67,9 +67,9 @@ jobs:
         run: terraform fmt -check
         continue-on-error: true
 
-      - name: Terraform Init
+      - name: Terraform Init (Dev Backend)
         id: init
-        run: terraform init
+        run: terraform init -backend-config=backends/dev.backend.hcl -reconfigure
 
       - name: Terraform Validate
         id: validate
@@ -164,7 +164,9 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'plan'
         run: |
           ENV_FILE="environments/${{ github.event.inputs.environment }}.tfvars"
+          BACKEND_FILE="backends/${{ github.event.inputs.environment }}.backend.hcl"
           echo "📋 Planning infrastructure for ${{ github.event.inputs.environment }} environment..."
+          terraform init -backend-config="$BACKEND_FILE" -reconfigure
           terraform plan \
             -var-file="$ENV_FILE" \
             -no-color
@@ -177,6 +179,7 @@ jobs:
       - name: Terraform Apply (Main Branch - Dev)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
+          terraform init -backend-config=backends/dev.backend.hcl -reconfigure
           terraform apply \
             -var-file="environments/dev.tfvars" \
             -auto-approve
@@ -189,6 +192,8 @@ jobs:
       - name: Terraform Apply (Manual)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
         run: |
+          BACKEND_FILE="backends/${{ github.event.inputs.environment }}.backend.hcl"
+          terraform init -backend-config="$BACKEND_FILE" -reconfigure
           terraform apply \
             -var-file="environments/${{ github.event.inputs.environment }}.tfvars" \
             -auto-approve
@@ -201,6 +206,8 @@ jobs:
       - name: Terraform Destroy (Manual)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
         run: |
+          BACKEND_FILE="backends/${{ github.event.inputs.environment }}.backend.hcl"
+          terraform init -backend-config="$BACKEND_FILE" -reconfigure
           terraform destroy \
             -var-file="environments/${{ github.event.inputs.environment }}.tfvars" \
             -auto-approve
