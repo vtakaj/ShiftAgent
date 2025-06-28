@@ -345,3 +345,51 @@ The HTTP transport enables web-based deployments and supports multiple concurren
 
 See `MCP_SERVER.md` for detailed usage and Claude Desktop integration instructions.
 See `DOCKER_MCP.md` for running MCP servers in Docker containers with HTTP/SSE transport.
+
+## Git Workflow Rules
+
+**CRITICAL: Always use Pull Request workflow. NEVER push directly to main branch.**
+
+### Required Workflow
+1. **Create feature branch** for all changes:
+   ```bash
+   git checkout -b feat/your-feature-name
+   # or
+   git checkout -b fix/your-fix-name
+   ```
+
+2. **Make changes and commit** to feature branch:
+   ```bash
+   git add .
+   git commit -m "descriptive commit message"
+   git push -u origin feat/your-feature-name
+   ```
+
+3. **Create Pull Request** for review:
+   ```bash
+   gh pr create --title "..." --body "..."
+   ```
+
+4. **Wait for review and merge** - never merge your own PRs immediately
+
+### Prohibited Actions
+- ❌ `git push origin main` (direct push to main)
+- ❌ Working directly on main branch
+- ❌ Force pushing to shared branches
+- ❌ Merging without review (except in emergencies)
+
+### Branch Naming Convention
+- `feat/` - New features
+- `fix/` - Bug fixes
+- `refactor/` - Code refactoring
+- `docs/` - Documentation updates
+- `chore/` - Maintenance tasks
+
+### Emergency Exception
+Only in critical production issues:
+```bash
+git commit --no-verify -m "emergency: fix critical issue"
+# Still create PR immediately after
+```
+
+**Remember: This protects main branch stability and enables proper code review.**
