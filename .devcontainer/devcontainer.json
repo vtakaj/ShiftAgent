@@ -45,7 +45,7 @@
         "ms-python.python",
         "ms-python.mypy-type-checker",
         "charliermarsh.ruff",
-        "pulumi.pulumi-lsp",
+        "hashicorp.terraform",
         "ms-vscode.docker",
         "ms-azuretools.vscode-docker",
         "redhat.vscode-yaml",
@@ -85,8 +85,6 @@
     "SSH_AUTH_SOCK": "${localEnv:SSH_AUTH_SOCK}",
     "JOB_STORAGE_TYPE": "filesystem",
     "JOB_STORAGE_DIR": "/workspace/job_storage",
-    "PULUMI_CONFIG_PASSPHRASE": "",
-    "PULUMI_SKIP_UPDATE_CHECK": "true",
     "SOLVER_TIMEOUT_SECONDS": "30",
     "SOLVER_LOG_LEVEL": "INFO"
   }

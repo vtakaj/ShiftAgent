@@ -1,64 +1,81 @@
 #!/bin/bash
+# Destroy Terraform infrastructure
 
-# Destroy infrastructure
 set -e
 
-echo "🗑️  Destroying Shift Scheduler Infrastructure"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TERRAFORM_DIR="$(dirname "$SCRIPT_DIR")"
+
+ENVIRONMENT=${1:-"dev"}
+
+if [ "$ENVIRONMENT" != "dev" ] && [ "$ENVIRONMENT" != "prod" ]; then
+    echo "❌ Invalid environment. Use 'dev' or 'prod'"
+    echo "Usage: $0 <environment>"
+    echo "Example: $0 dev"
+    exit 1
+fi
+
+echo "💥 Destroying Shift Scheduler infrastructure ($ENVIRONMENT)"
+echo "=================================================="
 
 # Change to infrastructure directory
-cd "$(dirname "$0")/.."
+cd "$TERRAFORM_DIR"
 
-# Ensure we're in the correct directory
-if [ ! -f "Pulumi.yaml" ]; then
-    echo "❌ Error: Not in infrastructure directory"
+# Check if Azure CLI is authenticated
+echo "🔐 Checking Azure authentication..."
+if ! az account show >/dev/null 2>&1; then
+    echo "❌ Please authenticate with Azure CLI: az login"
     exit 1
 fi
 
-# Get current stack
-STACK=$(pulumi stack --show-name 2>/dev/null || echo "none")
+# Show current subscription
+SUBSCRIPTION=$(az account show --query name -o tsv)
+echo "📋 Using Azure subscription: $SUBSCRIPTION"
 
-if [ "$STACK" = "none" ]; then
-    echo "❌ Error: No stack selected"
-    echo "💡 Use: pulumi stack select <stack-name>"
-    exit 1
-fi
-
-echo "📋 Current stack: $STACK"
-
-# Show resources that will be destroyed
-echo "👀 Resources that will be destroyed:"
-pulumi preview --diff
-
-# Warning and confirmation
-echo ""
-echo "⚠️  WARNING: This will permanently delete all resources in stack '$STACK'!"
-echo "⚠️  This action cannot be undone!"
-echo ""
-
-read -p "🤔 Are you absolutely sure you want to destroy all resources? Type 'destroy' to confirm: " confirm
-
-if [ "$confirm" != "destroy" ]; then
-    echo "❌ Destruction cancelled"
-    exit 0
-fi
-
-# Final confirmation for production
-if [ "$STACK" = "prod" ] || [ "$STACK" = "production" ]; then
+# Production safety checks
+if [ "$ENVIRONMENT" = "prod" ]; then
+    echo "🛡️  PRODUCTION DESTRUCTION WARNING!"
+    echo "⚠️  This will destroy ALL production resources!"
+    echo "⚠️  This action is IRREVERSIBLE!"
     echo ""
-    echo "🚨 PRODUCTION ENVIRONMENT DETECTED!"
-    echo "🚨 This will destroy the production infrastructure!"
-    echo ""
-    read -p "⚠️  Type 'destroy-production' to confirm: " prod_confirm
-    
-    if [ "$prod_confirm" != "destroy-production" ]; then
-        echo "❌ Production destruction cancelled"
-        exit 0
+    read -p "Type 'DESTROY PRODUCTION' to confirm: " confirm
+    if [ "$confirm" != "DESTROY PRODUCTION" ]; then
+        echo "❌ Destruction cancelled"
+        exit 1
+    fi
+else
+    echo "⚠️  This will destroy all $ENVIRONMENT resources!"
+    read -p "Are you sure? (yes/no): " confirm
+    if [ "$confirm" != "yes" ]; then
+        echo "❌ Destruction cancelled"
+        exit 1
     fi
 fi
 
-# Destroy infrastructure
-echo "🗑️  Destroying infrastructure..."
-pulumi destroy --yes
+# Initialize Terraform if needed
+if [ ! -d ".terraform" ]; then
+    echo "🔧 Initializing Terraform..."
+    terraform init
+fi
 
-echo "✅ Infrastructure destroyed successfully"
-echo "💡 To remove the stack completely, run: pulumi stack rm $STACK"
+# Plan destruction
+echo "📋 Planning destruction..."
+terraform plan \
+    -var-file="environments/${ENVIRONMENT}.tfvars" \
+    -destroy \
+    -out="${ENVIRONMENT}-destroy.tfplan"
+
+# Apply destruction
+echo "💥 Destroying infrastructure..."
+terraform apply "${ENVIRONMENT}-destroy.tfplan"
+
+# Clean up plan file
+rm -f "${ENVIRONMENT}-destroy.tfplan"
+
+echo "✅ Infrastructure destroyed successfully!"
+
+if [ "$ENVIRONMENT" = "prod" ]; then
+    echo ""
+    echo "🚨 PRODUCTION INFRASTRUCTURE HAS BEEN DESTROYED!"
+    echo "🚨 Make sure to update any external dependencies!"
+fi

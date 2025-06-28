@@ -11,7 +11,9 @@ help:
 	@echo "  mcp-http     - Start MCP server with HTTP transport (recommended)"
 	@echo "  mcp-sse      - Start MCP server with SSE transport (deprecated)"
 	@echo "  test         - Run tests"
-	@echo "  format       - Format code"
+	@echo "  format       - Format Python code"
+	@echo "  tf-format    - Format Terraform files"
+	@echo "  tf-format-check - Check Terraform formatting"
 	@echo "  lint         - Check code"
 	@echo "  clean        - Clear cache"
 	@echo ""
@@ -25,7 +27,7 @@ help:
 	@echo "  debug        - Run API in debug mode"
 	@echo "  test-api     - Test API endpoints"
 	@echo "  streamlit    - Start Streamlit web UI"
-	@echo "  pulumi-setup - Initialize Pulumi for infrastructure"
+	@echo "  infra-init   - Initialize Terraform infrastructure"
 	@echo ""
 	@echo "  Docker MCP Commands:"
 	@echo "  docker-mcp-build-http  - Build HTTP MCP Docker image"
@@ -82,6 +84,16 @@ format:
 	@echo "✨ Formatting code..."
 	uv run ruff format .
 	uv run ruff check . --fix
+
+# Format Terraform code
+tf-format:
+	@echo "🏗️ Formatting Terraform files..."
+	terraform fmt -recursive
+
+# Check Terraform formatting
+tf-format-check:
+	@echo "🔍 Checking Terraform formatting..."
+	terraform fmt -check -recursive
 
 # Check code
 lint:
@@ -201,18 +213,17 @@ docker-mcp-logs-sse:
 	@echo "📋 Showing SSE MCP server logs..."
 	./scripts/docker_mcp.sh logs sse
 
-# Initialize Pulumi for infrastructure
-pulumi-setup:
-	@echo "🏗️ Setting up Pulumi infrastructure..."
-	@command -v pulumi >/dev/null 2>&1 || { echo "❌ Pulumi not found. Please install Pulumi CLI first."; exit 1; }
-	@echo "✅ Pulumi CLI detected"
-	@cd infrastructure && pulumi version
-	@echo "📝 To get started with Pulumi:"
+# Initialize Terraform infrastructure
+infra-init:
+	@echo "🏗️ Setting up Terraform infrastructure..."
+	@command -v terraform >/dev/null 2>&1 || { echo "❌ Terraform not found. Please install Terraform CLI first."; exit 1; }
+	@echo "✅ Terraform CLI detected"
+	@cd infrastructure && terraform version
+	@echo "📝 To get started with Terraform:"
 	@echo "  1. cd infrastructure"
-	@echo "  2. pulumi login  (or pulumi login --local for offline)"
-	@echo "  3. pulumi stack init dev"
-	@echo "  4. pulumi config set azure-native:location 'East US'"
-	@echo "  5. pulumi up  (to deploy infrastructure)"
+	@echo "  2. terraform init"
+	@echo "  3. terraform plan -var-file=environments/dev.tfvars"
+	@echo "  4. terraform apply -var-file=environments/dev.tfvars"
 
 # Pre-commit Git Hooks
 hooks-install:

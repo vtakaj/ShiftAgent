@@ -53,13 +53,13 @@ class StorageConfigManager:
         return config
 
     @staticmethod
-    def from_pulumi_outputs(pulumi_outputs: dict[str, Any]) -> StorageConfig:
-        """Create storage config from Pulumi stack outputs"""
+    def from_terraform_outputs(terraform_outputs: dict[str, Any]) -> StorageConfig:
+        """Create storage config from Terraform outputs"""
         return StorageConfig(
             storage_type=StorageType.AZURE,
-            azure_connection_string=pulumi_outputs.get("storage_connection_string"),
-            azure_account_name=pulumi_outputs.get("storage_account_name"),
-            azure_container_name=pulumi_outputs.get(
+            azure_connection_string=terraform_outputs.get("storage_connection_string"),
+            azure_account_name=terraform_outputs.get("storage_account_name"),
+            azure_container_name=terraform_outputs.get(
                 "storage_job_data_container", "job-data"
             ),
         )
@@ -142,13 +142,13 @@ def get_current_storage_config() -> StorageConfig:
     return StorageConfigManager.from_environment()
 
 
-def setup_azure_storage_from_pulumi(pulumi_outputs: dict[str, Any]) -> None:
-    """Setup Azure storage configuration from Pulumi outputs"""
-    config = StorageConfigManager.from_pulumi_outputs(pulumi_outputs)
+def setup_azure_storage_from_terraform(terraform_outputs: dict[str, Any]) -> None:
+    """Setup Azure storage configuration from Terraform outputs"""
+    config = StorageConfigManager.from_terraform_outputs(terraform_outputs)
 
     if StorageConfigManager.validate_config(config):
         StorageConfigManager.apply_to_environment(config)
         print("Azure storage configuration applied to environment")
         StorageConfigManager.print_config_info(config)
     else:
-        print("Warning: Invalid Azure storage configuration from Pulumi outputs")
+        print("Warning: Invalid Azure storage configuration from Terraform outputs")

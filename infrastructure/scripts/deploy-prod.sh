@@ -1,59 +1,95 @@
 #!/bin/bash
+# Deploy production environment using Terraform
 
-# Deploy production environment
 set -e
 
-echo "🚀 Deploying Shift Scheduler Infrastructure - Production"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TERRAFORM_DIR="$(dirname "$SCRIPT_DIR")"
+
+echo "🚀 Deploying Shift Scheduler infrastructure (Production)"
+echo "======================================================"
 
 # Change to infrastructure directory
-cd "$(dirname "$0")/.."
+cd "$TERRAFORM_DIR"
 
-# Ensure we're in the correct directory
-if [ ! -f "Pulumi.yaml" ]; then
-    echo "❌ Error: Not in infrastructure directory"
+# Check if Azure CLI is authenticated
+echo "🔐 Checking Azure authentication..."
+if ! az account show >/dev/null 2>&1; then
+    echo "❌ Please authenticate with Azure CLI: az login"
     exit 1
 fi
 
-# Install dependencies
-echo "📦 Installing dependencies..."
-pip install -r requirements.txt
+# Show current subscription
+SUBSCRIPTION=$(az account show --query name -o tsv)
+echo "📋 Using Azure subscription: $SUBSCRIPTION"
 
-# Initialize and select prod stack
-echo "🔧 Setting up production stack..."
-pulumi stack init prod --non-interactive || true
-pulumi stack select prod
-
-# Set production configuration
-echo "⚙️ Configuring production environment..."
-pulumi config set azure-native:location "East US"
-pulumi config set shift-scheduler-infra:environment "production"
-pulumi config set shift-scheduler-infra:instance_count 3
-pulumi config set shift-scheduler-infra:sku_size "Standard"
-
-# Preview changes
-echo "👀 Previewing changes..."
-pulumi preview
-
-# Ask for confirmation with additional warning
-echo "⚠️  WARNING: You are about to deploy to PRODUCTION!"
-echo "⚠️  This will create billable Azure resources."
-read -p "🤔 Are you sure you want to proceed? (y/N): " confirm
-if [[ $confirm != [yY] && $confirm != [yY][eE][sS] ]]; then
+# Production safety checks
+echo "🛡️  Production deployment safety checks..."
+read -p "⚠️  Are you sure you want to deploy to PRODUCTION? (yes/no): " confirm
+if [ "$confirm" != "yes" ]; then
     echo "❌ Deployment cancelled"
-    exit 0
+    exit 1
 fi
 
-# Deploy infrastructure
-echo "🚀 Deploying production infrastructure..."
-pulumi up --yes
+# Initialize Terraform if needed
+if [ ! -d ".terraform" ]; then
+    echo "🔧 Initializing Terraform..."
+    terraform init
+else
+    echo "🔧 Terraform already initialized"
+fi
+
+# Validate configuration
+echo "✅ Validating Terraform configuration..."
+terraform validate
+
+# Format check
+echo "🎨 Checking Terraform formatting..."
+if ! terraform fmt -check; then
+    echo "⚠️  Formatting issues found. Running terraform fmt..."
+    terraform fmt
+fi
+
+# Plan deployment
+echo "📋 Planning deployment..."
+terraform plan \
+    -var-file="environments/prod.tfvars" \
+    -out="prod.tfplan" \
+    -detailed-exitcode
+
+PLAN_EXIT_CODE=$?
+
+if [ $PLAN_EXIT_CODE -eq 0 ]; then
+    echo "✅ No changes needed"
+    exit 0
+elif [ $PLAN_EXIT_CODE -eq 2 ]; then
+    echo "📝 Changes detected"
+    echo ""
+    echo "🔍 Please review the plan above carefully!"
+    read -p "⚠️  Proceed with production deployment? (yes/no): " proceed
+    if [ "$proceed" != "yes" ]; then
+        echo "❌ Deployment cancelled"
+        rm -f "prod.tfplan"
+        exit 1
+    fi
+else
+    echo "❌ Plan failed"
+    exit 1
+fi
+
+# Apply deployment
+echo "🚀 Applying changes to production..."
+terraform apply "prod.tfplan"
+
+# Clean up plan file
+rm -f "prod.tfplan"
 
 # Show outputs
-echo "✅ Deployment complete! Here are the outputs:"
-pulumi stack output
+echo "📊 Production deployment outputs:"
+terraform output
 
-echo "🎉 Production environment is ready!"
-echo "📋 Next steps:"
-echo "  1. Configure container registry credentials"
-echo "  2. Set up CI/CD pipeline"
-echo "  3. Configure monitoring and alerts"
-echo "  4. Set up backup and disaster recovery"
+echo "✅ Production environment deployed successfully!"
+echo ""
+echo "🔗 Useful commands:"
+echo "  View outputs: terraform output"
+echo "  Emergency destroy: ./scripts/destroy.sh prod (USE WITH EXTREME CAUTION)"
