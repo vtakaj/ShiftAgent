@@ -121,7 +121,7 @@ terraform init -backend-config=backends/prod.backend.hcl
 ```
 
 ### State File Locations
-- Development: `dev/shift-scheduler.tfstate`
-- Production: `prod/shift-scheduler.tfstate`
+- Development: `dev/shiftagent.tfstate`
+- Production: `prod/shiftagent.tfstate`
 
 This ensures complete isolation between environments.
