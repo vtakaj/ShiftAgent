@@ -213,18 +213,6 @@ docker-mcp-logs-sse:
 	@echo "📋 Showing SSE MCP server logs..."
 	./scripts/docker_mcp.sh logs sse
 
-# Initialize Terraform infrastructure
-infra-init:
-	@echo "🏗️ Setting up Terraform infrastructure..."
-	@command -v terraform >/dev/null 2>&1 || { echo "❌ Terraform not found. Please install Terraform CLI first."; exit 1; }
-	@echo "✅ Terraform CLI detected"
-	@cd infrastructure && terraform version
-	@echo "📝 To get started with Terraform:"
-	@echo "  1. cd infrastructure"
-	@echo "  2. terraform init"
-	@echo "  3. terraform plan -var-file=environments/dev.tfvars"
-	@echo "  4. terraform apply -var-file=environments/dev.tfvars"
-
 # Pre-commit Git Hooks
 hooks-install:
 	@echo "🪝 Installing pre-commit git hooks..."
