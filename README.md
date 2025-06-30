@@ -1,5 +1,23 @@
 # ShiftAgent
 
+[![Python Version](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://python.org)
+[![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104%2B-009688.svg)](https://fastapi.tiangolo.com)
+[![Timefold](https://img.shields.io/badge/Timefold-1.14%2B-orange.svg)](https://timefold.ai)
+[![FastMCP](https://img.shields.io/badge/FastMCP-0.1%2B-purple.svg)](https://github.com/pydantic/fastmcp)
+[![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![Type Checker](https://img.shields.io/badge/type%20checker-mypy-blue.svg)](https://mypy.readthedocs.io)
+[![Docker](https://img.shields.io/badge/docker-supported-blue.svg)](https://docker.com)
+[![Azure](https://img.shields.io/badge/Azure-supported-0078d4.svg)](https://azure.microsoft.com)
+[![AI Optimization](https://img.shields.io/badge/AI-optimization-ff6b35.svg)](https://timefold.ai)
+[![MCP Protocol](https://img.shields.io/badge/MCP-protocol-8b5cf6.svg)](https://modelcontextprotocol.io)
+
+<!-- Future CI/CD badges when GitHub Actions are set up:
+[![CI](https://github.com/vtakaj/shift-scheduler/actions/workflows/ci.yml/badge.svg)](https://github.com/vtakaj/shift-scheduler/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/vtakaj/shift-scheduler/branch/main/graph/badge.svg)](https://codecov.io/gh/vtakaj/shift-scheduler)
+[![Security](https://github.com/vtakaj/shift-scheduler/actions/workflows/security.yml/badge.svg)](https://github.com/vtakaj/shift-scheduler/actions/workflows/security.yml)
+-->
+
 An AI-powered employee shift scheduling agent using Timefold Solver with FastMCP integration for AI assistant support.
 
 ## 🚀 Quick Start

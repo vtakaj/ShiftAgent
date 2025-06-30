@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple test MCP server
+Mock MCP server for manual testing of MCP protocol implementation
 """
 
 import json

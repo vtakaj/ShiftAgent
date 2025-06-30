@@ -1,8 +1,8 @@
 #!/bin/bash
 # MCP Server runner script for Claude Desktop
 
-# Change to the project directory
-cd "$(dirname "$0")"
+# Change to the project directory (parent of scripts)
+cd "$(dirname "$0")/.."
 
 # Set up Python path
 export PYTHONPATH="${PWD}/src"

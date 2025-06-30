@@ -2,8 +2,8 @@ services:
   # MCP Server with stdio transport (for Claude Desktop)
   mcp-stdio:
     build:
-      context: .
-      dockerfile: Dockerfile.mcp
+      context: ../..
+      dockerfile: docker/dockerfiles/Dockerfile.mcp
     image: shift-agent-mcp-server:latest
     container_name: shift-agent-mcp-stdio
     environment:
@@ -18,8 +18,8 @@ services:
   # MCP Server with HTTP transport (recommended for web clients)
   mcp-http:
     build:
-      context: .
-      dockerfile: Dockerfile.mcp.http
+      context: ../..
+      dockerfile: docker/dockerfiles/Dockerfile.mcp.http
     image: shift-agent-mcp-http:latest
     container_name: shift-agent-mcp-http
     ports:
@@ -44,8 +44,8 @@ services:
   # MCP Server with SSE transport (deprecated, for legacy clients)
   mcp-sse:
     build:
-      context: .
-      dockerfile: Dockerfile.mcp.sse
+      context: ../..
+      dockerfile: docker/dockerfiles/Dockerfile.mcp.sse
     image: shift-agent-mcp-sse:latest
     container_name: shift-agent-mcp-sse
     ports:
