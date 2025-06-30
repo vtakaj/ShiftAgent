@@ -403,7 +403,7 @@ Add to your Claude Desktop config file:
   "mcpServers": {
     "shiftagent": {
       "command": "uv",
-      "args": ["run", "--project", "/path/to/shift-agent", "python", "/path/to/shiftagent/mcp_server.py"],
+      "args": ["run", "--project", "/path/to/shiftagent", "python", "/path/to/shiftagent/mcp_server.py"],
       "env": {
         "SHIFT_AGENT_API_URL": "http://localhost:8081"
       }

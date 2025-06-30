@@ -196,7 +196,7 @@ Dockerfile                # Default Dockerfile for CI/CD (references API service
 ### Core Components
 
 1. **shift_agent/api/server.py**: API server entry point
-   - Entry point for `shift-agent-api` command (defined in pyproject.toml)
+   - Entry point for `shiftagent-api` command (defined in pyproject.toml)
    - Can be run directly with `python -m shift_agent.api.server`
    - Used by Docker containers
    - Starts the API server on port 8081
