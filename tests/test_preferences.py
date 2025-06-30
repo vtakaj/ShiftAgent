@@ -9,16 +9,16 @@ from pathlib import Path
 # Add src directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from shiftagent.api.converters import (
+from shiftagent_api.api.converters import (
     convert_domain_to_response,
     convert_request_to_domain,
 )
-from shiftagent.api.schemas import (
+from shiftagent_api.api.schemas import (
     EmployeeRequest,
     ShiftRequest,
     ShiftScheduleRequest,
 )
-from shiftagent.core.models import Employee
+from shiftagent_api.core.models import Employee
 
 
 def test_api_converter_with_preferences():
@@ -78,7 +78,7 @@ def test_api_converter_with_preferences():
 
 def test_demo_data_with_preferences():
     """Test demo data includes preferences"""
-    from shiftagent.utils.demo_data import create_demo_schedule
+    from shiftagent_api.utils.demo_data import create_demo_schedule
 
     schedule = create_demo_schedule()
 
@@ -105,7 +105,7 @@ def test_demo_data_with_preferences():
 
 def test_constraint_helper_functions():
     """Test constraint helper functions"""
-    from shiftagent.core.constraints.shift_constraints import get_day_name
+    from shiftagent_api.core.constraints.shift_constraints import get_day_name
 
     # Test get_day_name function
     monday = datetime(2025, 6, 2)  # This is a Monday
