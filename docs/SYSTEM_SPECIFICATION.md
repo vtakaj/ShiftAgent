@@ -233,7 +233,7 @@ application/json
 #### 1. Health Check
 ```http
 GET /health
-Response: {"status": "UP", "service": "shift-agent"}
+Response: {"status": "UP", "service": "shiftagent"}
 ```
 
 #### 2. Demo Data Retrieval
@@ -309,7 +309,7 @@ Response: WeeklyTestResponse
 
 ### Directory Structure
 ```
-shift-agent/
+shiftagent/
 ├── main.py                  # FastAPI application entry point
 ├── models.py                # Data models and Pydantic schemas
 ├── constraints.py           # Timefold constraint definitions

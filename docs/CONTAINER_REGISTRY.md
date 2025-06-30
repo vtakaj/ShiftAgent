@@ -105,7 +105,7 @@ cd infrastructure/scripts
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `-i, --image-name` | Image name | `shift-agent` |
+| `-i, --image-name` | Image name | `shiftagent` |
 | `-t, --tag` | Image tag | `latest` |
 | `-f, --dockerfile` | Dockerfile path | `Dockerfile` |
 | `-c, --context` | Build context | Project root |
@@ -118,13 +118,13 @@ cd infrastructure/scripts
 
 ```bash
 # Build locally
-docker build -t shift-agent:latest .
+docker build -t shiftagent:latest .
 
 # Build for production
-docker build -t shift-agent:v1.0.0 --platform linux/amd64 .
+docker build -t shiftagent:v1.0.0 --platform linux/amd64 .
 
 # Multi-stage build optimization
-docker build --target production -t shift-agent:v1.0.0 .
+docker build --target production -t shiftagent:v1.0.0 .
 ```
 
 ## 🚢 Pushing Images
@@ -149,7 +149,7 @@ docker build --target production -t shift-agent:v1.0.0 .
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `-i, --image-name` | Local image name | `shift-agent` |
+| `-i, --image-name` | Local image name | `shiftagent` |
 | `-t, --tag` | Image tag | `latest` |
 | `-s, --stack` | Environment | Auto-detect |
 | `-r, --registry` | Registry URL | From stack |
@@ -167,8 +167,8 @@ REGISTRY=$(terraform output -raw container_registry_login_server)
 az acr login --name $REGISTRY
 
 # Tag and push
-docker tag shift-agent:latest $REGISTRY/shift-agent:latest
-docker push $REGISTRY/shift-agent:latest
+docker tag shiftagent:latest $REGISTRY/shiftagent:latest
+docker push $REGISTRY/shiftagent:latest
 ```
 
 ## 🔐 Authentication
@@ -281,7 +281,7 @@ steps:
    ```bash
    # Using Docker Content Trust
    export DOCKER_CONTENT_TRUST=1
-   docker push $REGISTRY/shift-agent:signed
+   docker push $REGISTRY/shiftagent:signed
    ```
 
 ## 🔄 Image Retention Policies
@@ -305,15 +305,15 @@ Retention policies automatically delete old images based on:
 az acr repository list --name <registry-name>
 
 # List tags for a repository
-az acr repository show-tags --name <registry-name> --repository shift-agent
+az acr repository show-tags --name <registry-name> --repository shiftagent
 
 # Delete specific tag
-az acr repository delete --name <registry-name> --image shift-agent:old-tag
+az acr repository delete --name <registry-name> --image shiftagent:old-tag
 
 # Delete all tags older than 30 days
-az acr repository show-tags --name <registry-name> --repository shift-agent \
+az acr repository show-tags --name <registry-name> --repository shiftagent \
   --orderby time_desc --query "[?timestamp < '2024-01-01'].name" -o tsv | \
-  xargs -I {} az acr repository delete --name <registry-name> --image shift-agent:{} --yes
+  xargs -I {} az acr repository delete --name <registry-name> --image shiftagent:{} --yes
 ```
 
 ## 📊 Monitoring and Logging
@@ -384,7 +384,7 @@ docker system info | grep -A5 "Registry Mirrors"
 az acr repository list --name <registry-name>
 
 # Check exact image name and tag
-az acr repository show-tags --name <registry-name> --repository shift-agent
+az acr repository show-tags --name <registry-name> --repository shiftagent
 
 # Verify registry URL
 cd infrastructure && terraform output -raw container_registry_login_server
@@ -427,7 +427,7 @@ az network private-endpoint list --query "[?privateLinkServiceConnections[0].pri
 az acr show --name <registry-name> --output table
 
 # Recent operations
-az acr repository show-logs --name <registry-name> --image shift-agent:latest
+az acr repository show-logs --name <registry-name> --image shiftagent:latest
 
 # Webhook status
 az acr webhook list --registry <registry-name> --output table
@@ -459,7 +459,7 @@ az acr webhook create \
   --name deployment-webhook \
   --uri https://your-ci-cd-endpoint.com/webhook \
   --actions push \
-  --scope shift-agent:latest
+  --scope shiftagent:latest
 ```
 
 ### Content Trust and Image Signing
@@ -472,7 +472,7 @@ export DOCKER_CONTENT_TRUST=1
 docker trust key generate developer
 
 # Sign and push
-docker trust sign <registry>/shift-agent:v1.0.0
+docker trust sign <registry>/shiftagent:v1.0.0
 ```
 
 ## 📚 Additional Resources

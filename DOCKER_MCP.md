@@ -99,14 +99,14 @@ docker run -d \
   -p 9000:9000 \
   -e MCP_HTTP_PORT=9000 \
   -e SHIFT_AGENT_API_URL=http://host.docker.internal:8081 \
-  shift-agent-mcp-http:latest
+  shiftagent-mcp-http:latest
 
 # Custom SSE port
 docker run -d \
   -p 9001:9001 \
   -e MCP_SSE_PORT=9001 \
   -e SHIFT_AGENT_API_URL=http://host.docker.internal:8081 \
-  shift-agent-mcp-sse:latest
+  shiftagent-mcp-sse:latest
 ```
 
 ### Using Docker Compose Override
@@ -157,7 +157,7 @@ For HTTP transport, create `claude_desktop_config.json`:
 ```json
 {
     "mcpServers": {
-        "shift-agent-http": {
+        "shiftagent-http": {
             "command": "curl",
             "args": [
                 "-X", "POST",
@@ -222,10 +222,10 @@ curl -f http://localhost:8083/mcp/health || echo "Health check failed"
 make docker-mcp-logs-http
 
 # Debug with verbose logging
-docker run -e LOG_LEVEL=DEBUG shift-agent-mcp-http:latest
+docker run -e LOG_LEVEL=DEBUG shiftagent-mcp-http:latest
 
 # Container shell access
-docker exec -it shift-agent-mcp-http /bin/bash
+docker exec -it shiftagent-mcp-http /bin/bash
 ```
 
 ## 🚦 Production Deployment
@@ -242,7 +242,7 @@ docker exec -it shift-agent-mcp-http /bin/bash
 version: '3.8'
 services:
   mcp-http:
-    image: shift-agent-mcp-http:latest
+    image: shiftagent-mcp-http:latest
     restart: unless-stopped
     ports:
       - "8083:8083"

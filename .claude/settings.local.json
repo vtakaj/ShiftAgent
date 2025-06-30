@@ -58,7 +58,8 @@
       "Bash(git config:*)",
       "Bash(cat:*)",
       "Bash(npm install)",
-      "Bash(SKIP_TESTS=true git push -u origin fix/pulumi-type-errors)"
+      "Bash(SKIP_TESTS=true git push -u origin fix/pulumi-type-errors)",
+      "Bash(docker:*)"
     ],
     "deny": []
   }

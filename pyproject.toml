@@ -1,5 +1,5 @@
 [project]
-name = "shift-agent"
+name = "shiftagent"
 version = "1.0.0"
 description = "AI-powered employee shift scheduling agent using Timefold Solver"
 readme = "README.md"
@@ -39,8 +39,8 @@ dev = [
 
 # Console scripts for uvx support
 [project.scripts]
-shift-agent-api = "shift_agent.api.server:main"
-shift-agent-mcp = "shift_agent_mcp.server:main"
+shiftagent-api = "shift_agent.api.server:main"
+shiftagent-mcp = "shift_agent_mcp.server:main"
 
 [build-system]
 requires = ["hatchling"]
