@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from src.shiftagent.core.models import Employee, Shift, ShiftSchedule
+from src.shiftagent_api.core.models import Employee, Shift, ShiftSchedule
 
 
 @pytest.fixture

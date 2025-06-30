@@ -13,16 +13,16 @@ from timefold.solver.config import (
     TerminationConfig,
 )
 
-from src.shiftagent.core.constraints.shift_constraints import (
+from src.shiftagent_api.core.constraints.shift_constraints import (
     shift_scheduling_constraints,
 )
-from src.shiftagent.core.models import Employee, Shift, ShiftSchedule
+from src.shiftagent_api.core.models import Employee, Shift, ShiftSchedule
 
 # Skip this entire test module until continuous planning is implemented
 pytest.skip("Continuous planning module not yet implemented", allow_module_level=True)
 
 # TODO: Import ContinuousPlanningService when implemented
-# from src.shiftagent.api.continuous_planning import ContinuousPlanningService
+# from src.shiftagent_api.api.continuous_planning import ContinuousPlanningService
 
 
 # Placeholder class until actual implementation

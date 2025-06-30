@@ -9,16 +9,16 @@ from pathlib import Path
 # Add src directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from shiftagent.api.converters import (
+from shiftagent_api.api.converters import (
     convert_domain_to_response,
     convert_request_to_domain,
 )
-from shiftagent.api.schemas import (
+from shiftagent_api.api.schemas import (
     EmployeeRequest,
     ShiftRequest,
     ShiftScheduleRequest,
 )
-from shiftagent.core.models import Employee
+from shiftagent_api.core.models import Employee
 
 
 def test_api_converter_with_preferences():

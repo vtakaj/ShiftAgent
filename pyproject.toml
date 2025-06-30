@@ -39,8 +39,8 @@ dev = [
 
 # Console scripts for uvx support
 [project.scripts]
-shiftagent-api = "shiftagent.api.server:main"
-shiftagent-mcp = "shiftagentmcp.server:main"
+shiftagent-api = "shiftagent_api.api.server:main"
+shiftagent-mcp = "shiftagent_mcp.server:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -91,12 +91,12 @@ disallow_untyped_defs = false
 
 # Ignore Timefold constraint system typing issues
 [[tool.mypy.overrides]]
-module = "shiftagent.core.constraints.*"
+module = "shiftagent_api.core.constraints.*"
 ignore_errors = true
 
 # Ignore complex nested data analysis typing issues
 [[tool.mypy.overrides]]
-module = "shiftagent.api.analysis"
+module = "shiftagent_api.api.analysis"
 ignore_errors = true
 
 [tool.ruff]
@@ -124,7 +124,7 @@ select = [
 ignore = ["E501"]  # line too long (handled by formatter)
 
 [tool.ruff.lint.isort]
-known-first-party = ["shiftagent"]
+known-first-party = ["shiftagent_api", "shiftagent_mcp", "shiftagent_ui"]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
@@ -148,7 +148,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src/shiftagent"]
+source = ["src/shiftagent_api", "src/shiftagent_mcp", "src/shiftagent_ui"]
 branch = true
 
 [tool.coverage.report]
