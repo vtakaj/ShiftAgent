@@ -91,7 +91,7 @@ Then create a pull request on GitHub with:
 
 ### Directory Structure
 ```
-src/shift_agent/
+src/shiftagent/
 ├── api/              # FastAPI application layer
 │   ├── routes.py     # API endpoints
 │   ├── schemas.py    # Request/response models

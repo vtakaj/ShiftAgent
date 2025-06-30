@@ -194,7 +194,7 @@ shiftagent/
 │   ├── launch.json         # Debug settings
 │   └── extensions.json     # Recommended extensions
 ├── src/                    # Source code directory
-│   └── shift_agent/
+│   └── shiftagent/
 │       ├── api/            # FastAPI application
 │       │   ├── app.py      # FastAPI instance
 │       │   ├── routes.py   # API endpoints

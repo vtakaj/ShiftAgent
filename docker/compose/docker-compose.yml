@@ -4,7 +4,7 @@ services:
       context: ../..
       dockerfile: docker/dockerfiles/Dockerfile.api
     ports:
-      - "${SHIFT_AGENT_PORT:-8081}:8081"
+      - "${SHIFTAGENT_PORT:-8081}:8081"
     environment:
       - PYTHONUNBUFFERED=1
       # Logging configuration
@@ -18,7 +18,7 @@ services:
       # Solver configuration
       - SOLVER_TIMEOUT_SECONDS=${SOLVER_TIMEOUT_SECONDS:-120}
       # MCP configuration
-      - SHIFT_AGENT_API_URL=${SHIFT_AGENT_API_URL:-http://172.17.0.1:8081}
+      - SHIFTAGENT_API_URL=${SHIFTAGENT_API_URL:-http://172.17.0.1:8081}
     volumes:
       # Job storage directory (persisted on host)
       - ${HOST_JOB_STORAGE_DIR:-../../job_storage}:/app/job_storage
@@ -72,7 +72,7 @@ services:
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - MCP_LOG_LEVEL=${MCP_LOG_LEVEL:-INFO}
-      - SHIFT_AGENT_API_URL=${SHIFT_AGENT_API_URL:-http://172.17.0.1:8081}
+      - SHIFTAGENT_API_URL=${SHIFTAGENT_API_URL:-http://172.17.0.1:8081}
     volumes:
       # Development: Hot reload for source code
       - ../../src:/app/src:ro

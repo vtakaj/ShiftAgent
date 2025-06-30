@@ -39,7 +39,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          PYTHONPATH=src uv run pytest tests/ -v --cov=src/shift_agent --cov-report=xml
+          PYTHONPATH=src uv run pytest tests/ -v --cov=src/shiftagent --cov-report=xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -57,7 +57,7 @@ jobs:
 
       - name: Run mypy type checking
         run: |
-          PYTHONPATH=src uv run mypy -p shift_agent --show-error-codes
+          PYTHONPATH=src uv run mypy -p shiftagent --show-error-codes
 
   # Security Scanning
   security:
