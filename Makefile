@@ -237,7 +237,7 @@ docker-build:
 
 docker-build-mcp:
 	@echo "🤖 Building MCP server Docker image..."
-	docker build -f docker/dockerfiles/Dockerfile.mcp -t shift-agent-mcp-server .
+	docker build -f docker/dockerfiles/Dockerfile.mcp -t shiftagent-mcp-server .
 
 docker-run:
 	@echo "🚀 Starting services with Docker Compose..."
@@ -262,7 +262,7 @@ docker-logs-mcp:
 # Test Docker MCP server
 test-docker-mcp:
 	@echo "🧪 Testing Docker MCP server..."
-	@echo '{"jsonrpc":"2.0","method":"list_tools","id":1}' | docker run -i --rm --network shift-agent-network shift-agent-mcp-server:latest
+	@echo '{"jsonrpc":"2.0","method":"list_tools","id":1}' | docker run -i --rm --network shiftagent-network shiftagent-mcp-server:latest
 
 # n8n integration commands
 docker-n8n-build:

@@ -13,9 +13,9 @@
 [![MCP Protocol](https://img.shields.io/badge/MCP-protocol-8b5cf6.svg)](https://modelcontextprotocol.io)
 
 <!-- Future CI/CD badges when GitHub Actions are set up:
-[![CI](https://github.com/vtakaj/shift-scheduler/actions/workflows/ci.yml/badge.svg)](https://github.com/vtakaj/shift-scheduler/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/vtakaj/shift-scheduler/branch/main/graph/badge.svg)](https://codecov.io/gh/vtakaj/shift-scheduler)
-[![Security](https://github.com/vtakaj/shift-scheduler/actions/workflows/security.yml/badge.svg)](https://github.com/vtakaj/shift-scheduler/actions/workflows/security.yml)
+[![CI](https://github.com/vtakaj/shiftagent/actions/workflows/ci.yml/badge.svg)](https://github.com/vtakaj/shiftagent/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/vtakaj/shiftagent/branch/main/graph/badge.svg)](https://codecov.io/gh/vtakaj/shiftagent)
+[![Security](https://github.com/vtakaj/shiftagent/actions/workflows/security.yml/badge.svg)](https://github.com/vtakaj/shiftagent/actions/workflows/security.yml)
 -->
 
 An AI-powered employee shift scheduling agent using Timefold Solver with FastMCP integration for AI assistant support.
@@ -38,14 +38,14 @@ code --install-extension ms-vscode-remote.remote-containers
 **Method 1: VS Code Dev Container (Recommended)**
 ```bash
 # Open project
-code /projects/shared/shift-agent
+code /projects/shared/shiftagent
 
 # Command Palette (Cmd+Shift+P) → "Dev Containers: Reopen in Container"
 ```
 
 **Method 2: Setup Script**
 ```bash
-cd /projects/shared/shift-agent
+cd /projects/shared/shiftagent
 
 # Docker environment setup
 chmod +x setup-docker.sh
@@ -184,7 +184,7 @@ Access points:
 ## 📁 Project Structure
 
 ```
-shift-agent/
+shiftagent/
 ├── .devcontainer/          # Dev Container configuration
 │   ├── devcontainer.json   # VS Code Dev Container settings
 │   ├── docker-compose.yml  # Dev Container Docker Compose
@@ -401,9 +401,9 @@ Add to your Claude Desktop config file:
 ```json
 {
   "mcpServers": {
-    "shift-agent": {
+    "shiftagent": {
       "command": "uv",
-      "args": ["run", "--project", "/path/to/shift-agent", "python", "/path/to/shift-agent/mcp_server.py"],
+      "args": ["run", "--project", "/path/to/shift-agent", "python", "/path/to/shiftagent/mcp_server.py"],
       "env": {
         "SHIFT_AGENT_API_URL": "http://localhost:8081"
       }

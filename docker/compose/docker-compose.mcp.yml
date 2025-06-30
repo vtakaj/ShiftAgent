@@ -4,8 +4,8 @@ services:
     build:
       context: ../..
       dockerfile: docker/dockerfiles/Dockerfile.mcp
-    image: shift-agent-mcp-server:latest
-    container_name: shift-agent-mcp-stdio
+    image: shiftagent-mcp-server:latest
+    container_name: shiftagent-mcp-stdio
     environment:
       - SHIFT_AGENT_API_URL=http://host.docker.internal:8081
       - LOG_LEVEL=INFO
@@ -20,8 +20,8 @@ services:
     build:
       context: ../..
       dockerfile: docker/dockerfiles/Dockerfile.mcp.http
-    image: shift-agent-mcp-http:latest
-    container_name: shift-agent-mcp-http
+    image: shiftagent-mcp-http:latest
+    container_name: shiftagent-mcp-http
     ports:
       - "8083:8083"
     environment:
@@ -46,8 +46,8 @@ services:
     build:
       context: ../..
       dockerfile: docker/dockerfiles/Dockerfile.mcp.sse
-    image: shift-agent-mcp-sse:latest
-    container_name: shift-agent-mcp-sse
+    image: shiftagent-mcp-sse:latest
+    container_name: shiftagent-mcp-sse
     ports:
       - "8084:8084"
     environment:
@@ -68,5 +68,5 @@ services:
 
 networks:
   default:
-    name: shift-agent-mcp-network
+    name: shiftagent-mcp-network
     external: false
