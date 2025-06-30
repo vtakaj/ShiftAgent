@@ -1,5 +1,5 @@
 services:
-  shift-agent:
+  shiftagent:
     build:
       context: ../..
       dockerfile: docker/dockerfiles/Dockerfile.api
@@ -36,7 +36,7 @@ services:
     depends_on:
       - postgres
     networks:
-      - shift-network
+      - shiftnetwork
 
   # PostgreSQL database (optional for future use)
   postgres:
@@ -59,7 +59,7 @@ services:
       start_period: 30s
     restart: unless-stopped
     networks:
-      - shift-network
+      - shiftnetwork
 
   # MCP Server (for AI assistant integration)
   mcp-server:
@@ -79,7 +79,7 @@ services:
       - ../../pyproject.toml:/app/pyproject.toml:ro
     restart: unless-stopped
     networks:
-      - shift-network
+      - shiftnetwork
     profiles:
       - mcp
 
@@ -88,6 +88,6 @@ volumes:
     driver: local
 
 networks:
-  shift-network:
+  shiftnetwork:
     driver: bridge
-    name: shift-agent-network
+    name: shiftagent-network

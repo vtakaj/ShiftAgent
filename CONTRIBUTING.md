@@ -15,8 +15,8 @@ Thank you for your interest in contributing to the Shift Agent project! This gui
 
 1. **Fork and clone the repository**
    ```bash
-   git clone https://github.com/your-username/shift-agent.git
-   cd shift-agent
+   git clone https://github.com/your-username/shiftagent.git
+   cd shiftagent
    ```
 
 2. **Set up development environment**

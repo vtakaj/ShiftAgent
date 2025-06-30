@@ -1,5 +1,5 @@
 services:
-  shift-agent:
+  shiftagent:
     build:
       context: ../..
       dockerfile: docker/dockerfiles/Dockerfile
@@ -24,7 +24,7 @@ services:
       # Production: Only job storage, no source code mounts
       - job_data:/app/job_storage
       # Optional: Bind mount for persistent storage
-      # - ${HOST_JOB_STORAGE_DIR:-/var/lib/shift-agent}:/app/job_storage
+      # - ${HOST_JOB_STORAGE_DIR:-/var/lib/shiftagent}:/app/job_storage
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
       interval: 30s
@@ -36,7 +36,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - shift-network
+      - shiftnetwork
     deploy:
       resources:
         limits:
@@ -67,7 +67,7 @@ services:
       start_period: 30s
     restart: always
     networks:
-      - shift-network
+      - shiftnetwork
     deploy:
       resources:
         limits:
@@ -97,7 +97,7 @@ services:
         condition: service_healthy
     restart: always
     networks:
-      - shift-network
+      - shiftnetwork
     profiles:
       - mcp
     deploy:
@@ -125,7 +125,7 @@ services:
       - shift-agent
     restart: always
     networks:
-      - shift-network
+      - shiftnetwork
     profiles:
       - nginx
     deploy:
@@ -148,7 +148,7 @@ services:
       retries: 3
     restart: always
     networks:
-      - shift-network
+      - shiftnetwork
     profiles:
       - cache
     deploy:
@@ -168,9 +168,9 @@ volumes:
     driver: local
 
 networks:
-  shift-network:
+  shiftnetwork:
     driver: bridge
-    name: shift-agent-network-prod
+    name: shiftagent-network-prod
 
 # Production secrets (use Docker secrets in swarm mode)
 secrets:

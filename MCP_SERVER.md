@@ -32,9 +32,9 @@ Add this configuration to your Claude Desktop config file:
 ```json
 {
   "mcpServers": {
-    "shift-agent": {
+    "shiftagent": {
       "command": "uv",
-      "args": ["run", "--project", "/path/to/shift-agent", "python", "/path/to/shift-agent/mcp_server.py"],
+      "args": ["run", "--project", "/path/to/shiftagent", "python", "/path/to/shiftagent/mcp_server.py"],
       "env": {
         "SHIFT_AGENT_API_URL": "http://localhost:8081"
       }
@@ -43,7 +43,7 @@ Add this configuration to your Claude Desktop config file:
 }
 ```
 
-**Important**: Replace `/path/to/shift-agent` with the actual absolute path to your project directory.
+**Important**: Replace `/path/to/shiftagent` with the actual absolute path to your project directory.
 
 ### 3. Restart Claude Desktop
 
