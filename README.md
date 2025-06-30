@@ -13,9 +13,9 @@
 [![MCP Protocol](https://img.shields.io/badge/MCP-protocol-8b5cf6.svg)](https://modelcontextprotocol.io)
 
 <!-- Future CI/CD badges when GitHub Actions are set up:
-[![CI](https://github.com/vtakaj/shift-scheduler/actions/workflows/ci.yml/badge.svg)](https://github.com/vtakaj/shift-scheduler/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/vtakaj/shift-scheduler/branch/main/graph/badge.svg)](https://codecov.io/gh/vtakaj/shift-scheduler)
-[![Security](https://github.com/vtakaj/shift-scheduler/actions/workflows/security.yml/badge.svg)](https://github.com/vtakaj/shift-scheduler/actions/workflows/security.yml)
+[![CI](https://github.com/vtakaj/shift-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/vtakaj/shift-agent/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/vtakaj/shift-agent/branch/main/graph/badge.svg)](https://codecov.io/gh/vtakaj/shift-agent)
+[![Security](https://github.com/vtakaj/shift-agent/actions/workflows/security.yml/badge.svg)](https://github.com/vtakaj/shift-agent/actions/workflows/security.yml)
 -->
 
 An AI-powered employee shift scheduling agent using Timefold Solver with FastMCP integration for AI assistant support.
