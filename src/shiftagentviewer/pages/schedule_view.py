@@ -83,7 +83,7 @@ def main():
     ):
         st.error("❌ ジョブが選択されていません")
         if st.button("📋 ジョブ一覧に戻る", type="primary"):
-            st.switch_page("shift_agent_viewer/main.py")
+            st.switch_page("shiftagentviewer/main.py")
         return
 
     job_id = st.session_state.selected_job_id
@@ -93,7 +93,7 @@ def main():
     with col1:
         if st.button("← ジョブ一覧に戻る", type="secondary"):
             st.session_state.selected_job_id = None
-            st.switch_page("shift_agent_viewer/main.py")
+            st.switch_page("shiftagentviewer/main.py")
 
     with col2:
         st.title(f"📅 シフト表: {job_id[:8]}...")
@@ -180,7 +180,7 @@ def main():
         # Return button on error
         if st.button("📋 ジョブ一覧に戻る", type="primary"):
             st.session_state.selected_job_id = None
-            st.switch_page("shift_agent_viewer/main.py")
+            st.switch_page("shiftagentviewer/main.py")
 
 
 if __name__ == "__main__":

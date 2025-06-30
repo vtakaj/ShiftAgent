@@ -16,7 +16,7 @@ os.environ["MCP_SSE_PORT"] = os.getenv("MCP_SSE_PORT", "8084")
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "src"))
 
 # Import and run the MCP server
-from shift_agent_mcp.server import main
+from shiftagentmcp.server import main
 
 if __name__ == "__main__":
     print(

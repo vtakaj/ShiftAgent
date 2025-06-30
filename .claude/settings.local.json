@@ -58,7 +58,17 @@
       "Bash(git config:*)",
       "Bash(cat:*)",
       "Bash(npm install)",
-      "Bash(SKIP_TESTS=true git push -u origin fix/pulumi-type-errors)"
+      "Bash(SKIP_TESTS=true git push -u origin fix/pulumi-type-errors)",
+      "Bash(PYTHONPATH=src uv run uvicorn shift_agent.api.app:app --host 0.0.0.0 --port 8081 --reload)",
+      "Bash(uv tool install:*)",
+      "Bash(PYTHONPATH=src uv run python -c \"import shiftagent; print('shiftagent package imports successfully')\")",
+      "Bash(PYTHONPATH=src uv run python -c \"import shiftagentmcp; print('shiftagentmcp package imports successfully')\")",
+      "Bash(PYTHONPATH=src uv run python -c \"import shiftagentviewer; print('shiftagentviewer package imports successfully')\")",
+      "Bash(PYTHONPATH=src uv run python -m shiftagent.api.server --help)",
+      "Bash(PYTHONPATH=src timeout 5s uv run python -m shiftagentmcp.server)",
+      "Bash(PYTHONPATH=src uv run pytest tests/test_models.py::test_schedule_creation -v)",
+      "Bash(PYTHONPATH=src uv run python -m pytest tests/test_models.py::test_schedule_creation -v)",
+      "Bash(PYTHONPATH=src uv run python -c \"from shiftagent.core.models import Employee, Shift, ShiftSchedule; print('Core models import successfully')\")"
     ],
     "deny": []
   }

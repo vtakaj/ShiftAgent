@@ -72,7 +72,7 @@ run:
 	@echo "Server URL: http://localhost:8081"
 	@echo "API Documentation: http://localhost:8081/docs"
 	@echo "For HTTPS: make run-https"
-	PYTHONPATH=src uv run uvicorn shift_agent.api.app:app --host 0.0.0.0 --port 8081 --reload
+	PYTHONPATH=src uv run uvicorn shiftagent.api.app:app --host 0.0.0.0 --port 8081 --reload
 
 # Start FastAPI server with HTTPS (self-signed certificate)
 run-https:
@@ -80,7 +80,7 @@ run-https:
 	@echo "Server URL: https://localhost:8081"
 	@echo "API Documentation: https://localhost:8081/docs"
 	@echo "Note: Browser will show security warning for self-signed certificate"
-	PYTHONPATH=src uv run uvicorn shift_agent.api.app:app --host 0.0.0.0 --port 8081 --reload --ssl-keyfile=./localhost-key.pem --ssl-certfile=./localhost.pem
+	PYTHONPATH=src uv run uvicorn shiftagent.api.app:app --host 0.0.0.0 --port 8081 --reload --ssl-keyfile=./localhost-key.pem --ssl-certfile=./localhost.pem
 
 # Run tests
 test:
@@ -153,18 +153,18 @@ dev-start: setup run
 # Debug mode
 debug:
 	@echo "🐛 Starting in debug mode..."
-	PYTHONPATH=src uv run uvicorn shift_agent.api.app:app --host 0.0.0.0 --port 8081 --reload --log-level debug
+	PYTHONPATH=src uv run uvicorn shiftagent.api.app:app --host 0.0.0.0 --port 8081 --reload --log-level debug
 
 # Run with MCP server
 run-mcp:
 	@echo "🤖 Starting MCP server..."
 	@echo "MCP Server URL: http://localhost:8082"
-	PYTHONPATH=src uv run python -m shift_agent_mcp.server
+	PYTHONPATH=src uv run python -m shiftagentmcp.server
 
 # Run MCP server only
 mcp:
 	@echo "🔧 Starting MCP server (make sure API is running)..."
-	PYTHONPATH=src uv run python -m shift_agent_mcp.server
+	PYTHONPATH=src uv run python -m shiftagentmcp.server
 
 # Test MCP server
 test-mcp:
@@ -190,7 +190,7 @@ mcp-sse:
 run-streamlit:
 	@echo "📊 Starting Streamlit app..."
 	@echo "Streamlit URL: http://localhost:8501"
-	cd src && PYTHONPATH=. uv run streamlit run shift_agent_viewer/main.py --server.port 8501
+	cd src && PYTHONPATH=. uv run streamlit run shiftagentviewer/main.py --server.port 8501
 
 # Docker MCP Server commands
 docker-mcp-build-http:

@@ -12,7 +12,7 @@ from fastmcp import Context
 from pydantic import BaseModel, Field
 
 # Configuration
-API_BASE_URL = os.getenv("SHIFT_AGENT_API_URL", "http://localhost:8081")
+API_BASE_URL = os.getenv("SHIFTAGENT_API_URL", "http://localhost:8081")
 
 
 # Helper functions

@@ -49,7 +49,7 @@ async def health_check():
     """Health check"""
     return {
         "status": "UP",
-        "service": "shift-agent",
+        "service": "shiftagent",
         "timestamp": datetime.now().isoformat(),
     }
 

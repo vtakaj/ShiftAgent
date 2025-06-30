@@ -133,7 +133,7 @@ terraform output
 
 ```
 src/
-├── shift_agent/          # Main application package
+├── shiftagent/          # Main application package
 │   ├── api/              # FastAPI application layer
 │   │   ├── app.py        # FastAPI instance and configuration
 │   │   ├── server.py     # Server entry point
@@ -160,10 +160,10 @@ src/
 │   ├── utils/            # Utilities
 │   │   └── demo_data.py  # Demo data generation
 │   └── streamlit_app.py  # Streamlit web UI
-├── shift_agent_mcp/      # MCP server package (separate)
+├── shiftagentmcp/      # MCP server package (separate)
 │   ├── server.py         # FastMCP server setup and tool registration
 │   └── tools.py          # MCP tool functions for shift scheduling
-└── shift_agent_viewer/   # Streamlit viewer package
+└── shiftagentviewer/   # Streamlit viewer package
     ├── main.py           # Streamlit app entry point
     ├── components/       # Reusable Streamlit components
     └── pages/            # Streamlit page modules
@@ -195,9 +195,9 @@ Dockerfile                # Default Dockerfile for CI/CD (references API service
 
 ### Core Components
 
-1. **shift_agent/api/server.py**: API server entry point
-   - Entry point for `shift-agent-api` command (defined in pyproject.toml)
-   - Can be run directly with `python -m shift_agent.api.server`
+1. **shiftagent/api/server.py**: API server entry point
+   - Entry point for `shiftagent-api` command (defined in pyproject.toml)
+   - Can be run directly with `python -m shiftagent.api.server`
    - Used by Docker containers
    - Starts the API server on port 8081
 
@@ -216,10 +216,10 @@ Dockerfile                # Default Dockerfile for CI/CD (references API service
    - Medium constraints: minimum rest time, minimum weekly hours
    - Soft constraints: minimize unassigned shifts, fair workload distribution
 
-5. **shift_agent_mcp** (separate package): MCP server for AI assistants
-   - `src/shift_agent_mcp/server.py`: FastMCP server setup and tool registration
-   - `src/shift_agent_mcp/tools.py`: MCP tool functions for shift scheduling
-   - Entry point: `python -m shift_agent_mcp.server`
+5. **shiftagentmcp** (separate package): MCP server for AI assistants
+   - `src/shiftagentmcp/server.py`: FastMCP server setup and tool registration
+   - `src/shiftagentmcp/tools.py`: MCP tool functions for shift scheduling
+   - Entry point: `python -m shiftagentmcp.server`
 
 ### Constraint System
 
@@ -327,11 +327,11 @@ JOB_STORAGE_TYPE=azure make test
 
 ## MCP Server
 
-The project includes a Python-based MCP (Model Context Protocol) server using FastMCP that exposes the ShiftAgent API as MCP tools. The MCP server is implemented as a separate package `shift_agent_mcp` to maintain clean separation of concerns.
+The project includes a Python-based MCP (Model Context Protocol) server using FastMCP that exposes the ShiftAgent API as MCP tools. The MCP server is implemented as a separate package `shiftagentmcp` to maintain clean separation of concerns.
 
 ### MCP Server Architecture
-- **Package**: `src/shift_agent_mcp/` (separate from main shift_agent package)
-- **Entry point**: `python -m shift_agent_mcp.server`
+- **Package**: `src/shiftagentmcp/` (separate from main shiftagent package)
+- **Entry point**: `python -m shiftagentmcp.server`
 - **Protocol**: FastMCP for Model Context Protocol implementation
 
 ### MCP Server Setup
@@ -340,7 +340,7 @@ The MCP server uses FastMCP and is automatically set up when you run `make setup
 **Default (stdio transport for Claude Desktop):**
 ```bash
 make run-mcp  # Run both API and MCP servers
-make mcp      # Run MCP server only (uses python -m shift_agent_mcp.server)
+make mcp      # Run MCP server only (uses python -m shiftagentmcp.server)
 ```
 
 **HTTP Transport (for web clients):**

@@ -1,5 +1,5 @@
 [project]
-name = "shift-agent"
+name = "shiftagent"
 version = "1.0.0"
 description = "AI-powered employee shift scheduling agent using Timefold Solver"
 readme = "README.md"
@@ -39,8 +39,8 @@ dev = [
 
 # Console scripts for uvx support
 [project.scripts]
-shift-agent-api = "shift_agent.api.server:main"
-shift-agent-mcp = "shift_agent_mcp.server:main"
+shiftagent-api = "shiftagent.api.server:main"
+shiftagent-mcp = "shiftagentmcp.server:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -91,12 +91,12 @@ disallow_untyped_defs = false
 
 # Ignore Timefold constraint system typing issues
 [[tool.mypy.overrides]]
-module = "shift_agent.core.constraints.*"
+module = "shiftagent.core.constraints.*"
 ignore_errors = true
 
 # Ignore complex nested data analysis typing issues
 [[tool.mypy.overrides]]
-module = "shift_agent.api.analysis"
+module = "shiftagent.api.analysis"
 ignore_errors = true
 
 [tool.ruff]
@@ -124,7 +124,7 @@ select = [
 ignore = ["E501"]  # line too long (handled by formatter)
 
 [tool.ruff.lint.isort]
-known-first-party = ["shift_agent"]
+known-first-party = ["shiftagent"]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
@@ -148,7 +148,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src/shift_agent"]
+source = ["src/shiftagent"]
 branch = true
 
 [tool.coverage.report]

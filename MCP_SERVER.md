@@ -276,7 +276,7 @@ Employee management tools work on completed jobs:
 Set environment variable for detailed logging:
 ```bash
 export SHIFT_AGENT_API_URL="http://localhost:8081"
-export PYTHONPATH="/path/to/shift-agent/src"
+export PYTHONPATH="/path/to/shiftagent/src"
 ```
 
 ### Checking API Health

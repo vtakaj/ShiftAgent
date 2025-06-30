@@ -7,12 +7,12 @@ import pytest
 # Add src directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from shift_agent.api.analysis import (
+from shiftagent.api.analysis import (
     get_target_hours,
     get_week_key,
     is_full_time_employee,
 )
-from shift_agent.core.models import Employee, Shift, ShiftSchedule
+from shiftagent.core.models import Employee, Shift, ShiftSchedule
 
 
 def test_employee_creation():
@@ -299,7 +299,7 @@ def test_employee_preferences_empty():
 
 def test_day_name_helper():
     """Test day name helper function"""
-    from shift_agent.core.constraints.shift_constraints import get_day_name
+    from shiftagent.core.constraints.shift_constraints import get_day_name
 
     # Test specific dates
     monday = datetime(2025, 6, 2)  # This is a Monday

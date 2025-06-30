@@ -194,7 +194,7 @@ shiftagent/
 │   ├── launch.json         # Debug settings
 │   └── extensions.json     # Recommended extensions
 ├── src/                    # Source code directory
-│   └── shift_agent/
+│   └── shiftagent/
 │       ├── api/            # FastAPI application
 │       │   ├── app.py      # FastAPI instance
 │       │   ├── routes.py   # API endpoints
@@ -403,7 +403,7 @@ Add to your Claude Desktop config file:
   "mcpServers": {
     "shiftagent": {
       "command": "uv",
-      "args": ["run", "--project", "/path/to/shift-agent", "python", "/path/to/shiftagent/mcp_server.py"],
+      "args": ["run", "--project", "/path/to/shiftagent", "python", "/path/to/shiftagent/mcp_server.py"],
       "env": {
         "SHIFT_AGENT_API_URL": "http://localhost:8081"
       }

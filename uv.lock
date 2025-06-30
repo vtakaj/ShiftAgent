@@ -1576,7 +1576,7 @@ wheels = [
 ]
 
 [[package]]
-name = "shift-agent"
+name = "shiftagent"
 version = "1.0.0"
 source = { editable = "." }
 dependencies = [

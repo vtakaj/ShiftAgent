@@ -7,7 +7,7 @@ services:
     image: shiftagent-mcp-server:latest
     container_name: shiftagent-mcp-stdio
     environment:
-      - SHIFT_AGENT_API_URL=http://host.docker.internal:8081
+      - SHIFTAGENT_API_URL=http://host.docker.internal:8081
       - LOG_LEVEL=INFO
       - MCP_LOG_LEVEL=INFO
     profiles:
@@ -25,7 +25,7 @@ services:
     ports:
       - "8083:8083"
     environment:
-      - SHIFT_AGENT_API_URL=http://host.docker.internal:8081
+      - SHIFTAGENT_API_URL=http://host.docker.internal:8081
       - LOG_LEVEL=INFO
       - MCP_LOG_LEVEL=INFO
       - MCP_TRANSPORT=http
@@ -51,7 +51,7 @@ services:
     ports:
       - "8084:8084"
     environment:
-      - SHIFT_AGENT_API_URL=http://host.docker.internal:8081
+      - SHIFTAGENT_API_URL=http://host.docker.internal:8081
       - LOG_LEVEL=INFO
       - MCP_LOG_LEVEL=INFO
       - MCP_TRANSPORT=sse
