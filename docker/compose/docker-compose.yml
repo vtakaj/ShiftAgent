@@ -1,8 +1,8 @@
 services:
   shift-agent:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: docker/dockerfiles/Dockerfile.api
     ports:
       - "${SHIFT_AGENT_PORT:-8081}:8081"
     environment:
@@ -21,13 +21,11 @@ services:
       - SHIFT_AGENT_API_URL=${SHIFT_AGENT_API_URL:-http://172.17.0.1:8081}
     volumes:
       # Job storage directory (persisted on host)
-      - ${HOST_JOB_STORAGE_DIR:-./job_storage}:/app/job_storage
+      - ${HOST_JOB_STORAGE_DIR:-../../job_storage}:/app/job_storage
       # Development: Hot reload for source code
-      - ./src:/app/src:ro
-      - ./main.py:/app/main.py:ro
-      - ./mcp_server.py:/app/mcp_server.py:ro
+      - ../../src:/app/src:ro
       # Development: Configuration files
-      - ./pyproject.toml:/app/pyproject.toml:ro
+      - ../../pyproject.toml:/app/pyproject.toml:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
       interval: 30s
@@ -52,7 +50,7 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+      - ../../scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-shiftuser} -d ${POSTGRES_DB:-shiftdb}"]
       interval: 30s
@@ -66,8 +64,8 @@ services:
   # MCP Server (for AI assistant integration)
   mcp-server:
     build:
-      context: .
-      dockerfile: Dockerfile.mcp
+      context: ../..
+      dockerfile: docker/dockerfiles/Dockerfile.mcp
     ports:
       - "${MCP_SERVER_PORT:-8082}:8082"
     environment:
@@ -77,9 +75,8 @@ services:
       - SHIFT_AGENT_API_URL=${SHIFT_AGENT_API_URL:-http://172.17.0.1:8081}
     volumes:
       # Development: Hot reload for source code
-      - ./src:/app/src:ro
-      - ./mcp_server.py:/app/mcp_server.py:ro
-      - ./pyproject.toml:/app/pyproject.toml:ro
+      - ../../src:/app/src:ro
+      - ../../pyproject.toml:/app/pyproject.toml:ro
     restart: unless-stopped
     networks:
       - shift-network

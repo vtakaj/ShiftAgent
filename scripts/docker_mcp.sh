@@ -38,14 +38,14 @@ build_image() {
 
     case $transport in
         stdio)
-            docker-compose -f docker-compose.mcp.yml --profile stdio build mcp-stdio
+            docker-compose -f docker/compose/docker-compose.mcp.yml --profile stdio build mcp-stdio
             ;;
         http)
-            docker-compose -f docker-compose.mcp.yml --profile http build mcp-http
+            docker-compose -f docker/compose/docker-compose.mcp.yml --profile http build mcp-http
             ;;
         sse)
             echo "⚠️  WARNING: SSE transport is deprecated. Consider using HTTP transport."
-            docker-compose -f docker-compose.mcp.yml --profile sse build mcp-sse
+            docker-compose -f docker/compose/docker-compose.mcp.yml --profile sse build mcp-sse
             ;;
         *)
             echo "❌ Unknown transport: $transport"
@@ -63,18 +63,18 @@ run_server() {
     case $transport in
         stdio)
             echo "📌 STDIO mode - for Claude Desktop integration"
-            docker-compose -f docker-compose.mcp.yml --profile stdio up mcp-stdio
+            docker-compose -f docker/compose/docker-compose.mcp.yml --profile stdio up mcp-stdio
             ;;
         http)
             echo "🌐 HTTP mode - accessible at http://localhost:8083/mcp"
-            docker-compose -f docker-compose.mcp.yml --profile http up -d mcp-http
+            docker-compose -f docker/compose/docker-compose.mcp.yml --profile http up -d mcp-http
             echo "✅ MCP HTTP server started on port 8083"
             echo "🔗 MCP endpoint: http://localhost:8083/mcp"
             ;;
         sse)
             echo "⚠️  WARNING: SSE transport is deprecated. Consider using HTTP transport."
             echo "📡 SSE mode - accessible at http://localhost:8084/sse/"
-            docker-compose -f docker-compose.mcp.yml --profile sse up -d mcp-sse
+            docker-compose -f docker/compose/docker-compose.mcp.yml --profile sse up -d mcp-sse
             echo "✅ MCP SSE server started on port 8084"
             echo "🔗 SSE endpoint: http://localhost:8084/sse/"
             ;;
@@ -91,9 +91,9 @@ stop_server() {
     echo "🛑 Stopping MCP server..."
 
     if [ "$transport" = "all" ]; then
-        docker-compose -f docker-compose.mcp.yml --profile stdio --profile http --profile sse down
+        docker-compose -f docker/compose/docker-compose.mcp.yml --profile stdio --profile http --profile sse down
     else
-        docker-compose -f docker-compose.mcp.yml --profile $transport down
+        docker-compose -f docker/compose/docker-compose.mcp.yml --profile $transport down
     fi
     echo "✅ MCP server stopped"
 }
@@ -104,13 +104,13 @@ show_logs() {
 
     case $transport in
         stdio)
-            docker-compose -f docker-compose.mcp.yml --profile stdio logs -f mcp-stdio
+            docker-compose -f docker/compose/docker-compose.mcp.yml --profile stdio logs -f mcp-stdio
             ;;
         http)
-            docker-compose -f docker-compose.mcp.yml --profile http logs -f mcp-http
+            docker-compose -f docker/compose/docker-compose.mcp.yml --profile http logs -f mcp-http
             ;;
         sse)
-            docker-compose -f docker-compose.mcp.yml --profile sse logs -f mcp-sse
+            docker-compose -f docker/compose/docker-compose.mcp.yml --profile sse logs -f mcp-sse
             ;;
         *)
             echo "❌ Unknown transport: $transport"
@@ -122,7 +122,7 @@ show_logs() {
 
 clean_all() {
     echo "🧹 Cleaning up all MCP containers and images..."
-    docker-compose -f docker-compose.mcp.yml --profile stdio --profile http --profile sse down --rmi all --volumes --remove-orphans
+    docker-compose -f docker/compose/docker-compose.mcp.yml --profile stdio --profile http --profile sse down --rmi all --volumes --remove-orphans
     echo "✅ Cleanup complete"
 }
 

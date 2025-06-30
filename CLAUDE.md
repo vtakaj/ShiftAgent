@@ -132,37 +132,70 @@ terraform output
 ### Folder Structure
 
 ```
-src/shift_agent/
-├── api/              # FastAPI application layer
-│   ├── app.py        # FastAPI instance and configuration
-│   ├── routes.py     # API endpoints
-│   ├── schemas.py    # Pydantic request/response models
-│   ├── solver.py     # Timefold solver configuration
-│   ├── jobs.py       # Async job management
-│   ├── job_store.py  # Job persistence abstraction
-│   ├── azure_job_store.py # Azure Blob Storage implementation
-│   ├── converters.py # Domain <-> API model converters
-│   └── analysis.py   # Weekly hours analysis logic
-├── config/           # Configuration management
-│   └── storage_config.py # Storage configuration utilities
-├── core/             # Domain logic
-│   ├── models/       # Domain models with Timefold annotations
-│   │   ├── employee.py   # Employee entity
-│   │   ├── shift.py      # Shift planning entity
-│   │   └── schedule.py   # ShiftSchedule planning solution
-│   └── constraints/  # Optimization constraints
-│       └── shift_constraints.py
-├── mcp/              # MCP server for AI assistants
-│   ├── server.py     # FastMCP server setup
-│   └── tools.py      # MCP tool functions
-└── utils/            # Utilities
-    └── demo_data.py  # Demo data generation
+src/
+├── shift_agent/          # Main application package
+│   ├── api/              # FastAPI application layer
+│   │   ├── app.py        # FastAPI instance and configuration
+│   │   ├── server.py     # Server entry point
+│   │   ├── routes.py     # API endpoints
+│   │   ├── schemas.py    # Pydantic request/response models
+│   │   ├── solver.py     # Timefold solver configuration
+│   │   ├── jobs.py       # Async job management
+│   │   ├── job_store.py  # Job persistence abstraction
+│   │   ├── azure_job_store.py # Azure Blob Storage implementation
+│   │   ├── converters.py # Domain <-> API model converters
+│   │   └── analysis.py   # Weekly hours analysis logic
+│   ├── config/           # Configuration management
+│   │   └── storage_config.py # Storage configuration utilities
+│   ├── core/             # Domain logic
+│   │   ├── models/       # Domain models with Timefold annotations
+│   │   │   ├── employee.py   # Employee entity
+│   │   │   ├── shift.py      # Shift planning entity
+│   │   │   └── schedule.py   # ShiftSchedule planning solution
+│   │   └── constraints/  # Optimization constraints
+│   │       └── shift_constraints.py
+│   ├── templates/        # HTML template rendering
+│   │   ├── renderer.py   # Template renderer utilities
+│   │   └── schedule_report.html # Schedule report template
+│   ├── utils/            # Utilities
+│   │   └── demo_data.py  # Demo data generation
+│   └── streamlit_app.py  # Streamlit web UI
+├── shift_agent_mcp/      # MCP server package (separate)
+│   ├── server.py         # FastMCP server setup and tool registration
+│   └── tools.py          # MCP tool functions for shift scheduling
+└── shift_agent_viewer/   # Streamlit viewer package
+    ├── main.py           # Streamlit app entry point
+    ├── components/       # Reusable Streamlit components
+    └── pages/            # Streamlit page modules
+        └── schedule_view.py
+
+docker/                   # Docker configuration
+├── dockerfiles/          # Container definitions
+│   ├── Dockerfile.api    # Main API service
+│   ├── Dockerfile.mcp    # MCP server (stdio)
+│   ├── Dockerfile.mcp.http # MCP server (HTTP)
+│   └── Dockerfile.mcp.sse  # MCP server (SSE)
+├── compose/              # Docker Compose configurations
+│   ├── docker-compose.yml     # Development environment
+│   ├── docker-compose.prod.yml # Production environment
+│   ├── docker-compose.mcp.yml  # MCP server management
+│   └── docker-compose.n8n.yml  # n8n integration
+└── .env.docker          # Docker environment variables
+
+scripts/                  # Utility scripts
+├── run-mcp-server.sh     # MCP server launcher
+├── docker_mcp.sh         # Docker MCP management
+├── test_mcp_connection.sh # MCP connection testing
+├── mock_mcp_server.py    # MCP protocol mock server
+└── test_azure_storage_manual.py # Azure storage testing
 ```
 
 ### Core Components
 
-1. **main.py**: Entry point that imports and runs the FastAPI app
-   - Adds src directory to Python path
+1. **shift_agent/api/server.py**: API server entry point
+   - Entry point for `shift-agent-api` command (defined in pyproject.toml)
+   - Can be run directly with `python -m shift_agent.api.server`
+   - Used by Docker containers
    - Starts the API server on port 8081
 
 2. **api/routes.py**: API endpoints for shift optimization
@@ -180,9 +213,10 @@ src/shift_agent/
    - Medium constraints: minimum rest time, minimum weekly hours
    - Soft constraints: minimize unassigned shifts, fair workload distribution
 
-5. **mcp_server.py**: Entry point for MCP server
-   - Exposes ShiftAgent functionality to AI assistants
-   - Uses FastMCP for protocol implementation
+5. **shift_agent_mcp** (separate package): MCP server for AI assistants
+   - `src/shift_agent_mcp/server.py`: FastMCP server setup and tool registration
+   - `src/shift_agent_mcp/tools.py`: MCP tool functions for shift scheduling
+   - Entry point: `python -m shift_agent_mcp.server`
 
 ### Constraint System
 
@@ -290,7 +324,12 @@ JOB_STORAGE_TYPE=azure make test
 
 ## MCP Server
 
-The project includes a Python-based MCP (Model Context Protocol) server using FastMCP that exposes the ShiftAgent API as MCP tools.
+The project includes a Python-based MCP (Model Context Protocol) server using FastMCP that exposes the ShiftAgent API as MCP tools. The MCP server is implemented as a separate package `shift_agent_mcp` to maintain clean separation of concerns.
+
+### MCP Server Architecture
+- **Package**: `src/shift_agent_mcp/` (separate from main shift_agent package)
+- **Entry point**: `python -m shift_agent_mcp.server`
+- **Protocol**: FastMCP for Model Context Protocol implementation
 
 ### MCP Server Setup
 The MCP server uses FastMCP and is automatically set up when you run `make setup`.
@@ -298,7 +337,7 @@ The MCP server uses FastMCP and is automatically set up when you run `make setup
 **Default (stdio transport for Claude Desktop):**
 ```bash
 make run-mcp  # Run both API and MCP servers
-make mcp      # Run MCP server only
+make mcp      # Run MCP server only (uses python -m shift_agent_mcp.server)
 ```
 
 **HTTP Transport (for web clients):**

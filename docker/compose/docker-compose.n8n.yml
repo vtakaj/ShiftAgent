@@ -3,7 +3,9 @@ version: '3.8'
 services:
   # FastAPI サーバー
   api:
-    build: .
+    build:
+      context: ../..
+      dockerfile: docker/dockerfiles/Dockerfile.api
     container_name: shift-agent-api
     command: ["uvicorn", "src.shift_agent.api.app:app", "--host", "0.0.0.0", "--port", "8081"]
     ports:
@@ -13,7 +15,7 @@ services:
       - JOB_STORAGE_DIR=/app/job_storage
       - SOLVER_TIMEOUT_SECONDS=300
     volumes:
-      - ./job_storage:/app/job_storage
+      - ../../job_storage:/app/job_storage
     networks:
       - n8n-network
     healthcheck:
@@ -24,9 +26,11 @@ services:
 
   # MCP SSE サーバー
   mcp:
-    build: .
+    build:
+      context: ../..
+      dockerfile: docker/dockerfiles/Dockerfile.mcp
     container_name: shift-agent-mcp
-    command: ["python", "mcp_server.py", "--transport", "sse", "--sse-host", "0.0.0.0", "--sse-port", "8084"]
+    command: ["python", "-m", "shift_agent_mcp.server", "--transport", "sse", "--sse-host", "0.0.0.0", "--sse-port", "8084"]
     ports:
       - "8084:8084"
     environment:

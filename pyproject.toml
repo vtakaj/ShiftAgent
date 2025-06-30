@@ -39,7 +39,7 @@ dev = [
 
 # Console scripts for uvx support
 [project.scripts]
-shift-agent-api = "shift_agent.main:main"
+shift-agent-api = "shift_agent.api.server:main"
 shift-agent-mcp = "shift_agent_mcp.server:main"
 
 [build-system]

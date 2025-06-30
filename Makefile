@@ -36,6 +36,15 @@ help:
 	@echo "  docker-mcp-stop        - Stop all Docker MCP servers"
 	@echo "  docker-mcp-logs-http   - Show HTTP MCP logs"
 	@echo "  docker-mcp-logs-sse    - Show SSE MCP logs"
+	@echo ""
+	@echo "  n8n Integration Commands:"
+	@echo "  docker-n8n-build       - Build n8n integration images"
+	@echo "  docker-n8n-run         - Start n8n workflow automation (port 5678)"
+	@echo "  docker-n8n-stop        - Stop n8n integration stack"
+	@echo "  docker-n8n-logs        - Show all n8n integration logs"
+	@echo "  docker-n8n-logs-api    - Show API service logs"
+	@echo "  docker-n8n-logs-mcp    - Show MCP service logs"
+	@echo "  docker-n8n-logs-n8n    - Show n8n service logs"
 
 # Development environment setup (with error handling)
 setup:
@@ -224,33 +233,64 @@ hooks-test:
 # Docker commands
 docker-build:
 	@echo "🐳 Building Docker images..."
-	docker-compose build
+	docker-compose -f docker/compose/docker-compose.yml build
 
 docker-build-mcp:
 	@echo "🤖 Building MCP server Docker image..."
-	docker build -f Dockerfile.mcp -t shift-agent-mcp-server .
+	docker build -f docker/dockerfiles/Dockerfile.mcp -t shift-agent-mcp-server .
 
 docker-run:
 	@echo "🚀 Starting services with Docker Compose..."
-	docker-compose up -d
+	docker-compose -f docker/compose/docker-compose.yml up -d
 
 docker-run-mcp:
 	@echo "🤖 Starting MCP server with Docker Compose..."
-	docker-compose --profile mcp up -d mcp-server
+	docker-compose -f docker/compose/docker-compose.yml --profile mcp up -d mcp-server
 
 docker-stop:
 	@echo "🛑 Stopping Docker services..."
-	docker-compose down
+	docker-compose -f docker/compose/docker-compose.yml down
 
 docker-logs:
 	@echo "📋 Showing Docker logs..."
-	docker-compose logs -f
+	docker-compose -f docker/compose/docker-compose.yml logs -f
 
 docker-logs-mcp:
 	@echo "📋 Showing MCP server logs..."
-	docker-compose logs -f mcp-server
+	docker-compose -f docker/compose/docker-compose.yml logs -f mcp-server
 
 # Test Docker MCP server
 test-docker-mcp:
 	@echo "🧪 Testing Docker MCP server..."
 	@echo '{"jsonrpc":"2.0","method":"list_tools","id":1}' | docker run -i --rm --network shift-agent-network shift-agent-mcp-server:latest
+
+# n8n integration commands
+docker-n8n-build:
+	@echo "🔄 Building n8n integration images..."
+	docker-compose -f docker/compose/docker-compose.n8n.yml build
+
+docker-n8n-run:
+	@echo "🚀 Starting n8n integration stack..."
+	docker-compose -f docker/compose/docker-compose.n8n.yml up -d
+	@echo "✅ n8n is available at: http://localhost:5678"
+	@echo "📡 MCP SSE endpoint: http://localhost:8084/sse/"
+
+docker-n8n-stop:
+	@echo "🛑 Stopping n8n integration stack..."
+	docker-compose -f docker/compose/docker-compose.n8n.yml down
+
+docker-n8n-logs:
+	@echo "📋 Showing n8n integration logs..."
+	docker-compose -f docker/compose/docker-compose.n8n.yml logs -f
+
+docker-n8n-logs-api:
+	@echo "📋 Showing n8n API logs..."
+	docker-compose -f docker/compose/docker-compose.n8n.yml logs -f api
+
+docker-n8n-logs-mcp:
+	@echo "📋 Showing n8n MCP logs..."
+	docker-compose -f docker/compose/docker-compose.n8n.yml logs -f mcp
+
+docker-n8n-logs-n8n:
+	@echo "📋 Showing n8n service logs..."
+	docker-compose -f docker/compose/docker-compose.n8n.yml logs -f n8n
