@@ -175,19 +175,22 @@ docker/                   # Docker configuration
 │   ├── Dockerfile.mcp    # MCP server (stdio)
 │   ├── Dockerfile.mcp.http # MCP server (HTTP)
 │   └── Dockerfile.mcp.sse  # MCP server (SSE)
-├── compose/              # Docker Compose configurations
-│   ├── docker-compose.yml     # Development environment
-│   ├── docker-compose.prod.yml # Production environment
-│   ├── docker-compose.mcp.yml  # MCP server management
-│   └── docker-compose.n8n.yml  # n8n integration
-└── .env.docker          # Docker environment variables
+└── compose/              # Docker Compose configurations
+    ├── docker-compose.yml     # Development environment
+    ├── docker-compose.prod.yml # Production environment
+    ├── docker-compose.mcp.yml  # MCP server management
+    └── docker-compose.n8n.yml  # n8n integration
 
 scripts/                  # Utility scripts
 ├── run-mcp-server.sh     # MCP server launcher
 ├── docker_mcp.sh         # Docker MCP management
 ├── test_mcp_connection.sh # MCP connection testing
 ├── mock_mcp_server.py    # MCP protocol mock server
+├── run_mcp_http.py       # HTTP MCP server runner
+├── run_mcp_sse.py        # SSE MCP server runner
 └── test_azure_storage_manual.py # Azure storage testing
+
+Dockerfile                # Default Dockerfile for CI/CD (references API service)
 ```
 
 ### Core Components
