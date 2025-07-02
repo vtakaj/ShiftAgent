@@ -36,6 +36,8 @@ locals {
   container_registry_name         = "cr${local.project_name}${local.environment}${local.instance}"
   container_apps_environment_name = "cae-${local.project_name}-${local.environment}-${local.instance}"
   log_analytics_workspace_name    = "log-${local.project_name}-${local.environment}-${local.instance}"
+  application_insights_name       = "appi-${local.project_name}-${local.environment}-${local.instance}"
+  virtual_network_name            = "vnet-${local.project_name}-${local.environment}-${local.instance}"
 
   # Common tags following CAF naming convention
   common_tags = {
@@ -110,19 +112,65 @@ module "container_registry" {
   depends_on = [module.resource_group]
 }
 
+# Optional: Virtual Network for Container Apps
+module "networking" {
+  source = "./modules/networking"
+
+  enable_vnet                              = var.enable_vnet_integration
+  vnet_name                                = local.virtual_network_name
+  vnet_address_space                       = var.vnet_address_space
+  location                                 = local.location
+  resource_group_name                      = module.resource_group.name
+  container_apps_subnet_name               = var.container_apps_subnet_name
+  container_apps_subnet_address_prefixes   = var.container_apps_subnet_address_prefixes
+  enable_private_dns                       = var.enable_private_dns
+  private_dns_zone_name                    = var.private_dns_zone_name
+  tags = merge(local.common_tags, {
+    Purpose = "Container Apps networking"
+  })
+
+  depends_on = [module.resource_group]
+}
+
+# Application Insights for enhanced monitoring
+module "application_insights" {
+  source = "./modules/application_insights"
+
+  name                        = local.application_insights_name
+  resource_group_name         = module.resource_group.name
+  location                    = local.location
+  log_analytics_workspace_id  = module.log_analytics.workspace_id
+  application_type            = var.application_insights_type
+  retention_in_days           = var.application_insights_retention_days
+  sampling_percentage         = var.application_insights_sampling_percentage
+  enable_smart_detection      = var.enable_smart_detection
+  create_workbook             = var.create_monitoring_workbook
+  tags = merge(local.common_tags, {
+    Purpose = "Application monitoring and diagnostics"
+  })
+
+  depends_on = [module.log_analytics]
+}
+
 # Container Apps Environment
 module "container_apps" {
   source = "./modules/container_apps"
 
-  name                        = local.container_apps_environment_name
-  resource_group_name         = module.resource_group.name
-  location                    = local.location
-  log_analytics_workspace_id  = module.log_analytics.workspace_id
-  log_analytics_workspace_key = module.log_analytics.primary_shared_key
-  zone_redundant              = var.zone_redundant
+  name                            = local.container_apps_environment_name
+  resource_group_name             = module.resource_group.name
+  location                        = local.location
+  log_analytics_workspace_id      = module.log_analytics.workspace_id
+  log_analytics_workspace_key     = module.log_analytics.primary_shared_key
+  zone_redundant                  = var.zone_redundant
+  infrastructure_subnet_id        = var.enable_vnet_integration ? module.networking.container_apps_subnet_id : null
+  internal_load_balancer_enabled  = var.enable_vnet_integration ? var.internal_load_balancer_enabled : false
+  workload_profiles               = var.container_apps_workload_profiles
+  enable_diagnostic_settings      = var.enable_container_apps_diagnostics
+  diagnostic_retention_enabled    = var.diagnostic_retention_enabled
+  diagnostic_retention_days       = var.diagnostic_retention_days
   tags = merge(local.common_tags, {
     Purpose = "Container Apps hosting environment"
   })
 
-  depends_on = [module.log_analytics]
+  depends_on = [module.log_analytics, module.networking]
 }

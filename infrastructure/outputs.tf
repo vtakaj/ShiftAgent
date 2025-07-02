@@ -117,3 +117,73 @@ output "container_registry_environment" {
   description = "Environment of the container registry"
   value       = var.environment
 }
+
+# Networking outputs
+output "virtual_network_id" {
+  description = "ID of the Virtual Network (if VNet integration enabled)"
+  value       = var.enable_vnet_integration ? module.networking.vnet_id : null
+}
+
+output "virtual_network_name" {
+  description = "Name of the Virtual Network (if VNet integration enabled)"
+  value       = var.enable_vnet_integration ? module.networking.vnet_name : null
+}
+
+output "container_apps_subnet_id" {
+  description = "ID of the Container Apps subnet (if VNet integration enabled)"
+  value       = var.enable_vnet_integration ? module.networking.container_apps_subnet_id : null
+}
+
+output "container_apps_static_ip" {
+  description = "Static IP address of the Container Apps environment (if VNet integrated)"
+  value       = module.container_apps.static_ip_address
+}
+
+output "is_vnet_integrated" {
+  description = "Whether the Container Apps environment is VNet integrated"
+  value       = module.container_apps.is_vnet_integrated
+}
+
+# Application Insights outputs
+output "application_insights_id" {
+  description = "ID of the Application Insights component"
+  value       = module.application_insights.application_insights_id
+}
+
+output "application_insights_name" {
+  description = "Name of the Application Insights component"
+  value       = module.application_insights.application_insights_name
+}
+
+output "application_insights_instrumentation_key" {
+  description = "Instrumentation key for Application Insights"
+  value       = module.application_insights.instrumentation_key
+  sensitive   = true
+}
+
+output "application_insights_connection_string" {
+  description = "Connection string for Application Insights"
+  value       = module.application_insights.connection_string
+  sensitive   = true
+}
+
+output "application_insights_app_id" {
+  description = "Application ID of the Application Insights component"
+  value       = module.application_insights.app_id
+}
+
+# Enhanced Container Apps outputs
+output "container_apps_docker_bridge_cidr" {
+  description = "Docker bridge CIDR of the Container Apps environment"
+  value       = module.container_apps.docker_bridge_cidr
+}
+
+output "container_apps_platform_reserved_cidr" {
+  description = "Platform reserved CIDR of the Container Apps environment"
+  value       = module.container_apps.platform_reserved_cidr
+}
+
+output "container_apps_platform_reserved_dns_ip" {
+  description = "Platform reserved DNS IP address of the Container Apps environment"
+  value       = module.container_apps.platform_reserved_dns_ip_address
+}
