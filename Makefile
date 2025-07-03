@@ -159,17 +159,17 @@ debug:
 run-mcp:
 	@echo "🤖 Starting MCP server..."
 	@echo "MCP Server URL: http://localhost:8082"
-	PYTHONPATH=src uv run python -m shiftagentmcp.server
+	PYTHONPATH=src uv run python -m shiftagent_mcp.server
 
 # Run MCP server only
 mcp:
 	@echo "🔧 Starting MCP server (make sure API is running)..."
-	PYTHONPATH=src uv run python -m shiftagentmcp.server
+	PYTHONPATH=src uv run python -m shiftagent_mcp.server
 
 # Test MCP server
 test-mcp:
 	@echo "🧪 Testing MCP server..."
-	@echo '{"jsonrpc":"2.0","method":"list_tools","id":1}' | PYTHONPATH=src uv run python -m shift_agent_mcp.server
+	@echo '{"jsonrpc":"2.0","method":"list_tools","id":1}' | PYTHONPATH=src uv run python -m shiftagent_mcp.server
 
 # Run MCP server with HTTP transport
 mcp-http:

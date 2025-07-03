@@ -28,7 +28,7 @@ services:
       context: ../..
       dockerfile: docker/dockerfiles/Dockerfile.mcp
     container_name: shiftagent-mcp
-    command: ["python", "-m", "shiftagentmcp.server", "--transport", "sse", "--sse-host", "0.0.0.0", "--sse-port", "8084"]
+    command: ["python", "-m", "shiftagent_mcp.server", "--transport", "sse", "--sse-host", "0.0.0.0", "--sse-port", "8084"]
     ports:
       - "8084:8084"
     environment:

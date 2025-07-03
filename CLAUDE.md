@@ -160,7 +160,7 @@ src/
 │   ├── utils/            # Utilities
 │   │   └── demo_data.py  # Demo data generation
 │   └── streamlit_app.py  # Streamlit web UI
-├── shiftagentmcp/      # MCP server package (separate)
+├── shiftagent_mcp/      # MCP server package (separate)
 │   ├── server.py         # FastMCP server setup and tool registration
 │   └── tools.py          # MCP tool functions for shift scheduling
 └── shiftagentviewer/   # Streamlit viewer package
@@ -216,10 +216,10 @@ Dockerfile                # Default Dockerfile for CI/CD (references API service
    - Medium constraints: minimum rest time, minimum weekly hours
    - Soft constraints: minimize unassigned shifts, fair workload distribution
 
-5. **shiftagentmcp** (separate package): MCP server for AI assistants
-   - `src/shiftagentmcp/server.py`: FastMCP server setup and tool registration
-   - `src/shiftagentmcp/tools.py`: MCP tool functions for shift scheduling
-   - Entry point: `python -m shiftagentmcp.server`
+5. **shiftagent_mcp** (separate package): MCP server for AI assistants
+   - `src/shiftagent_mcp/server.py`: FastMCP server setup and tool registration
+   - `src/shiftagent_mcp/tools.py`: MCP tool functions for shift scheduling
+   - Entry point: `python -m shiftagent_mcp.server`
 
 ### Constraint System
 
@@ -327,11 +327,11 @@ JOB_STORAGE_TYPE=azure make test
 
 ## MCP Server
 
-The project includes a Python-based MCP (Model Context Protocol) server using FastMCP that exposes the ShiftAgent API as MCP tools. The MCP server is implemented as a separate package `shiftagentmcp` to maintain clean separation of concerns.
+The project includes a Python-based MCP (Model Context Protocol) server using FastMCP that exposes the ShiftAgent API as MCP tools. The MCP server is implemented as a separate package `shiftagent_mcp` to maintain clean separation of concerns.
 
 ### MCP Server Architecture
-- **Package**: `src/shiftagentmcp/` (separate from main shiftagent package)
-- **Entry point**: `python -m shiftagentmcp.server`
+- **Package**: `src/shiftagent_mcp/` (separate from main shiftagent package)
+- **Entry point**: `python -m shiftagent_mcp.server`
 - **Protocol**: FastMCP for Model Context Protocol implementation
 
 ### MCP Server Setup
@@ -340,7 +340,7 @@ The MCP server uses FastMCP and is automatically set up when you run `make setup
 **Default (stdio transport for Claude Desktop):**
 ```bash
 make run-mcp  # Run both API and MCP servers
-make mcp      # Run MCP server only (uses python -m shiftagentmcp.server)
+make mcp      # Run MCP server only (uses python -m shiftagent_mcp.server)
 ```
 
 **HTTP Transport (for web clients):**
