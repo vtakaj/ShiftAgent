@@ -40,7 +40,7 @@ dev = [
 # Console scripts for uvx support
 [project.scripts]
 shiftagent-api = "shiftagent.api.server:main"
-shiftagent-mcp = "shiftagentmcp.server:main"
+shiftagent-mcp = "shiftagent_mcp.server:main"
 
 [build-system]
 requires = ["hatchling"]

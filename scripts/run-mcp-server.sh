@@ -14,4 +14,4 @@ if [ ! -d ".venv" ]; then
 fi
 
 # Run the MCP server
-exec uv run python -m shift_agent_mcp.server
+exec uv run python -m shiftagent_mcp.server
