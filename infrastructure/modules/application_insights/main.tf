@@ -32,7 +32,6 @@ resource "azurerm_monitor_smart_detector_alert_rule" "failure_anomalies" {
 
   name                = "${var.name}-failure-anomalies"
   resource_group_name = var.resource_group_name
-  service_name        = "FailureAnomaliesDetector"
   detector_type       = "FailureAnomaliesDetector"
   scope_resource_ids  = [azurerm_application_insights.main.id]
   frequency           = "PT1M"
