@@ -37,8 +37,11 @@ resource "azurerm_monitor_smart_detector_alert_rule" "failure_anomalies" {
   frequency           = "PT1M"
   severity            = "Sev3"
 
-  action_group {
-    ids = var.action_group_ids
+  dynamic "action_group" {
+    for_each = length(var.action_group_ids) > 0 ? [1] : []
+    content {
+      ids = var.action_group_ids
+    }
   }
 
   tags = var.tags
