@@ -789,3 +789,333 @@ def swap_shifts_in_job(job_id: str, shift1_id: str, shift2_id: str) -> bool:
                 jobs[job_id]["error"] = f"Shift swap failed: {str(e)}"
                 _sync_job_to_store(job_id)
         return False
+
+
+def find_replacement_candidates(
+    job_id: str, shift_id: str, unavailable_employee_id: str
+) -> tuple[bool, list[dict[str, Any]], str | None]:
+    """Find and rank replacement candidates for an unavailable employee"""
+    try:
+        with job_lock:
+            if job_id not in jobs:
+                logger.error(f"Job {job_id} not found")
+                return False, [], f"Job {job_id} not found"
+
+            job = jobs[job_id]
+
+            # Only allow replacement in completed jobs
+            if job["status"] != "SOLVING_COMPLETED":
+                logger.error(f"Job {job_id} status is {job['status']}, not completed")
+                return False, [], f"Job {job_id} is not completed"
+
+            if "solution" not in job:
+                logger.error(f"Job {job_id} has no solution")
+                return False, [], f"Job {job_id} has no solution"
+
+            # Get the current solution
+            current_solution = job["solution"]
+
+            # Find the target shift
+            target_shift = None
+            for shift in current_solution.shifts:
+                if shift.id == shift_id:
+                    target_shift = shift
+                    break
+
+            if target_shift is None:
+                logger.error(f"Shift {shift_id} not found in solution")
+                return False, [], f"Shift {shift_id} not found"
+
+            # Find the unavailable employee
+            unavailable_employee = None
+            for emp in current_solution.employees:
+                if emp.id == unavailable_employee_id:
+                    unavailable_employee = emp
+                    break
+
+            if unavailable_employee is None:
+                logger.error(f"Employee {unavailable_employee_id} not found in solution")
+                return False, [], f"Employee {unavailable_employee_id} not found"
+
+            # Verify the employee is actually assigned to this shift
+            if target_shift.employee != unavailable_employee:
+                logger.error(
+                    f"Employee {unavailable_employee_id} is not assigned to shift {shift_id}"
+                )
+                return (
+                    False,
+                    [],
+                    f"Employee {unavailable_employee_id} is not assigned to shift {shift_id}",
+                )
+
+        logger.info(
+            f"[Job {job_id}] Finding replacement candidates for shift {shift_id}, "
+            f"unavailable employee: {unavailable_employee.name}"
+        )
+
+        # Find all qualified candidates
+        candidates = []
+        for employee in current_solution.employees:
+            if employee.id == unavailable_employee_id:
+                continue  # Skip the unavailable employee
+
+            # Check basic qualifications
+            candidate_data = {
+                "employee_id": employee.id,
+                "employee_name": employee.name,
+                "skills": list(employee.skills),
+                "score": 0.0,
+                "reasons": [],
+            }
+
+            # Check skill requirements (hard constraint)
+            has_required_skills = employee.has_required_skills(target_shift.required_skills)
+            if not has_required_skills:
+                missing_skills = target_shift.required_skills - employee.skills
+                candidate_data["reasons"].append(
+                    f"Missing required skills: {missing_skills}"
+                )
+                continue  # Skip candidates without required skills
+
+            candidate_data["score"] += 100.0  # Base score for having required skills
+            candidate_data["reasons"].append("Has all required skills")
+
+            # Check availability (hard constraint)
+            if employee.is_unavailable_on_date(target_shift.start_time):
+                candidate_data["reasons"].append(
+                    f"Unavailable on {target_shift.start_time.date()}"
+                )
+                continue  # Skip unavailable employees
+
+            candidate_data["score"] += 50.0  # Bonus for availability
+            candidate_data["reasons"].append("Available on shift date")
+
+            # Check for shift conflicts
+            has_conflict = False
+            for other_shift in current_solution.shifts:
+                if (
+                    other_shift.employee == employee
+                    and other_shift.id != shift_id
+                    and target_shift.overlaps_with(other_shift)
+                ):
+                    has_conflict = True
+                    candidate_data["reasons"].append(
+                        f"Conflicts with shift {other_shift.id} "
+                        f"({other_shift.start_time} - {other_shift.end_time})"
+                    )
+                    break
+
+            if has_conflict:
+                continue  # Skip candidates with conflicts
+
+            candidate_data["score"] += 30.0  # Bonus for no conflicts
+            candidate_data["reasons"].append("No schedule conflicts")
+
+            # Calculate workload balance score
+            current_shifts = [s for s in current_solution.shifts if s.employee == employee]
+            current_hours = sum(s.get_duration_minutes() for s in current_shifts) / 60.0
+            target_hours = target_shift.get_duration_minutes() / 60.0
+            total_hours = current_hours + target_hours
+
+            # Prefer employees with lower current workload
+            if total_hours <= 40:
+                candidate_data["score"] += 20.0
+                candidate_data["reasons"].append(
+                    f"Workload balanced ({current_hours:.1f}h + {target_hours:.1f}h = {total_hours:.1f}h)"
+                )
+            elif total_hours <= 50:
+                candidate_data["score"] += 10.0
+                candidate_data["reasons"].append(
+                    f"Moderate workload ({current_hours:.1f}h + {target_hours:.1f}h = {total_hours:.1f}h)"
+                )
+            else:
+                candidate_data["score"] -= 10.0
+                candidate_data["reasons"].append(
+                    f"High workload ({current_hours:.1f}h + {target_hours:.1f}h = {total_hours:.1f}h)"
+                )
+
+            # Extra skills bonus
+            extra_skills = employee.skills - target_shift.required_skills
+            if extra_skills:
+                candidate_data["score"] += len(extra_skills) * 2.0
+                candidate_data["reasons"].append(
+                    f"Has additional skills: {extra_skills}"
+                )
+
+            # Day preferences
+            shift_day = target_shift.start_time.strftime("%A").lower()
+            if employee.prefers_work_day(shift_day):
+                candidate_data["score"] += 15.0
+                candidate_data["reasons"].append(f"Prefers working on {shift_day}")
+            elif employee.prefers_day_off(shift_day):
+                candidate_data["score"] -= 5.0
+                candidate_data["reasons"].append(f"Prefers day off on {shift_day}")
+
+            candidates.append(candidate_data)
+
+        # Sort candidates by score (descending)
+        candidates.sort(key=lambda x: x["score"], reverse=True)
+
+        logger.info(
+            f"[Job {job_id}] Found {len(candidates)} qualified replacement candidates"
+        )
+        
+        return True, candidates, None
+
+    except Exception as e:
+        logger.error(f"[Job {job_id}] Failed to find replacement candidates: {str(e)}")
+        return False, [], f"Internal error: {str(e)}"
+
+
+def replace_employee_in_job(
+    job_id: str, shift_id: str, unavailable_employee_id: str, 
+    new_employee_id: str | None = None, auto_assign: bool = False
+) -> tuple[bool, dict[str, Any] | None, str | None]:
+    """Replace an unavailable employee with a new employee"""
+    try:
+        # First, find candidates
+        success, candidates, error_msg = find_replacement_candidates(
+            job_id, shift_id, unavailable_employee_id
+        )
+        
+        if not success:
+            return False, None, error_msg
+        
+        if not candidates:
+            return False, None, "No qualified replacement candidates found"
+        
+        # Select the replacement employee
+        selected_employee = None
+        if auto_assign:
+            # Pick the best candidate (highest score)
+            best_candidate = candidates[0]
+            new_employee_id = best_candidate["employee_id"]
+            logger.info(
+                f"[Job {job_id}] Auto-assigning best candidate: {best_candidate['employee_name']} "
+                f"(score: {best_candidate['score']:.1f})"
+            )
+        
+        if new_employee_id is None:
+            return False, {"candidates": candidates}, "No employee selected for replacement"
+        
+        # Find the selected employee
+        with job_lock:
+            if job_id not in jobs:
+                return False, None, f"Job {job_id} not found"
+            
+            job = jobs[job_id]
+            current_solution = job["solution"]
+            
+            for emp in current_solution.employees:
+                if emp.id == new_employee_id:
+                    selected_employee = emp
+                    break
+            
+            if selected_employee is None:
+                return False, None, f"Selected employee {new_employee_id} not found"
+            
+            # Find the target shift
+            target_shift = None
+            for shift in current_solution.shifts:
+                if shift.id == shift_id:
+                    target_shift = shift
+                    break
+            
+            if target_shift is None:
+                return False, None, f"Shift {shift_id} not found"
+            
+            # Mark job as being modified
+            jobs[job_id]["status"] = "REPLACING_EMPLOYEE"
+            _sync_job_to_store(job_id)
+        
+        logger.info(
+            f"[Job {job_id}] Replacing {target_shift.employee.name} with {selected_employee.name} "
+            f"for shift {shift_id}"
+        )
+        
+        # Pin all other assignments to preserve them during re-optimization
+        pinned_count = 0
+        for shift in current_solution.shifts:
+            if shift.id != shift_id and shift.employee is not None and not shift.pinned:
+                # Only pin assignments without violations
+                current_emp = shift.employee
+                has_violation = False
+                
+                # Check for hard constraint violations
+                if not current_emp.has_required_skills(shift.required_skills):
+                    has_violation = True
+                elif current_emp.is_unavailable_on_date(shift.start_time):
+                    has_violation = True
+                
+                # Only pin valid assignments
+                if not has_violation:
+                    shift.pin()
+                    pinned_count += 1
+        
+        logger.info(f"[Job {job_id}] Pinned {pinned_count} other assignments")
+        
+        # Directly set the new assignment
+        target_shift.employee = selected_employee
+        
+        # Use solver to validate and optimize around the new assignment
+        solver = solver_factory.build_solver()
+        
+        logger.info(f"[Job {job_id}] Running solver to validate replacement...")
+        updated_solution = solver.solve(current_solution)
+        
+        # Unpin shifts for future modifications
+        for shift in updated_solution.shifts:
+            if shift.pinned:
+                shift.pinned = False
+        
+        # Update the job with new solution
+        with job_lock:
+            jobs[job_id]["status"] = "SOLVING_COMPLETED"
+            jobs[job_id]["solution"] = updated_solution
+            jobs[job_id]["updated_at"] = datetime.now()
+            jobs[job_id]["final_score"] = str(updated_solution.score)
+            
+            # Track the replacement
+            if "employee_replacements" not in jobs[job_id]:
+                jobs[job_id]["employee_replacements"] = []
+            jobs[job_id]["employee_replacements"].append(
+                {
+                    "shift_id": shift_id,
+                    "unavailable_employee_id": unavailable_employee_id,
+                    "new_employee_id": new_employee_id,
+                    "auto_assign": auto_assign,
+                    "candidates_count": len(candidates),
+                    "timestamp": datetime.now(),
+                }
+            )
+            _sync_job_to_store(job_id)
+        
+        total_assigned = sum(
+            1 for s in updated_solution.shifts if s.employee is not None
+        )
+        
+        logger.info(
+            f"[Job {job_id}] Employee replacement completed successfully. "
+            f"Score: {updated_solution.score}, "
+            f"Total assigned shifts: {total_assigned}/{len(updated_solution.shifts)}"
+        )
+        
+        result = {
+            "candidates": candidates,
+            "selected_employee": {
+                "employee_id": selected_employee.id,
+                "employee_name": selected_employee.name,
+            },
+            "final_score": str(updated_solution.score),
+        }
+        
+        return True, result, None
+        
+    except Exception as e:
+        logger.error(f"[Job {job_id}] Failed to replace employee: {str(e)}")
+        with job_lock:
+            if job_id in jobs:
+                jobs[job_id]["status"] = "SOLVING_FAILED"
+                jobs[job_id]["error"] = f"Employee replacement failed: {str(e)}"
+                _sync_job_to_store(job_id)
+        return False, None, f"Internal error: {str(e)}"

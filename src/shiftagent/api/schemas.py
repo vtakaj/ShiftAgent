@@ -82,6 +82,39 @@ class ReassignShiftResponse(BaseModel):
     html_report_url: str | None = None
 
 
+class ReplaceEmployeeRequest(BaseModel):
+    shift_id: str = Field(description="ID of the shift needing replacement")
+    unavailable_employee_id: str = Field(description="ID of the employee who can't work")
+    auto_assign: bool = Field(
+        default=False, description="Automatically assign the best candidate"
+    )
+    candidate_employee_id: str | None = Field(
+        None, description="Specific employee to assign (if not auto_assign)"
+    )
+
+
+class CandidateEmployee(BaseModel):
+    employee_id: str
+    employee_name: str
+    skills: list[str]
+    score: float = Field(description="Candidate suitability score")
+    reasons: list[str] = Field(default_factory=list, description="Reasons for score")
+
+
+class ReplaceEmployeeResponse(BaseModel):
+    job_id: str
+    shift_id: str
+    unavailable_employee_id: str
+    unavailable_employee_name: str | None
+    status: str
+    message: str
+    candidates: list[CandidateEmployee] = Field(default_factory=list)
+    selected_employee_id: str | None = None
+    selected_employee_name: str | None = None
+    final_score: str | None = None
+    html_report_url: str | None = None
+
+
 class SolutionResponse(BaseModel):
     job_id: str
     status: str

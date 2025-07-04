@@ -15,17 +15,22 @@ from .job_store import job_store
 from .jobs import (
     _sync_job_to_store,
     add_employee_to_completed_job,
+    find_replacement_candidates,
     job_lock,
     jobs,
     reassign_shift_in_job,
+    replace_employee_in_job,
     solve_problem_async,
     swap_shifts_in_job,
     update_employee_skills,
 )
 from .schemas import (
+    CandidateEmployee,
     EmployeeRequest,
     ReassignShiftRequest,
     ReassignShiftResponse,
+    ReplaceEmployeeRequest,
+    ReplaceEmployeeResponse,
     ShiftScheduleRequest,
     SolutionResponse,
     SolveResponse,
@@ -517,6 +522,121 @@ async def reassign_shift(job_id: str, request: ReassignShiftRequest):
             error_msg = "; ".join(warnings_or_errors)
 
         raise HTTPException(status_code=400, detail=error_msg)
+
+
+@router.post("/api/shifts/{job_id}/replace", response_model=ReplaceEmployeeResponse)
+async def replace_employee(job_id: str, request: ReplaceEmployeeRequest):
+    """Find and assign replacement for unavailable employee"""
+    try:
+        # Find the unavailable employee name for response
+        unavailable_employee_name = None
+        with job_lock:
+            if job_id in jobs and "solution" in jobs[job_id]:
+                solution = jobs[job_id]["solution"]
+                for emp in solution.employees:
+                    if emp.id == request.unavailable_employee_id:
+                        unavailable_employee_name = emp.name
+                        break
+
+        # If only finding candidates (not auto_assign and no specific candidate)
+        if not request.auto_assign and request.candidate_employee_id is None:
+            # Just find candidates without assignment
+            success, candidates, error_msg = find_replacement_candidates(
+                job_id, request.shift_id, request.unavailable_employee_id
+            )
+            
+            if not success:
+                raise HTTPException(status_code=400, detail=error_msg)
+            
+            # Convert candidates to response format
+            candidate_responses = [
+                CandidateEmployee(
+                    employee_id=c["employee_id"],
+                    employee_name=c["employee_name"],
+                    skills=c["skills"],
+                    score=c["score"],
+                    reasons=c["reasons"]
+                )
+                for c in candidates
+            ]
+            
+            return ReplaceEmployeeResponse(
+                job_id=job_id,
+                shift_id=request.shift_id,
+                unavailable_employee_id=request.unavailable_employee_id,
+                unavailable_employee_name=unavailable_employee_name,
+                status="CANDIDATES_FOUND",
+                message=f"Found {len(candidates)} qualified replacement candidates",
+                candidates=candidate_responses,
+            )
+        
+        # Perform the replacement
+        success, result, error_msg = replace_employee_in_job(
+            job_id,
+            request.shift_id,
+            request.unavailable_employee_id,
+            request.candidate_employee_id,
+            request.auto_assign
+        )
+        
+        if not success:
+            # If result contains candidates, it means no employee was selected
+            if result and "candidates" in result:
+                candidate_responses = [
+                    CandidateEmployee(
+                        employee_id=c["employee_id"],
+                        employee_name=c["employee_name"],
+                        skills=c["skills"],
+                        score=c["score"],
+                        reasons=c["reasons"]
+                    )
+                    for c in result["candidates"]
+                ]
+                
+                return ReplaceEmployeeResponse(
+                    job_id=job_id,
+                    shift_id=request.shift_id,
+                    unavailable_employee_id=request.unavailable_employee_id,
+                    unavailable_employee_name=unavailable_employee_name,
+                    status="CANDIDATES_FOUND",
+                    message="Please select an employee from the candidates or use auto_assign=true",
+                    candidates=candidate_responses,
+                )
+            else:
+                raise HTTPException(status_code=400, detail=error_msg)
+        
+        # Success - convert result to response format
+        candidate_responses = [
+            CandidateEmployee(
+                employee_id=c["employee_id"],
+                employee_name=c["employee_name"],
+                skills=c["skills"],
+                score=c["score"],
+                reasons=c["reasons"]
+            )
+            for c in result["candidates"]
+        ]
+        
+        selected_employee = result["selected_employee"]
+        
+        return ReplaceEmployeeResponse(
+            job_id=job_id,
+            shift_id=request.shift_id,
+            unavailable_employee_id=request.unavailable_employee_id,
+            unavailable_employee_name=unavailable_employee_name,
+            status="SUCCESS",
+            message=f"Successfully replaced {unavailable_employee_name or 'unavailable employee'} with {selected_employee['employee_name']}",
+            candidates=candidate_responses,
+            selected_employee_id=selected_employee["employee_id"],
+            selected_employee_name=selected_employee["employee_name"],
+            final_score=result["final_score"],
+            html_report_url=f"/api/shifts/solve/{job_id}/html",
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # HTML Report Generation
