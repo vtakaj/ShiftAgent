@@ -144,7 +144,9 @@ src/
 │   │   ├── job_store.py  # Job persistence abstraction
 │   │   ├── azure_job_store.py # Azure Blob Storage implementation
 │   │   ├── converters.py # Domain <-> API model converters
-│   │   └── analysis.py   # Weekly hours analysis logic
+│   │   ├── analysis.py   # Weekly hours analysis logic
+│   │   ├── problem_fact_changes.py # Dynamic problem updates
+│   │   └── shift-schedule-template.html # HTML template
 │   ├── config/           # Configuration management
 │   │   └── storage_config.py # Storage configuration utilities
 │   ├── core/             # Domain logic
@@ -160,14 +162,9 @@ src/
 │   ├── utils/            # Utilities
 │   │   └── demo_data.py  # Demo data generation
 │   └── streamlit_app.py  # Streamlit web UI
-├── shiftagent_mcp/      # MCP server package (separate)
-│   ├── server.py         # FastMCP server setup and tool registration
-│   └── tools.py          # MCP tool functions for shift scheduling
-└── shiftagentviewer/   # Streamlit viewer package
-    ├── main.py           # Streamlit app entry point
-    ├── components/       # Reusable Streamlit components
-    └── pages/            # Streamlit page modules
-        └── schedule_view.py
+└── shiftagent_mcp/      # MCP server package (separate)
+    ├── server.py         # FastMCP server setup and tool registration
+    └── tools.py          # MCP tool functions for shift scheduling
 
 docker/                   # Docker configuration
 ├── dockerfiles/          # Container definitions
@@ -256,15 +253,19 @@ The solver optimizes using HardMediumSoftScore:
 - `POST /api/shifts/analyze-weekly`: Analyze weekly work hours
 - `GET /api/shifts/test-weekly`: Test weekly constraint calculations
 
-#### Employee Management (New Feature)
+#### Employee Management
 - `POST /api/shifts/{job_id}/add-employee`: Add single employee to completed job
 - `PATCH /api/shifts/{job_id}/employee/{employee_id}/skills`: Update employee skills and re-optimize
-- `POST /api/shifts/{job_id}/reassign`: Reassign shift to specific employee or unassign
 
 #### Job Management
 - `GET /api/jobs`: List all jobs with status
 - `DELETE /api/jobs/{job_id}`: Delete specific job
 - `POST /api/jobs/cleanup`: Clean up old jobs
+
+#### Report Generation
+- `GET /api/shifts/demo/html`: Demo schedule as HTML report
+- `GET /api/shifts/solve/{job_id}/html`: Optimization result as HTML report
+- `POST /api/shifts/solve-sync/html`: Synchronous solve with HTML report
 
 
 ## Development Notes
@@ -278,9 +279,9 @@ The solver optimizes using HardMediumSoftScore:
 - Timefold Solver for constraint optimization
 
 ### Testing
-Tests use pytest and are located in `test_models.py`. Run a single test with:
+Tests use pytest and are located in `tests/` directory. Run a single test with:
 ```bash
-uv run pytest test_models.py::test_name -v
+uv run pytest tests/test_models.py::test_name -v
 ```
 
 ### Common Issues
@@ -319,7 +320,7 @@ export AZURE_STORAGE_CONTAINER_NAME="job-data"  # Optional, defaults to "job-dat
 #### Testing Azure Storage
 ```bash
 # Test Azure Storage integration
-python scripts/test_azure_storage.py
+python scripts/test_azure_storage_manual.py
 
 # Run tests with Azure storage backend
 JOB_STORAGE_TYPE=azure make test
@@ -372,10 +373,9 @@ The HTTP transport enables web-based deployments and supports multiple concurren
 - `analyze_weekly_hours`: Analyze weekly work hours
 - `test_weekly_constraints`: Test weekly constraints with demo data
 
-#### Employee Management (Available Now)
+#### Employee Management
 - `add_employee_to_job`: Add single employee to completed job with minimal re-optimization
 - `update_employee_skills`: Update employee skills and re-optimize affected assignments
-- `reassign_shift`: Reassign shift to specific employee or unassign it
 
 #### Schedule Inspection
 - `get_schedule_shifts`: Get all shifts from a completed schedule for inspection

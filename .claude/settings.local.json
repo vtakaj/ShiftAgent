@@ -71,7 +71,8 @@
       "Bash(PYTHONPATH=src uv run python -c \"from shiftagent.core.models import Employee, Shift, ShiftSchedule; print('Core models import successfully')\")",
       "Bash(PYTHONPATH=src python -m shiftagent_mcp.server --help)",
       "Bash(PYTHONPATH=src uv run python -m shiftagent_mcp.server --help)",
-      "Bash(timeout 5 make mcp)"
+      "Bash(timeout 5 make mcp)",
+      "Bash(PYTHONPATH=src uv run mypy tests --config-file pyproject.toml)"
     ],
     "deny": []
   }

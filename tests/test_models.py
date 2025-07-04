@@ -1,11 +1,6 @@
-import sys
 from datetime import datetime, timedelta
-from pathlib import Path
 
 import pytest
-
-# Add src directory to Python path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from shiftagent.api.analysis import (
     get_target_hours,

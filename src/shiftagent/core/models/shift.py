@@ -14,16 +14,16 @@ from .employee import Employee
 @planning_entity
 @dataclass
 class Shift:
-    """シフトクラス"""
+    """Shift class"""
 
     id: str
     start_time: datetime
     end_time: datetime
     required_skills: set[str] = field(default_factory=set)
     location: str | None = None
-    priority: int = 5  # 1が最高優先度、10が最低優先度
+    priority: int = 5  # 1 is highest priority, 10 is lowest priority
 
-    # Timefold Solverによって最適化される変数
+    # Variable optimized by Timefold Solver
     employee: Annotated[Employee | None, PlanningVariable] = field(default=None)
 
     # Pinning field for continuous planning
@@ -31,17 +31,17 @@ class Shift:
     pinned: Annotated[bool, PlanningPin] = field(default=False)
 
     def get_duration_minutes(self) -> int:
-        """シフトの時間（分）を取得"""
+        """Get the duration of the shift in minutes"""
         return int((self.end_time - self.start_time).total_seconds() / 60)
 
     def overlaps_with(self, other: "Shift") -> bool:
-        """他のシフトと時間が重複するかチェック"""
+        """Check if this shift overlaps with another shift"""
         if other is None:
             return False
         return self.start_time < other.end_time and other.start_time < self.end_time
 
     def is_assigned(self) -> bool:
-        """従業員が割り当てられているかチェック"""
+        """Check if an employee is assigned to this shift"""
         return self.employee is not None
 
     def pin(self) -> None:
@@ -60,7 +60,7 @@ class Shift:
         employee_name = (
             self.employee.name
             if self.employee is not None and hasattr(self.employee, "name")
-            else "未割り当て"
+            else "Unassigned"
         )
         return (
             f"Shift(id='{self.id}', "

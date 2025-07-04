@@ -15,6 +15,7 @@ from .job_store import job_store
 from .jobs import (
     _sync_job_to_store,
     add_employee_to_completed_job,
+    add_employees_to_completed_job,
     job_lock,
     jobs,
     reassign_shift_in_job,
@@ -23,6 +24,8 @@ from .jobs import (
     update_employee_skills,
 )
 from .schemas import (
+    BatchEmployeeRequest,
+    BatchEmployeeResponse,
     EmployeeRequest,
     ReassignShiftRequest,
     ReassignShiftResponse,
@@ -371,6 +374,87 @@ async def add_employee_to_job(job_id: str, employee: EmployeeRequest):
                 error_msg = "Job not found"
 
         raise HTTPException(status_code=400, detail=error_msg)
+
+
+@router.post("/api/shifts/{job_id}/add-employees", response_model=BatchEmployeeResponse)
+async def add_employees_to_job(job_id: str, request: BatchEmployeeRequest):
+    """Add multiple employees to completed job in batch"""
+    # Convert employee requests to domain models
+    from .converters import convert_employee_request_to_domain
+    from .schemas import EmployeeAdditionResult
+
+    new_employees = [
+        convert_employee_request_to_domain(emp) for emp in request.employees
+    ]
+
+    # Add the employees to the job
+    success, result_data = add_employees_to_completed_job(
+        job_id, new_employees, request.auto_assign
+    )
+
+    if not success:
+        # Handle various error cases
+        error_msg = result_data.get("error", "Unknown error occurred")
+        raise HTTPException(status_code=400, detail=error_msg)
+
+    # Extract results
+    results_data = result_data["results"]
+    successful_additions = result_data["successful_additions"]
+    failed_additions = result_data["failed_additions"]
+    skipped_additions = result_data["skipped_additions"]
+
+    # Convert results to response format
+    employee_results = []
+    for result in results_data:
+        employee_results.append(
+            EmployeeAdditionResult(
+                employee_id=result["employee_id"],
+                employee_name=result["employee_name"],
+                status=result["status"],
+                message=result["message"],
+                errors=result["errors"],
+                warnings=result["warnings"],
+                assigned_shifts=result["assigned_shifts"],
+            )
+        )
+
+    # Determine overall status
+    total_employees = len(request.employees)
+    if successful_additions == total_employees:
+        overall_status = "SUCCESS"
+        message = f"All {total_employees} employees added successfully"
+    elif successful_additions > 0:
+        overall_status = "PARTIAL_SUCCESS"
+        message = (
+            f"{successful_additions}/{total_employees} employees added successfully"
+        )
+    else:
+        overall_status = "FAILED"
+        message = "No employees were added successfully"
+
+    # Get updated job info for final score
+    final_score = None
+    html_report_url = None
+    if successful_additions > 0:
+        with job_lock:
+            if job_id in jobs:
+                job = jobs[job_id]
+                if "solution" in job:
+                    final_score = str(job["solution"].score)
+                    html_report_url = f"/api/shifts/solve/{job_id}/html"
+
+    return BatchEmployeeResponse(
+        job_id=job_id,
+        total_employees=total_employees,
+        successful_additions=successful_additions,
+        failed_additions=failed_additions,
+        skipped_additions=skipped_additions,
+        overall_status=overall_status,
+        message=message,
+        results=employee_results,
+        final_score=final_score,
+        html_report_url=html_report_url,
+    )
 
 
 @router.patch("/api/shifts/{job_id}/employee/{employee_id}/skills")

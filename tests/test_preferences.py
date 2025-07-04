@@ -2,12 +2,7 @@
 Tests for employee preference functionality
 """
 
-import sys
 from datetime import datetime
-from pathlib import Path
-
-# Add src directory to Python path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from shiftagent.api.converters import (
     convert_domain_to_response,

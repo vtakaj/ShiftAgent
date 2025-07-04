@@ -46,15 +46,15 @@ shiftagent-mcp = "shiftagent_mcp.server:main"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-# シンプルなhatchling設定
+# Simple hatchling configuration
 [tool.hatch.build.targets.wheel]
-# ルートディレクトリのPythonファイルと src ディレクトリを含める
+# Include Python files in root directory and src directory
 include = [
     "/*.py",
     "/src/**/*.py",
 ]
 
-# 不要なファイルを除外
+# Exclude unnecessary files
 exclude = [
     ".devcontainer/",
     ".vscode/",
@@ -88,6 +88,9 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
+mypy_path = "src"
+namespace_packages = true
+explicit_package_bases = true
 
 # Ignore Timefold constraint system typing issues
 [[tool.mypy.overrides]]

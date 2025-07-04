@@ -789,3 +789,283 @@ def swap_shifts_in_job(job_id: str, shift1_id: str, shift2_id: str) -> bool:
                 jobs[job_id]["error"] = f"Shift swap failed: {str(e)}"
                 _sync_job_to_store(job_id)
         return False
+
+
+def add_employees_to_completed_job(
+    job_id: str, new_employees: list, auto_assign: bool = False
+) -> tuple[bool, dict]:
+    """Add multiple employees to completed job with validation and detailed reporting"""
+    successful_additions = 0
+    failed_additions = 0
+    skipped_additions = 0
+
+    try:
+        with job_lock:
+            if job_id not in jobs:
+                logger.error(f"Job {job_id} not found")
+                return False, {
+                    "error": "Job not found",
+                    "results": [],
+                    "successful_additions": 0,
+                    "failed_additions": 0,
+                    "skipped_additions": 0,
+                }
+
+            job = jobs[job_id]
+
+            # Only allow adding to completed jobs
+            if job["status"] != "SOLVING_COMPLETED":
+                logger.error(f"Job {job_id} status is {job['status']}, not completed")
+                return False, {
+                    "error": f"Job status is {job['status']}, not completed",
+                    "results": [],
+                    "successful_additions": 0,
+                    "failed_additions": 0,
+                    "skipped_additions": 0,
+                }
+
+            if "solution" not in job:
+                logger.error(f"Job {job_id} has no solution")
+                return False, {
+                    "error": "Job has no solution",
+                    "results": [],
+                    "successful_additions": 0,
+                    "failed_additions": 0,
+                    "skipped_additions": 0,
+                }
+
+            # Get the current solution
+            current_solution = job["solution"]
+
+            # Mark job as being modified
+            jobs[job_id]["status"] = "ADDING_EMPLOYEES_BATCH"
+            _sync_job_to_store(job_id)
+
+        # Phase 1: Validate all employees before adding any
+        logger.info(
+            f"[Job {job_id}] Starting batch validation of {len(new_employees)} employees"
+        )
+
+        validation_results = []
+        existing_employee_ids = {emp.id for emp in current_solution.employees}
+        new_employee_ids = set()
+
+        for employee in new_employees:
+            employee_result = {
+                "employee_id": employee.id,
+                "employee_name": employee.name,
+                "status": "PENDING",
+                "message": "",
+                "errors": [],
+                "warnings": [],
+                "assigned_shifts": 0,
+            }
+
+            # Check for duplicate ID within existing employees
+            if employee.id in existing_employee_ids:
+                employee_result["status"] = "SKIPPED"
+                employee_result["message"] = (
+                    f"Employee ID {employee.id} already exists in job"
+                )
+                employee_result["errors"].append("Duplicate employee ID")
+                skipped_additions += 1
+
+            # Check for duplicate ID within the batch
+            elif employee.id in new_employee_ids:
+                employee_result["status"] = "FAILED"
+                employee_result["message"] = (
+                    f"Duplicate employee ID {employee.id} in batch"
+                )
+                employee_result["errors"].append("Duplicate ID in batch")
+                failed_additions += 1
+
+            else:
+                # Validate required fields
+                errors = []
+                if not employee.name.strip():
+                    errors.append("Employee name cannot be empty")
+                if not employee.skills:
+                    errors.append("Employee must have at least one skill")
+                if not employee.id.strip():
+                    errors.append("Employee ID cannot be empty")
+
+                if errors:
+                    employee_result["status"] = "FAILED"
+                    employee_result["message"] = (
+                        f"Validation failed: {'; '.join(errors)}"
+                    )
+                    employee_result["errors"] = errors
+                    failed_additions += 1
+                else:
+                    employee_result["status"] = "VALIDATED"
+                    employee_result["message"] = "Ready to add"
+                    new_employee_ids.add(employee.id)
+
+            validation_results.append(employee_result)
+
+        logger.info(
+            f"[Job {job_id}] Validation complete. Valid: {len(new_employee_ids)}, "
+            f"Failed: {failed_additions}, Skipped: {skipped_additions}"
+        )
+
+        # Phase 2: Add valid employees if any exist
+        if new_employee_ids:
+            logger.info(
+                f"[Job {job_id}] Adding {len(new_employee_ids)} valid employees "
+                f"using batch optimization"
+            )
+
+            # Pin all existing assignments to preserve them during re-optimization
+            pinned_count = 0
+            unpinned_violations = 0
+
+            for shift in current_solution.shifts:
+                if shift.employee is not None and not shift.pinned:
+                    # Check if current assignment has constraint violations
+                    current_emp = shift.employee
+                    has_violation = False
+
+                    # Check for hard constraint violations that should be fixed
+                    if not current_emp.has_required_skills(shift.required_skills):
+                        has_violation = True
+                        unpinned_violations += 1
+                        logger.info(
+                            f"[Job {job_id}] Not pinning shift {shift.id} due to skill mismatch"
+                        )
+                    elif current_emp.is_unavailable_on_date(shift.start_time):
+                        has_violation = True
+                        unpinned_violations += 1
+                        logger.info(
+                            f"[Job {job_id}] Not pinning shift {shift.id} due to unavailability"
+                        )
+
+                    # Only pin assignments without violations
+                    if not has_violation:
+                        shift.pin()
+                        pinned_count += 1
+
+            logger.info(
+                f"[Job {job_id}] Pinned {pinned_count} valid assignments, "
+                f"left {unpinned_violations} constraint violations unpinned for fixing"
+            )
+
+            # Add all valid employees to the solution
+            employees_to_add = []
+            for i, employee in enumerate(new_employees):
+                if validation_results[i]["status"] == "VALIDATED":
+                    current_solution.employees.append(employee)
+                    employees_to_add.append(employee)
+                    logger.info(
+                        f"[Job {job_id}] Added employee {employee.name} with skills: {employee.skills}"
+                    )
+
+            # Run solver only if auto_assign is True
+            if auto_assign:
+                # Use existing solver factory with pinned assignments
+                solver = solver_factory.build_solver()
+
+                logger.info(
+                    f"[Job {job_id}] Running solver with {len(employees_to_add)} new employees..."
+                )
+                updated_solution = solver.solve(current_solution)
+
+                # Unpin shifts for future modifications
+                for shift in updated_solution.shifts:
+                    if shift.pinned:
+                        shift.pinned = False
+
+                # Update results with assignment counts
+                for i, employee in enumerate(new_employees):
+                    if validation_results[i]["status"] == "VALIDATED":
+                        assigned_count = sum(
+                            1
+                            for shift in updated_solution.shifts
+                            if shift.employee and shift.employee.id == employee.id
+                        )
+                        validation_results[i]["assigned_shifts"] = assigned_count
+                        validation_results[i]["status"] = "SUCCESS"
+                        validation_results[i]["message"] = (
+                            f"Successfully added and assigned to {assigned_count} shifts"
+                        )
+                        successful_additions += 1
+            else:
+                # Don't run solver, just add employees without assignments
+                logger.info(
+                    f"[Job {job_id}] Adding {len(employees_to_add)} employees "
+                    f"without auto-assignment"
+                )
+                updated_solution = current_solution
+
+                # Update results without assignment counts
+                for i, _employee in enumerate(new_employees):
+                    if validation_results[i]["status"] == "VALIDATED":
+                        validation_results[i]["assigned_shifts"] = 0
+                        validation_results[i]["status"] = "SUCCESS"
+                        validation_results[i]["message"] = (
+                            "Successfully added (no auto-assignment)"
+                        )
+                        successful_additions += 1
+
+            # Update the job with new solution
+            with job_lock:
+                jobs[job_id]["status"] = "SOLVING_COMPLETED"
+                jobs[job_id]["solution"] = updated_solution
+                jobs[job_id]["updated_at"] = datetime.now()
+                jobs[job_id]["final_score"] = str(updated_solution.score)
+
+                # Track the batch addition
+                if "batch_employee_additions" not in jobs[job_id]:
+                    jobs[job_id]["batch_employee_additions"] = []
+                jobs[job_id]["batch_employee_additions"].append(
+                    {
+                        "timestamp": datetime.now(),
+                        "total_employees": len(new_employees),
+                        "successful_additions": successful_additions,
+                        "failed_additions": failed_additions,
+                        "skipped_additions": skipped_additions,
+                        "auto_assign": auto_assign,
+                        "employee_results": validation_results,
+                    }
+                )
+                _sync_job_to_store(job_id)
+
+            total_assigned = sum(
+                1 for s in updated_solution.shifts if s.employee is not None
+            )
+
+            logger.info(
+                f"[Job {job_id}] Batch employee addition completed. "
+                f"Score: {updated_solution.score}, "
+                f"Total assigned shifts: {total_assigned}/{len(updated_solution.shifts)}, "
+                f"Successful additions: {successful_additions}, "
+                f"Failed additions: {failed_additions}, "
+                f"Skipped additions: {skipped_additions}"
+            )
+        else:
+            # No valid employees to add
+            logger.info(f"[Job {job_id}] No valid employees to add")
+            with job_lock:
+                jobs[job_id]["status"] = "SOLVING_COMPLETED"
+                _sync_job_to_store(job_id)
+
+        return True, {
+            "results": validation_results,
+            "successful_additions": successful_additions,
+            "failed_additions": failed_additions,
+            "skipped_additions": skipped_additions,
+        }
+
+    except Exception as e:
+        logger.error(f"[Job {job_id}] Failed to add employees in batch: {str(e)}")
+        with job_lock:
+            if job_id in jobs:
+                jobs[job_id]["status"] = "SOLVING_FAILED"
+                jobs[job_id]["error"] = f"Batch employee addition failed: {str(e)}"
+                _sync_job_to_store(job_id)
+        return False, {
+            "error": f"Internal error: {str(e)}",
+            "results": validation_results,
+            "successful_additions": successful_additions,
+            "failed_additions": failed_additions,
+            "skipped_additions": skipped_additions,
+        }
