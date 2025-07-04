@@ -12,12 +12,6 @@
 [![AI Optimization](https://img.shields.io/badge/AI-optimization-ff6b35.svg)](https://timefold.ai)
 [![MCP Protocol](https://img.shields.io/badge/MCP-protocol-8b5cf6.svg)](https://modelcontextprotocol.io)
 
-<!-- Future CI/CD badges when GitHub Actions are set up:
-[![CI](https://github.com/vtakaj/shiftagent/actions/workflows/ci.yml/badge.svg)](https://github.com/vtakaj/shiftagent/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/vtakaj/shiftagent/branch/main/graph/badge.svg)](https://codecov.io/gh/vtakaj/shiftagent)
-[![Security](https://github.com/vtakaj/shiftagent/actions/workflows/security.yml/badge.svg)](https://github.com/vtakaj/shiftagent/actions/workflows/security.yml)
--->
-
 An AI-powered employee shift scheduling agent using Timefold Solver with FastMCP integration for AI assistant support.
 
 ## 🚀 Quick Start
@@ -194,37 +188,76 @@ shiftagent/
 │   ├── launch.json         # Debug settings
 │   └── extensions.json     # Recommended extensions
 ├── src/                    # Source code directory
-│   └── shiftagent/
-│       ├── api/            # FastAPI application
-│       │   ├── app.py      # FastAPI instance
-│       │   ├── routes.py   # API endpoints
-│       │   ├── schemas.py  # Pydantic models
-│       │   ├── solver.py   # Timefold solver config
-│       │   ├── jobs.py     # Async job management
-│       │   ├── converters.py # Schema converters
-│       │   └── analysis.py # Weekly hours analysis
-│       ├── core/           # Domain logic
-│       │   ├── models/     # Domain models
-│       │   │   ├── employee.py
-│       │   │   ├── shift.py
-│       │   │   └── schedule.py
-│       │   └── constraints/# Optimization constraints
-│       │       └── shift_constraints.py
-│       ├── mcp/            # MCP server implementation
-│       │   ├── server.py   # FastMCP server
-│       │   └── tools.py    # MCP tool functions
-│       └── utils/          # Utilities
-│           └── demo_data.py
+│   ├── shiftagent/         # Main application package
+│   │   ├── api/            # FastAPI application
+│   │   │   ├── app.py      # FastAPI instance
+│   │   │   ├── routes.py   # API endpoints
+│   │   │   ├── schemas.py  # Pydantic models
+│   │   │   ├── jobs.py     # Async job management
+│   │   │   ├── converters.py # Schema converters
+│   │   │   ├── solver.py   # Timefold solver configuration
+│   │   │   ├── analysis.py # Weekly hours analysis
+│   │   │   ├── server.py   # Server configuration
+│   │   │   ├── job_store.py # Job storage implementation
+│   │   │   ├── azure_job_store.py # Azure storage backend
+│   │   │   ├── problem_fact_changes.py # Dynamic problem updates
+│   │   │   └── shift-schedule-template.html # HTML template
+│   │   ├── core/           # Domain logic
+│   │   │   ├── models/     # Domain models
+│   │   │   │   ├── employee.py
+│   │   │   │   ├── shift.py
+│   │   │   │   └── schedule.py
+│   │   │   └── constraints/# Optimization constraints
+│   │   │       └── shift_constraints.py
+│   │   ├── config/         # Configuration management
+│   │   │   └── storage_config.py
+│   │   ├── templates/      # HTML templates and rendering
+│   │   │   ├── renderer.py
+│   │   │   └── schedule_report.html
+│   │   ├── utils/          # Utilities
+│   │   │   └── demo_data.py
+│   │   └── streamlit_app.py # Streamlit web interface
+│   └── shiftagent_mcp/     # MCP server implementation
+│       ├── server.py       # FastMCP server
+│       └── tools.py        # MCP tool functions
 ├── tests/                  # Test files
 │   ├── test_models.py
-│   └── test_mcp.py
-├── main.py                 # API entry point
-├── mcp_server.py           # MCP server entry point
+│   ├── test_mcp.py
+│   ├── test_preferences.py
+│   ├── test_emergency_staff.py
+│   ├── test_continuous_planning.py
+│   └── test_azure_storage.py
+├── scripts/                # Utility scripts
+│   ├── run_mcp_http.py     # MCP HTTP server runner
+│   ├── run_mcp_sse.py      # MCP SSE server runner
+│   ├── docker_mcp.sh       # Docker MCP setup
+│   └── test_mcp_connection.sh
+├── docker/                 # Docker configurations
+│   ├── dockerfiles/        # Dockerfile variants
+│   └── compose/            # Docker Compose files
+│       ├── docker-compose.yml
+│       ├── docker-compose.prod.yml
+│       ├── docker-compose.mcp.yml
+│       └── docker-compose.n8n.yml
+├── docs/                   # Documentation
+│   ├── SYSTEM_SPECIFICATION.md
+│   ├── CONTAINER_REGISTRY.md
+│   ├── SOLVER_CONFIGURATION.md
+│   └── mcp-employee-management-sequence.md
+├── infrastructure/         # Terraform infrastructure
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   ├── environments/       # Environment configurations
+│   ├── modules/            # Terraform modules
+│   └── scripts/            # Infrastructure scripts
+├── job_storage/            # Local job storage directory
 ├── api-test.http           # REST Client API tests
 ├── MCP_SERVER.md           # MCP server documentation
+├── DOCKER_MCP.md           # Docker MCP setup guide
 ├── CLAUDE.md               # Claude Code guidance
-├── Dockerfile              # Production Dockerfile (multi-platform)
-├── docker-compose.yml      # Production Docker Compose
+├── CONTRIBUTING.md         # Contribution guidelines
+├── Dockerfile              # Production Dockerfile
 ├── pyproject.toml          # uv configuration
 ├── Makefile                # Development efficiency commands
 └── README.md               # This file
@@ -238,18 +271,11 @@ shiftagent/
 - **Weekly Work Hours Constraints**: 40-hour limit, minimum work hours, target time adjustment
 - **Fairness Optimization**: Equal distribution of work hours
 
-### 👥 **Employee Management** (NEW!)
+### 👥 **Employee Management**
 - **Add Employees to Completed Jobs**: Add new employees to already solved schedules
 - **Skill Updates**: Update employee skills and re-optimize affected assignments
 - **Minimal Re-optimization**: Uses intelligent pinning to preserve valid assignments
 - **Constraint Resolution**: Automatically resolves violations while minimizing changes
-
-### 🔧 **Continuous Planning** (Coming Soon)
-- **Real-time Modifications**: Modify schedules during optimization without full re-solving
-- **Shift Swapping**: Exchange employees between shifts using ProblemChangeDirector
-- **Emergency Replacements**: Find suitable replacements when employees become unavailable
-- **Shift Pinning**: Lock specific shifts to prevent changes during optimization
-- **Live Reassignment**: Reassign shifts to specific employees or unassign them
 
 ### 📄 **Report Generation**
 - **HTML Reports**: Formatted web-based schedule reports with statistics and styling
@@ -261,7 +287,7 @@ shiftagent/
 - **Python-based Implementation**: Uses FastMCP for seamless integration
 - **Full API Access**: All shift scheduling and continuous planning features available through MCP tools
 
-### ⚙️ **Configurable Solver** (NEW!)
+### ⚙️ **Configurable Solver**
 - **Extended Timeout**: Configure solver runtime via `SOLVER_TIMEOUT_SECONDS` (default: 120s)
 - **Verbose Logging**: Real-time optimization progress with `SOLVER_LOG_LEVEL=DEBUG`
 - **Progress Tracking**: Monitor score improvements and constraint violations
@@ -282,23 +308,14 @@ GET  /api/shifts/weekly-analysis/{job_id} # Weekly work hours analysis (after so
 GET  /api/shifts/test-weekly          # Weekly work hours constraint test (demo)
 ```
 
-### Employee Management Endpoints (NEW!)
+### Employee Management Endpoints
 
 ```http
 POST /api/shifts/{job_id}/add-employee        # Add employee to completed job
 PATCH /api/shifts/{job_id}/employee/{employee_id}/skills  # Update employee skills
 ```
 
-### Continuous Planning Endpoints (Coming Soon)
-
-```http
-POST /api/shifts/{job_id}/swap               # Swap employees between two shifts
-POST /api/shifts/{job_id}/replace            # Find replacement for unavailable employee
-POST /api/shifts/{job_id}/pin                # Pin/unpin shifts for continuous planning
-POST /api/shifts/{job_id}/reassign           # Reassign shift to specific employee
-```
-
-### Job Management Endpoints (NEW!)
+### Job Management Endpoints
 
 ```http
 GET  /api/jobs                               # List all jobs
@@ -313,7 +330,6 @@ POST /api/jobs/cleanup                       # Clean up old jobs
 GET  /api/shifts/demo/html                   # Demo schedule as HTML report
 GET  /api/shifts/solve/{job_id}/html         # Optimization result as HTML report
 POST /api/shifts/solve-sync/html             # Synchronous solve with HTML report
-
 ```
 
 ### Request Example
@@ -380,12 +396,6 @@ make mcp      # Terminal 2: MCP server
 
 #### Schedule Management
 - `get_schedule_shifts` - Inspect completed schedules in detail
-
-#### Continuous Planning (Real-time Modifications)
-- `swap_shifts` - Swap employees between two shifts during optimization
-- `find_shift_replacement` - Find replacement when employee becomes unavailable
-- `pin_shifts` - Pin/unpin shifts to prevent changes during optimization
-- `reassign_shift` - Reassign shift to specific employee or unassign
 
 #### Report Generation
 - `get_demo_schedule_html` - Get demo schedule as HTML report
@@ -740,7 +750,7 @@ This project includes Infrastructure as Code (IaC) using Terraform for Azure dep
 
 ### Infrastructure Documentation
 
-- **包括的なインフラドキュメント**: [infrastructure/README.md](infrastructure/README.md)
+- **包括のインフラドキュメント**: [infrastructure/README.md](infrastructure/README.md)
 
 ### Quick Infrastructure Setup
 
