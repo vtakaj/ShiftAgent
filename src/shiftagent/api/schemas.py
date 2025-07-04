@@ -24,6 +24,47 @@ class EmployeeRequest(BaseModel):
         default_factory=list,
         description="Specific dates when employee is unavailable. Format: ISO 8601 (YYYY-MM-DDTHH:MM:SS or YYYY-MM-DD). Examples: '2024-01-15T00:00:00', '2024-01-15'. Time component is optional and will be normalized to date-only for comparison.",
     )
+    max_hours_per_week: int | None = Field(
+        default=None,
+        description="Maximum hours per week for the employee",
+    )
+    min_hours_per_week: int | None = Field(
+        default=None,
+        description="Minimum hours per week for the employee",
+    )
+
+
+class BatchEmployeeRequest(BaseModel):
+    employees: list[EmployeeRequest] = Field(
+        description="List of employees to add to the job"
+    )
+    auto_assign: bool = Field(
+        default=False,
+        description="Whether to automatically assign new employees to unassigned shifts",
+    )
+
+
+class EmployeeAdditionResult(BaseModel):
+    employee_id: str
+    employee_name: str
+    status: str  # SUCCESS, FAILED, SKIPPED
+    message: str
+    errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    assigned_shifts: int = 0
+
+
+class BatchEmployeeResponse(BaseModel):
+    job_id: str
+    total_employees: int
+    successful_additions: int
+    failed_additions: int
+    skipped_additions: int
+    overall_status: str  # SUCCESS, PARTIAL_SUCCESS, FAILED
+    message: str
+    results: list[EmployeeAdditionResult]
+    final_score: str | None = None
+    html_report_url: str | None = None
 
 
 class ShiftRequest(BaseModel):
