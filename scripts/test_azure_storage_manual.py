@@ -6,10 +6,6 @@ Test script for Azure Storage functionality
 import os
 import sys
 from datetime import datetime
-from pathlib import Path
-
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from shiftagent.api.azure_job_store import create_azure_job_store
 from shiftagent.config.storage_config import (

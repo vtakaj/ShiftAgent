@@ -376,9 +376,7 @@ async def add_employee_to_job(job_id: str, employee: EmployeeRequest):
         raise HTTPException(status_code=400, detail=error_msg)
 
 
-@router.post(
-    "/api/shifts/{job_id}/add-employees", response_model=BatchEmployeeResponse
-)
+@router.post("/api/shifts/{job_id}/add-employees", response_model=BatchEmployeeResponse)
 async def add_employees_to_job(job_id: str, request: BatchEmployeeRequest):
     """Add multiple employees to completed job in batch"""
     # Convert employee requests to domain models

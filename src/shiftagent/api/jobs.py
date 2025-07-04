@@ -795,11 +795,10 @@ def add_employees_to_completed_job(
     job_id: str, new_employees: list, auto_assign: bool = False
 ) -> tuple[bool, dict]:
     """Add multiple employees to completed job with validation and detailed reporting"""
-    results = []
     successful_additions = 0
     failed_additions = 0
     skipped_additions = 0
-    
+
     try:
         with job_lock:
             if job_id not in jobs:
@@ -837,7 +836,7 @@ def add_employees_to_completed_job(
 
             # Get the current solution
             current_solution = job["solution"]
-            
+
             # Mark job as being modified
             jobs[job_id]["status"] = "ADDING_EMPLOYEES_BATCH"
             _sync_job_to_store(job_id)
@@ -846,11 +845,11 @@ def add_employees_to_completed_job(
         logger.info(
             f"[Job {job_id}] Starting batch validation of {len(new_employees)} employees"
         )
-        
+
         validation_results = []
         existing_employee_ids = {emp.id for emp in current_solution.employees}
         new_employee_ids = set()
-        
+
         for employee in new_employees:
             employee_result = {
                 "employee_id": employee.id,
@@ -861,21 +860,25 @@ def add_employees_to_completed_job(
                 "warnings": [],
                 "assigned_shifts": 0,
             }
-            
+
             # Check for duplicate ID within existing employees
             if employee.id in existing_employee_ids:
                 employee_result["status"] = "SKIPPED"
-                employee_result["message"] = f"Employee ID {employee.id} already exists in job"
+                employee_result["message"] = (
+                    f"Employee ID {employee.id} already exists in job"
+                )
                 employee_result["errors"].append("Duplicate employee ID")
                 skipped_additions += 1
-                
+
             # Check for duplicate ID within the batch
             elif employee.id in new_employee_ids:
                 employee_result["status"] = "FAILED"
-                employee_result["message"] = f"Duplicate employee ID {employee.id} in batch"
+                employee_result["message"] = (
+                    f"Duplicate employee ID {employee.id} in batch"
+                )
                 employee_result["errors"].append("Duplicate ID in batch")
                 failed_additions += 1
-                
+
             else:
                 # Validate required fields
                 errors = []
@@ -885,31 +888,33 @@ def add_employees_to_completed_job(
                     errors.append("Employee must have at least one skill")
                 if not employee.id.strip():
                     errors.append("Employee ID cannot be empty")
-                    
+
                 if errors:
                     employee_result["status"] = "FAILED"
-                    employee_result["message"] = f"Validation failed: {'; '.join(errors)}"
+                    employee_result["message"] = (
+                        f"Validation failed: {'; '.join(errors)}"
+                    )
                     employee_result["errors"] = errors
                     failed_additions += 1
                 else:
                     employee_result["status"] = "VALIDATED"
                     employee_result["message"] = "Ready to add"
                     new_employee_ids.add(employee.id)
-                    
+
             validation_results.append(employee_result)
-            
+
         logger.info(
             f"[Job {job_id}] Validation complete. Valid: {len(new_employee_ids)}, "
             f"Failed: {failed_additions}, Skipped: {skipped_additions}"
         )
-        
+
         # Phase 2: Add valid employees if any exist
         if new_employee_ids:
             logger.info(
                 f"[Job {job_id}] Adding {len(new_employee_ids)} valid employees "
                 f"using batch optimization"
             )
-            
+
             # Pin all existing assignments to preserve them during re-optimization
             pinned_count = 0
             unpinned_violations = 0
@@ -959,7 +964,9 @@ def add_employees_to_completed_job(
                 # Use existing solver factory with pinned assignments
                 solver = solver_factory.build_solver()
 
-                logger.info(f"[Job {job_id}] Running solver with {len(employees_to_add)} new employees...")
+                logger.info(
+                    f"[Job {job_id}] Running solver with {len(employees_to_add)} new employees..."
+                )
                 updated_solution = solver.solve(current_solution)
 
                 # Unpin shifts for future modifications
@@ -990,11 +997,13 @@ def add_employees_to_completed_job(
                 updated_solution = current_solution
 
                 # Update results without assignment counts
-                for i, employee in enumerate(new_employees):
+                for i, _employee in enumerate(new_employees):
                     if validation_results[i]["status"] == "VALIDATED":
                         validation_results[i]["assigned_shifts"] = 0
                         validation_results[i]["status"] = "SUCCESS"
-                        validation_results[i]["message"] = "Successfully added (no auto-assignment)"
+                        validation_results[i]["message"] = (
+                            "Successfully added (no auto-assignment)"
+                        )
                         successful_additions += 1
 
             # Update the job with new solution

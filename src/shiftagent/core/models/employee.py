@@ -8,7 +8,7 @@ from datetime import datetime
 
 @dataclass
 class Employee:
-    """従業員クラス"""
+    """Employee class"""
 
     id: str
     name: str
@@ -28,11 +28,11 @@ class Employee:
     emergency_added_at: datetime | None = field(default=None)
 
     def has_skill(self, skill: str) -> bool:
-        """指定されたスキルを持っているかチェック"""
+        """Check if employee has the specified skill"""
         return skill in self.skills
 
     def has_all_skills(self, required_skills: set[str]) -> bool:
-        """必要なスキルをすべて持っているかチェック"""
+        """Check if employee has all required skills"""
         return required_skills.issubset(self.skills)
 
     def prefers_day_off(self, day_name: str) -> bool:

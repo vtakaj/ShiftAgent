@@ -21,45 +21,45 @@ from .shift import Shift
 @planning_solution
 @dataclass
 class ShiftSchedule:
-    """シフトスケジュール全体を表すクラス"""
+    """Class representing the entire shift schedule"""
 
-    # 問題のファクト（変更されない情報）
+    # Problem facts (information that doesn't change)
     employees: Annotated[
         list[Employee], ProblemFactCollectionProperty, ValueRangeProvider
     ] = field(default_factory=list)
 
-    # 最適化対象のエンティティ
+    # Planning entities (optimization targets)
     shifts: Annotated[list[Shift], PlanningEntityCollectionProperty] = field(
         default_factory=list
     )
 
-    # スコア（最適化の結果）
+    # Score (optimization result)
     score: Annotated[HardMediumSoftScore, PlanningScore] = field(
         default=HardMediumSoftScore.ZERO
     )
 
     def get_employee_count(self) -> int:
-        """従業員数を取得"""
+        """Get the number of employees"""
         return len(self.employees)
 
     def get_shift_count(self) -> int:
-        """シフト数を取得"""
+        """Get the number of shifts"""
         return len(self.shifts)
 
     def get_assigned_shift_count(self) -> int:
-        """割り当て済みシフト数を取得"""
+        """Get the number of assigned shifts"""
         return sum(1 for shift in self.shifts if shift.is_assigned())
 
     def get_unassigned_shift_count(self) -> int:
-        """未割り当てシフト数を取得"""
+        """Get the number of unassigned shifts"""
         return self.get_shift_count() - self.get_assigned_shift_count()
 
     def add_employee(self, employee: Employee):
-        """従業員を追加"""
+        """Add an employee"""
         self.employees.append(employee)
 
     def add_shift(self, shift: Shift):
-        """シフトを追加"""
+        """Add a shift"""
         self.shifts.append(shift)
 
     def __str__(self):

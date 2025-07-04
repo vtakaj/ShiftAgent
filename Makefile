@@ -107,7 +107,7 @@ tf-format-check:
 lint:
 	@echo "🔍 Checking code..."
 	uv run ruff check . || true
-	uv run mypy . || true
+	uv run mypy src scripts || true
 
 # Clear cache
 clean:
