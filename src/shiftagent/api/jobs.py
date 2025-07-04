@@ -791,7 +791,9 @@ def swap_shifts_in_job(job_id: str, shift1_id: str, shift2_id: str) -> bool:
         return False
 
 
-def add_employees_to_completed_job(job_id: str, new_employees: list, auto_assign: bool = False) -> tuple[bool, dict]:
+def add_employees_to_completed_job(
+    job_id: str, new_employees: list, auto_assign: bool = False
+) -> tuple[bool, dict]:
     """Add multiple employees to completed job with validation and detailed reporting"""
     results = []
     successful_additions = 0
@@ -841,7 +843,9 @@ def add_employees_to_completed_job(job_id: str, new_employees: list, auto_assign
             _sync_job_to_store(job_id)
 
         # Phase 1: Validate all employees before adding any
-        logger.info(f"[Job {job_id}] Starting batch validation of {len(new_employees)} employees")
+        logger.info(
+            f"[Job {job_id}] Starting batch validation of {len(new_employees)} employees"
+        )
         
         validation_results = []
         existing_employee_ids = {emp.id for emp in current_solution.employees}
@@ -894,11 +898,17 @@ def add_employees_to_completed_job(job_id: str, new_employees: list, auto_assign
                     
             validation_results.append(employee_result)
             
-        logger.info(f"[Job {job_id}] Validation complete. Valid: {len(new_employee_ids)}, Failed: {failed_additions}, Skipped: {skipped_additions}")
+        logger.info(
+            f"[Job {job_id}] Validation complete. Valid: {len(new_employee_ids)}, "
+            f"Failed: {failed_additions}, Skipped: {skipped_additions}"
+        )
         
         # Phase 2: Add valid employees if any exist
         if new_employee_ids:
-            logger.info(f"[Job {job_id}] Adding {len(new_employee_ids)} valid employees using batch optimization")
+            logger.info(
+                f"[Job {job_id}] Adding {len(new_employee_ids)} valid employees "
+                f"using batch optimization"
+            )
             
             # Pin all existing assignments to preserve them during re-optimization
             pinned_count = 0
@@ -944,29 +954,48 @@ def add_employees_to_completed_job(job_id: str, new_employees: list, auto_assign
                         f"[Job {job_id}] Added employee {employee.name} with skills: {employee.skills}"
                     )
 
-            # Use existing solver factory with pinned assignments
-            solver = solver_factory.build_solver()
+            # Run solver only if auto_assign is True
+            if auto_assign:
+                # Use existing solver factory with pinned assignments
+                solver = solver_factory.build_solver()
 
-            logger.info(f"[Job {job_id}] Running solver with {len(employees_to_add)} new employees...")
-            updated_solution = solver.solve(current_solution)
+                logger.info(f"[Job {job_id}] Running solver with {len(employees_to_add)} new employees...")
+                updated_solution = solver.solve(current_solution)
 
-            # Unpin shifts for future modifications
-            for shift in updated_solution.shifts:
-                if shift.pinned:
-                    shift.pinned = False
+                # Unpin shifts for future modifications
+                for shift in updated_solution.shifts:
+                    if shift.pinned:
+                        shift.pinned = False
 
-            # Update results with assignment counts
-            for i, employee in enumerate(new_employees):
-                if validation_results[i]["status"] == "VALIDATED":
-                    assigned_count = sum(
-                        1
-                        for shift in updated_solution.shifts
-                        if shift.employee and shift.employee.id == employee.id
-                    )
-                    validation_results[i]["assigned_shifts"] = assigned_count
-                    validation_results[i]["status"] = "SUCCESS"
-                    validation_results[i]["message"] = f"Successfully added and assigned to {assigned_count} shifts"
-                    successful_additions += 1
+                # Update results with assignment counts
+                for i, employee in enumerate(new_employees):
+                    if validation_results[i]["status"] == "VALIDATED":
+                        assigned_count = sum(
+                            1
+                            for shift in updated_solution.shifts
+                            if shift.employee and shift.employee.id == employee.id
+                        )
+                        validation_results[i]["assigned_shifts"] = assigned_count
+                        validation_results[i]["status"] = "SUCCESS"
+                        validation_results[i]["message"] = (
+                            f"Successfully added and assigned to {assigned_count} shifts"
+                        )
+                        successful_additions += 1
+            else:
+                # Don't run solver, just add employees without assignments
+                logger.info(
+                    f"[Job {job_id}] Adding {len(employees_to_add)} employees "
+                    f"without auto-assignment"
+                )
+                updated_solution = current_solution
+
+                # Update results without assignment counts
+                for i, employee in enumerate(new_employees):
+                    if validation_results[i]["status"] == "VALIDATED":
+                        validation_results[i]["assigned_shifts"] = 0
+                        validation_results[i]["status"] = "SUCCESS"
+                        validation_results[i]["message"] = "Successfully added (no auto-assignment)"
+                        successful_additions += 1
 
             # Update the job with new solution
             with job_lock:
@@ -1026,7 +1055,7 @@ def add_employees_to_completed_job(job_id: str, new_employees: list, auto_assign
                 _sync_job_to_store(job_id)
         return False, {
             "error": f"Internal error: {str(e)}",
-            "results": results,
+            "results": validation_results,
             "successful_additions": successful_additions,
             "failed_additions": failed_additions,
             "skipped_additions": skipped_additions,

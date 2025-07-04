@@ -376,14 +376,18 @@ async def add_employee_to_job(job_id: str, employee: EmployeeRequest):
         raise HTTPException(status_code=400, detail=error_msg)
 
 
-@router.post("/api/shifts/{job_id}/add-employees", response_model=BatchEmployeeResponse)
+@router.post(
+    "/api/shifts/{job_id}/add-employees", response_model=BatchEmployeeResponse
+)
 async def add_employees_to_job(job_id: str, request: BatchEmployeeRequest):
     """Add multiple employees to completed job in batch"""
     # Convert employee requests to domain models
     from .converters import convert_employee_request_to_domain
     from .schemas import EmployeeAdditionResult
 
-    new_employees = [convert_employee_request_to_domain(emp) for emp in request.employees]
+    new_employees = [
+        convert_employee_request_to_domain(emp) for emp in request.employees
+    ]
 
     # Add the employees to the job
     success, result_data = add_employees_to_completed_job(
@@ -423,7 +427,9 @@ async def add_employees_to_job(job_id: str, request: BatchEmployeeRequest):
         message = f"All {total_employees} employees added successfully"
     elif successful_additions > 0:
         overall_status = "PARTIAL_SUCCESS"
-        message = f"{successful_additions}/{total_employees} employees added successfully"
+        message = (
+            f"{successful_additions}/{total_employees} employees added successfully"
+        )
     else:
         overall_status = "FAILED"
         message = "No employees were added successfully"
